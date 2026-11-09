@@ -2693,13 +2693,7 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
     // A measured resting rate is drawn in the vitals row under the rings now;
     // drawing it again here would be the same number twice on one screen.
     // Its ABSENCE still belongs to this section's one missing-data card.
-    if (d.rhr.isEmpty) add(
-      d.rhr,
-      () => SignalCard(LucideIcons.heart, C.red, l?.homeHeartRate ?? 'Heart rate',
-          '${d.rhr.value!.round()}',
-          unit: 'bpm',
-          sub: l?.homeRestingSub ?? 'Resting',
-          onTap: () => go(c, detail('resting_hr'))),
+    if (d.rhr.isEmpty) {
       // "no sleep was recorded" was stated as fact, unconditionally — and it
       // was rendered directly beside a Sleep card showing that night's
       // duration. Sleep duration and nocturnal RHR are gated separately: a
@@ -2710,12 +2704,14 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
       // resting rate, picked by a human writing copy. Only the branch the
       // screen can actually see is stated; the other defers to the note, or to
       // saying it does not know.
-      () => StatusCard.forMetric(l?.homeNoRestingHr ?? 'No resting heart rate', d.rhr,
+      final gap = StatusCard.forMetric(
+          l?.homeNoRestingHr ?? 'No resting heart rate', d.rhr,
           why: d.sleepMin.isEmpty
               ? (l?.homeNoRestingHrWhy ??
                   'Resting heart rate is read from sleep, and no sleep was recorded.')
-              : ''),
-    );
+              : '');
+      if (gap != null) absent.add(gap);
+    }
     // Steps keeps its tile whether or not a counter reported. Zero steps is a
     // real reading — an unmoved counter — and it renders as 0, not as absence.
     // When nothing counted at all the tile stays and says so in two words,
