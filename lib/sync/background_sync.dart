@@ -45,6 +45,7 @@ import 'high_freq_wake_window.dart';
 import 'reset_gate.dart';
 import 'paired_device.dart';
 import 'sync_policy.dart';
+import '../platform/provisioning.dart' show checkSideloadExpiry;
 
 /// Headless mirror of the foreground `AlarmConfirmation` self-heal: an
 /// ALARM_SET event (56) means the strap has this arm latched, independent of
@@ -351,6 +352,7 @@ Future<bool> runHeadlessSync({BandLease? lease}) async {
         '[bgsync] strap not reachable this cycle — will catch up next time.',
       );
       await checkSyncStaleness();
+      await checkSideloadExpiry();
       return true;
     }
     try {
@@ -385,6 +387,7 @@ Future<bool> runHeadlessSync({BandLease? lease}) async {
     }
     debugPrint('[bgsync] done (local drain + light derive).');
     await checkSyncStaleness();
+    await checkSideloadExpiry();
     return true;
   } catch (e) {
     debugPrint('[bgsync] error (ignored): $e');

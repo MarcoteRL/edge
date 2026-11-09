@@ -128,6 +128,7 @@ import '../notify/notification_service.dart';
 import '../notify/tap_router.dart';
 import '../notify/water_buzzer.dart';
 import '../sync/background_sync.dart' show checkSyncStaleness;
+import '../platform/provisioning.dart' show checkSideloadExpiry;
 import '../sync/band_ownership.dart';
 import '../sync/high_freq_wake_window.dart';
 import '../sync/ios_bg_task.dart';
@@ -2363,6 +2364,8 @@ class AppState extends ChangeNotifier {
       // scene (app.dart's didChangeAppLifecycleState), so this is a genuinely
       // contextual moment to ask, per Apple's/Android's notification docs.
       unawaited(checkSyncStaleness(allowPermissionPrompt: true));
+      // A sideloaded build's 7-day signature (iOS only; no-op elsewhere).
+      unawaited(checkSideloadExpiry(allowPermissionPrompt: true));
     } catch (e) {
       _log('[notify] cadence checks skipped: $e');
     }

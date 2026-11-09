@@ -16367,5 +16367,30 @@
         "type": "int"
       }
     }
+  },
+  "sideloadExpiryTitle": "This install stops opening in {hours} h",
+  "@sideloadExpiryTitle": {
+    "description": "Home card when a sideloaded iOS build's signing profile expires within two days.",
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "sideloadExpiryLapsedTitle": "This install has expired",
+  "@sideloadExpiryLapsedTitle": {
+    "description": "Home card when the sideloaded build's signing profile has already lapsed."
+  },
+  "sideloadExpiryBody": "Re-sign it with Sideloadly, using the same Apple ID, to keep syncing. Installing over it keeps your data.",
+  "@sideloadExpiryBody": {
+    "description": "Body of the sideload expiry card."
+  },
+  "notifSideloadExpiryTitle": "Re-sign OpenStrap soon",
+  "@notifSideloadExpiryTitle": {
+    "description": "Notification title a day before a sideloaded build stops opening."
+  },
+  "notifSideloadExpiryBody": "This install stops opening within a day. Re-sign it with Sideloadly to keep syncing.",
+  "@notifSideloadExpiryBody": {
+    "description": "Notification body a day before a sideloaded build stops opening."
   }
 }

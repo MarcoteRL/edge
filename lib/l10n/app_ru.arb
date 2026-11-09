@@ -1,5 +1,17 @@
 {
   "@@locale": "ru",
+  "sideloadExpiryTitle": "Эта установка перестанет открываться через {hours} ч",
+  "@sideloadExpiryTitle": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "sideloadExpiryLapsedTitle": "Срок этой установки истёк",
+  "sideloadExpiryBody": "Переподпишите её в Sideloadly с тем же Apple ID, чтобы синхронизация продолжалась. Установка поверх сохраняет ваши данные.",
+  "notifSideloadExpiryTitle": "Скоро переподпишите OpenStrap",
+  "notifSideloadExpiryBody": "Эта установка перестанет открываться в течение суток. Переподпишите её в Sideloadly, чтобы синхронизация продолжалась.",
   "homeAnalyzingProgress": "День {done} из {total}.",
   "@homeAnalyzingProgress": {
     "placeholders": {

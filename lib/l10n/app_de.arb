@@ -1,5 +1,10 @@
 {
   "@@locale": "de",
+  "sideloadExpiryTitle": "Diese Installation öffnet sich in {hours} h nicht mehr",
+  "sideloadExpiryLapsedTitle": "Diese Installation ist abgelaufen",
+  "sideloadExpiryBody": "Signiere sie mit Sideloadly und derselben Apple-ID neu, damit sie weiter synchronisiert. Darüber installieren behält deine Daten.",
+  "notifSideloadExpiryTitle": "OpenStrap bald neu signieren",
+  "notifSideloadExpiryBody": "Diese Installation öffnet sich in weniger als einem Tag nicht mehr. Signiere sie mit Sideloadly neu, damit sie weiter synchronisiert.",
   "homeAnalyzingProgress": "Tag {done} von {total}.",
   "homeRecoveryNoNightToScore": "Keine Nacht mit dem Band, die bewertet werden kann. Die Erholung kommt aus deinem Schlaf, also trag das Band über Nacht.",
   "homeAnalyzingFirstBody": "Schritte und Strain füllen sich im Lauf des Tages. Schlaf und Erholung brauchen eine Nacht mit dem Band.",

@@ -1,5 +1,10 @@
 {
   "@@locale": "es",
+  "sideloadExpiryTitle": "Esta instalación deja de abrirse en {hours} h",
+  "sideloadExpiryLapsedTitle": "Esta instalación ha caducado",
+  "sideloadExpiryBody": "Vuelve a firmarla con Sideloadly, con el mismo Apple ID, para que siga sincronizando. Si la instalas encima, conservas tus datos.",
+  "notifSideloadExpiryTitle": "Vuelve a firmar OpenStrap pronto",
+  "notifSideloadExpiryBody": "Esta instalación dejará de abrirse en menos de un día. Vuelve a firmarla con Sideloadly para que siga sincronizando.",
   "homeAnalyzingProgress": "Día {done} de {total}.",
   "homeRecoveryNoNightToScore": "No hay ninguna noche con la banda puesta que puntuar. La recuperación sale de tu sueño, así que llévala puesta por la noche.",
   "homeAnalyzingFirstBody": "Los pasos y el esfuerzo se van completando a lo largo del día. El sueño y la recuperación necesitan una noche con la banda puesta.",

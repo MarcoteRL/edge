@@ -1,5 +1,10 @@
 {
   "@@locale": "hi",
+  "sideloadExpiryTitle": "यह इंस्टॉल {hours} घंटे में खुलना बंद हो जाएगा",
+  "sideloadExpiryLapsedTitle": "यह इंस्टॉल समाप्त हो गया है",
+  "sideloadExpiryBody": "सिंक जारी रखने के लिए इसे उसी Apple ID से Sideloadly में फिर से साइन करें। इसके ऊपर इंस्टॉल करने से आपका डेटा बना रहता है।",
+  "notifSideloadExpiryTitle": "जल्द ही OpenStrap को फिर से साइन करें",
+  "notifSideloadExpiryBody": "यह इंस्टॉल एक दिन के भीतर खुलना बंद हो जाएगा। सिंक जारी रखने के लिए इसे Sideloadly से फिर से साइन करें।",
   "homeAnalyzingProgress": "दिन {done} / {total}.",
   "homeRecoveryNoNightToScore": "स्कोर करने के लिए बैंड पहनकर बिताई कोई रात नहीं है। रिकवरी आपकी नींद से आती है, इसलिए रात में बैंड पहनें।",
   "homeAnalyzingFirstBody": "कदम और स्ट्रेन दिन भर में भरते जाते हैं। नींद और रिकवरी के लिए बैंड पहनकर एक रात चाहिए।",

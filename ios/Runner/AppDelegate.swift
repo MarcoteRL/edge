@@ -91,6 +91,10 @@ import CoreMotion
     if let registrar = registry.registrar(forPlugin: "AppIconBridge") {
       AppIconBridge.register(messenger: registrar.messenger())
     }
+    // When a sideloaded build stops launching (embedded.mobileprovision).
+    if let registrar = registry.registrar(forPlugin: "ProvisioningBridge") {
+      ProvisioningBridge.register(messenger: registrar.messenger())
+    }
     // Build-time iOS configuration exposed to Dart without requiring --dart-define.
     if let registrar = registry.registrar(forPlugin: "ConfigBridge") {
       ConfigBridge.register(messenger: registrar.messenger())
@@ -376,5 +380,49 @@ enum AppIconBridge {
         result(FlutterMethodNotImplemented)
       }
     }
+  }
+}
+
+/// When this install stops launching.
+///
+/// A free-Apple-ID sideload (Sideloadly, AltStore) is signed with a 7-day
+/// development profile, and iOS refuses to open the app once it lapses: no
+/// background sync, so nights pile up in the band until it is re-signed. The
+/// profile ships inside the bundle as `embedded.mobileprovision`, a CMS
+/// envelope around a plain XML plist, and its `ExpirationDate` is exactly that
+/// moment. An App Store build carries no such file, so this answers nil there.
+///
+/// The plist is found by its XML markers rather than by verifying the CMS
+/// signature: only the date is read, and iOS has already validated the profile
+/// to let this code run at all.
+enum ProvisioningBridge {
+  private static let channelName = "openstrap/provisioning"
+
+  static func register(messenger: FlutterBinaryMessenger) {
+    let channel = FlutterMethodChannel(name: channelName, binaryMessenger: messenger)
+    channel.setMethodCallHandler { call, result in
+      switch call.method {
+      case "expiryMs":
+        result(expiryMs())
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
+  }
+
+  static func expiryMs() -> NSNumber? {
+    guard
+      let url = Bundle.main.url(forResource: "embedded", withExtension: "mobileprovision"),
+      let data = try? Data(contentsOf: url),
+      let start = data.range(of: Data("<?xml".utf8)),
+      let end = data.range(of: Data("</plist>".utf8), in: start.lowerBound..<data.endIndex)
+    else { return nil }
+    let plistData = data.subdata(in: start.lowerBound..<end.upperBound)
+    guard
+      let plist = try? PropertyListSerialization.propertyList(
+        from: plistData, options: [], format: nil) as? [String: Any],
+      let date = plist["ExpirationDate"] as? Date
+    else { return nil }
+    return NSNumber(value: Int64(date.timeIntervalSince1970 * 1000))
   }
 }

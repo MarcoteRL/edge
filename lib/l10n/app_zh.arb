@@ -1,5 +1,10 @@
 {
   "@@locale": "zh",
+  "sideloadExpiryTitle": "此安装将在 {hours} 小时后无法打开",
+  "sideloadExpiryLapsedTitle": "此安装已过期",
+  "sideloadExpiryBody": "请用同一个 Apple ID 在 Sideloadly 中重新签名，以便继续同步。覆盖安装会保留你的数据。",
+  "notifSideloadExpiryTitle": "请尽快重新签名 OpenStrap",
+  "notifSideloadExpiryBody": "此安装将在一天内无法打开。请用 Sideloadly 重新签名以便继续同步。",
   "homeAnalyzingProgress": "第 {done} 天，共 {total} 天。",
   "homeRecoveryNoNightToScore": "没有戴着腕带的夜晚可供评分。恢复来自你的睡眠，所以请在夜间佩戴腕带。",
   "homeAnalyzingFirstBody": "步数和负荷会在一天中逐步补全。睡眠和恢复需要戴着腕带过一夜。",

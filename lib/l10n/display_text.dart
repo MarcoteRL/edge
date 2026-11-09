@@ -122,6 +122,9 @@ String localizedText(AppLocalizations? l, String text) {
       l.findingIllnessDetail,
     "No night with the band on to score. Recovery comes from your sleep, so wear the band overnight." =>
       l.homeRecoveryNoNightToScore,
+    "Re-sign OpenStrap soon" => l.notifSideloadExpiryTitle,
+    "This install stops opening within a day. Re-sign it with Sideloadly to keep syncing." =>
+      l.notifSideloadExpiryBody,
     "Low recovery" => l.findingLowReadinessTitle,
     "Recovery was in its lowest band. Taken together, that night's signals sat well below your usual." =>
       l.findingLowReadinessDetail,

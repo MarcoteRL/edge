@@ -1,5 +1,10 @@
 {
   "@@locale": "fr",
+  "sideloadExpiryTitle": "Cette installation ne s’ouvrira plus dans {hours} h",
+  "sideloadExpiryLapsedTitle": "Cette installation a expiré",
+  "sideloadExpiryBody": "Re-signez-la avec Sideloadly, avec le même identifiant Apple, pour continuer à synchroniser. L’installer par-dessus conserve vos données.",
+  "notifSideloadExpiryTitle": "Re-signez OpenStrap bientôt",
+  "notifSideloadExpiryBody": "Cette installation ne s’ouvrira plus d’ici un jour. Re-signez-la avec Sideloadly pour continuer à synchroniser.",
   "homeAnalyzingProgress": "Jour {done} sur {total}.",
   "homeRecoveryNoNightToScore": "Aucune nuit avec le bracelet à évaluer. La récupération vient de votre sommeil : portez le bracelet la nuit.",
   "homeAnalyzingFirstBody": "Les pas et l’effort se complètent au fil de la journée. Le sommeil et la récupération ont besoin d’une nuit avec le bracelet.",

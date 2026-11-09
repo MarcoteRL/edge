@@ -1,5 +1,10 @@
 {
   "@@locale": "th",
+  "sideloadExpiryTitle": "การติดตั้งนี้จะเปิดไม่ได้ในอีก {hours} ชม.",
+  "sideloadExpiryLapsedTitle": "การติดตั้งนี้หมดอายุแล้ว",
+  "sideloadExpiryBody": "ลงชื่อใหม่ด้วย Sideloadly โดยใช้ Apple ID เดิม เพื่อให้ซิงค์ต่อไปได้ การติดตั้งทับจะเก็บข้อมูลของคุณไว้",
+  "notifSideloadExpiryTitle": "ลงชื่อ OpenStrap ใหม่เร็วๆ นี้",
+  "notifSideloadExpiryBody": "การติดตั้งนี้จะเปิดไม่ได้ภายในหนึ่งวัน ลงชื่อใหม่ด้วย Sideloadly เพื่อให้ซิงค์ต่อไปได้",
   "homeAnalyzingProgress": "วันที่ {done} จาก {total}",
   "homeRecoveryNoNightToScore": "ยังไม่มีคืนที่สวมสายรัดให้คำนวณคะแนน การฟื้นตัวคำนวณจากการนอนของคุณ จึงควรสวมสายรัดตอนกลางคืน",
   "homeAnalyzingFirstBody": "จำนวนก้าวและความหนักจะค่อยๆ เติมระหว่างวัน การนอนและการฟื้นตัวต้องใช้หนึ่งคืนที่สวมสายรัด",

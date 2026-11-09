@@ -42,6 +42,8 @@ import '../../compute/findings.dart'
         kReadinessGoodFrom,
         kReadinessRestBelow;
 import '../../data/day_label.dart' show todayLabel, calendarDaysBetween;
+import '../../platform/provisioning.dart'
+    show Provisioning, sideloadExpiryNotice;
 import '../../compute/onehz_pipeline.dart'
     show readinessInputShortfallNote, readinessUnstableBaselineNote;
 import '../../data/db.dart' show DbRebuild, LocalDb;
@@ -2091,6 +2093,9 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
           phase,
           const SizedBox(height: S.x3),
         ],
+      // A sideloaded build's signature is about to lapse (iOS, free Apple ID).
+      // Nothing on an App Store / TestFlight build, nor when handed data.
+      if (isToday && widget.data == null) const _SideloadExpiryCard(),
       // The active wearable's day, cell by cell. Nothing on a WHOOP-only
       // install, nor when the screen is handed its data.
       if (widget.data == null)
@@ -2728,4 +2733,42 @@ Widget coachChip(BuildContext c) {
       ),
     ),
   );
+}
+
+/// "Re-sign within N hours" on Home while a sideloaded build's 7-day
+/// signature runs out. Asked once per screen build of Home; renders nothing
+/// when there is no profile or the expiry is more than two days away.
+class _SideloadExpiryCard extends StatefulWidget {
+  const _SideloadExpiryCard();
+
+  @override
+  State<_SideloadExpiryCard> createState() => _SideloadExpiryCardState();
+}
+
+class _SideloadExpiryCardState extends State<_SideloadExpiryCard> {
+  late final Future<DateTime?> _expiry = Provisioning.expiry();
+
+  @override
+  Widget build(BuildContext c) => FutureBuilder<DateTime?>(
+        future: _expiry,
+        builder: (c, snap) {
+          final notice = sideloadExpiryNotice(snap.data, DateTime.now());
+          if (notice == null) return const SizedBox.shrink();
+          final l = AppLocalizations.of(c);
+          final title = notice.hoursLeft == 0
+              ? (l?.sideloadExpiryLapsedTitle ?? 'This install has expired')
+              : (l?.sideloadExpiryTitle(notice.hoursLeft) ??
+                  'This install stops opening in ${notice.hoursLeft} h');
+          return Padding(
+            padding: const EdgeInsets.only(bottom: S.x3),
+            child: StatusCard(
+              title,
+              l?.sideloadExpiryBody ??
+                  'Re-sign it with Sideloadly, using the same Apple ID, to '
+                      'keep syncing. Installing over it keeps your data.',
+              icon: LucideIcons.clock,
+            ),
+          );
+        },
+      );
 }
