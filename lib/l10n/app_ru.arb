@@ -4,9 +4,9 @@
   "healthspanLinkTitle": "Оценка физиологического возраста",
   "healthspanLinkSub": "По вашей физической форме и сну, относительно опубликованных норм",
   "healthspanNotYetTitle": "Пока недостаточно данных для оценки",
-  "healthspanNotYetBody": "Нужны возраст и пол в профиле и хотя бы два из трёх показателей ниже.",
+  "healthspanNotYetBody": "Нужны возраст и пол в профиле и хотя бы три фактора ниже.",
   "healthspanInputsTitle": "Что на него влияет",
-  "healthspanMethod": "Каждый показатель сравнивается с опубликованной популяционной нормой и переводится в годы через исследования смертности, на которых он основан: форма — по регистру FRIEND (Kaminsky 2015, Kodama 2009), регулярность сна — по UK Biobank (Windred 2024), длительность сна — по Cappuccio 2010. Риск удваивается примерно каждые восемь лет возраста, так риск превращается в годы. Пульс в покое и шаги не учитываются: ни для одного нет нормы, с которой этот браслет можно честно сравнить.",
+  "healthspanMethod": "Устроено как Healthspan у WHOOP: те же девять факторов за шесть месяцев, у каждого точка равновесия на уровне рекомендаций здравоохранения, поэтому их выполнение не добавляет лет. WHOOP не публикует свои формулы, поэтому каждая кривая здесь взята из опубликованного исследования (Windred 2024, Cappuccio 2010, Lee 2022, Momma 2022, Banach 2023, Kaminsky 2015 и Kodama 2009, Zhang 2016). Риск удваивается примерно каждые восемь лет возраста, так риск превращается в годы.",
   "healthspanDisclaimer": "Оценка по популяционным исследованиям, а не медицинский возраст.",
   "healthspanSameAsAge": "Совпадает с вашим возрастом",
   "healthspanYounger": "На {years} лет моложе вашего возраста",
@@ -34,12 +34,10 @@
       }
     }
   },
-  "healthspanFitness": "Форма (VO2max)",
+  "healthspanFitness": "VO2max",
   "healthspanRegularity": "Регулярность сна",
-  "healthspanDuration": "Длительность сна",
-  "healthspanFitnessMissing": "Запишите пробежку или быструю ходьбу с GPS, чтобы её оценить.",
-  "healthspanRegularityMissing": "Нужна неделя или больше ночей с браслетом.",
-  "healthspanDurationMissing": "Нужно не менее 7 записанных ночей.",
+  "healthspanDuration": "Часы сна",
+  "healthspanFitnessMissing": "Нужны вес и рост и две недели ношения браслета.",
   "healthspanNoEffect": "±0 лет",
   "healthspanMinusYears": "−{years} лет",
   "@healthspanMinusYears": {
@@ -57,7 +55,7 @@
       }
     }
   },
-  "healthspanFitnessDetail": "{value} мл/кг/мин при норме {reference} для вашего возраста",
+  "healthspanFitnessDetail": "{value} мл/кг/мин по пробежкам с GPS · равновесие {reference}",
   "@healthspanFitnessDetail": {
     "placeholders": {
       "value": {
@@ -68,7 +66,7 @@
       }
     }
   },
-  "healthspanRegularityDetail": "Индекс {value} при норме {reference}",
+  "healthspanRegularityDetail": "Индекс {value} · равновесие {reference}",
   "@healthspanRegularityDetail": {
     "placeholders": {
       "value": {
@@ -79,7 +77,7 @@
       }
     }
   },
-  "healthspanDurationDetail": "В среднем {hours} ч за ночь",
+  "healthspanDurationDetail": "{hours} ч за ночь · нейтрально от 6 до 9 ч",
   "@healthspanDurationDetail": {
     "placeholders": {
       "hours": {
@@ -8020,5 +8018,62 @@
         "type": "int"
       }
     }
-  }
+  },
+  "healthspanFitnessEstimated": "{value} мл/кг/мин, оценка без нагрузки · равновесие {reference}",
+  "@healthspanFitnessEstimated": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      },
+      "reference": {
+        "type": "String"
+      }
+    }
+  },
+  "healthspanZones13": "Время в зонах 1–3",
+  "healthspanZones45": "Время в зонах 4–5",
+  "healthspanStrength": "Силовые нагрузки",
+  "healthspanSteps": "Шаги",
+  "healthspanRhr": "Пульс в покое",
+  "healthspanLeanMass": "Безжировая масса",
+  "healthspanLeanMassMissing": "Нужны весы с анализом состава тела.",
+  "healthspanNightsMissing": "Нужно не менее 7 ночей с браслетом.",
+  "healthspanDaysMissing": "Нужны две недели с браслетом.",
+  "healthspanMinutesDetail": "{value} мин в неделю · равновесие {breakEven}",
+  "@healthspanMinutesDetail": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      },
+      "breakEven": {
+        "type": "String"
+      }
+    }
+  },
+  "healthspanStepsDetail": "{value} в день · равновесие 8 000",
+  "@healthspanStepsDetail": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "healthspanRhrDetail": "{value} уд/мин ночью · равновесие 60 (ночной пульс ниже, поэтому оценка смещена в сторону молодости)",
+  "@healthspanRhrDetail": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "healthspanPace": "Темп старения: {pace}x",
+  "@healthspanPace": {
+    "placeholders": {
+      "pace": {
+        "type": "String"
+      }
+    }
+  },
+  "healthspanPaceNotYet": "Темп старения: нужен ещё месяц данных",
+  "healthspanPaceHelp": "1x — стареете в темпе календаря, 0x — без изменений, ниже 0 — молодеете. Последний месяц против предыдущего."
 }
