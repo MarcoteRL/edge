@@ -1,5 +1,8 @@
 {
   "@@locale": "zh",
+  "homeRecoveryNoNightToScore": "没有戴着腕带的夜晚可供评分。恢复来自你的睡眠，所以请在夜间佩戴腕带。",
+  "homeAnalyzingFirstBody": "步数和负荷会在一天中逐步补全。睡眠和恢复需要戴着腕带过一夜。",
+  "homeAnalyzingFirstTitle": "正在读取你的第一批数据",
   "whoopFirmwareWarningTitle": "WHOOP 用户：请勿再连接 WHOOP 官方应用",
   "whoopFirmwareWarningAction": "如果你在使用 OpenStrap 或其他开源应用，或打算以后改用，请不要再把腕带连接到 WHOOP 官方应用。它可能会自动安装固件更新。请卸载或停用 WHOOP 应用，防止它更新你的腕带。",
   "whoopFirmwareWarningDetails": "有报告称，WHOOP 5.0 / MG 的固件 50.43.1.0 和 50.43.2.0 会阻止数据访问。蓝牙可能仍能连接。OpenStrap 无法签发解锁受影响腕带所需的 WHOOP 签名会员令牌。我们正在寻找解决方案，但目前还没有修复。",

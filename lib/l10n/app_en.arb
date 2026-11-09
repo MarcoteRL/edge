@@ -7429,13 +7429,25 @@
   "@homeSyncingBody": {
     "description": "Body shown on a bare day while records are actively arriving from the band."
   },
-  "homeAnalyzingTitle": "Crunching last night's numbers",
+  "homeAnalyzingTitle": "Updating your numbers",
   "@homeAnalyzingTitle": {
     "description": "Title shown on a bare day once the backlog has landed and a derive job is computing today's numbers."
   },
   "homeAnalyzingBody": "The data is in — sleep, recovery and strain are next.",
   "@homeAnalyzingBody": {
     "description": "Body shown on a bare day once the backlog has landed and a derive job is computing today's numbers."
+  },
+  "homeAnalyzingFirstTitle": "Reading your first data",
+  "@homeAnalyzingFirstTitle": {
+    "description": "Title of the derive card on a first run, before any night has been scored."
+  },
+  "homeAnalyzingFirstBody": "Steps and strain fill in as the day goes. Sleep and recovery need a night with the band on.",
+  "@homeAnalyzingFirstBody": {
+    "description": "Body of the derive card on a first run, before any night has been scored."
+  },
+  "homeRecoveryNoNightToScore": "No night with the band on to score. Recovery comes from your sleep, so wear the band overnight.",
+  "@homeRecoveryNoNightToScore": {
+    "description": "Why recovery is missing when there was no night with any recovery input (first run, or the band was off overnight)."
   },
   "homeConnectingTitle": "Connecting to your band",
   "@homeConnectingTitle": {

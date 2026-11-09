@@ -1777,7 +1777,12 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
   /// gets the same connecting/syncing feedback as every other one. Returns
   /// null when none of the three phases apply, so the caller falls through
   /// to its own "nothing yet" copy.
-  Widget? _phaseStatusCard(BuildContext c, AppLocalizations? l) {
+  ///
+  /// [firstRun]: no night has been scored on this install yet. The derive
+  /// card then says what the first data can and cannot give, instead of
+  /// promising last night's numbers when there is no last night.
+  Widget? _phaseStatusCard(BuildContext c, AppLocalizations? l,
+      {bool firstRun = false}) {
     final syncing = syncingNowOf(c);
     final deriving = derivingOf(c);
     // The tap latch is otherwise cleared only by its 20s grace timer — if
@@ -1803,12 +1808,20 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
       );
     }
     if (deriving) {
-      return StatusCard(
-        l?.homeAnalyzingTitle ?? 'Crunching last night\'s numbers',
-        l?.homeAnalyzingBody ?? 'The data is in — sleep, recovery and strain '
-            'are next.',
-        leading: spinner,
-      );
+      return firstRun
+          ? StatusCard(
+              l?.homeAnalyzingFirstTitle ?? 'Reading your first data',
+              l?.homeAnalyzingFirstBody ??
+                  'Steps and strain fill in as the day goes. Sleep and '
+                      'recovery need a night with the band on.',
+              leading: spinner,
+            )
+          : StatusCard(
+              l?.homeAnalyzingTitle ?? 'Updating your numbers',
+              l?.homeAnalyzingBody ?? 'The data is in — sleep, recovery and '
+                  'strain are next.',
+              leading: spinner,
+            );
     }
     if (_syncTapped) {
       return StatusCard(
@@ -1834,7 +1847,7 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
         icon: LucideIcons.calendarOff,
       );
     }
-    final phase = _phaseStatusCard(c, l);
+    final phase = _phaseStatusCard(c, l, firstRun: d.heldOverNight == null);
     if (phase != null) return phase;
     if (noBandCard(c, l) case final noBand?) return noBand;
 
@@ -1912,7 +1925,7 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
           )
         else
           Builder(builder: (c) {
-            final phase = _phaseStatusCard(c, l);
+            final phase = _phaseStatusCard(c, l, firstRun: _days.isEmpty);
             if (phase != null) return phase;
             if (noBandCard(c, l) case final noBand?) return noBand;
             final sync = syncOf(c);

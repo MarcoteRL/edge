@@ -1,5 +1,8 @@
 {
   "@@locale": "fr",
+  "homeRecoveryNoNightToScore": "Aucune nuit avec le bracelet à évaluer. La récupération vient de votre sommeil : portez le bracelet la nuit.",
+  "homeAnalyzingFirstBody": "Les pas et l’effort se complètent au fil de la journée. Le sommeil et la récupération ont besoin d’une nuit avec le bracelet.",
+  "homeAnalyzingFirstTitle": "Lecture de vos premières données",
   "whoopFirmwareWarningTitle": "Utilisateurs WHOOP : ne vous reconnectez pas à l’application WHOOP",
   "whoopFirmwareWarningAction": "Si vous utilisez OpenStrap ou une autre application open source, ou prévoyez d’y passer plus tard, ne reconnectez plus votre bracelet à l’application WHOOP officielle. Elle peut installer automatiquement des mises à jour du firmware. Désinstallez ou désactivez l’application WHOOP pour l’empêcher de mettre à jour votre bracelet.",
   "whoopFirmwareWarningDetails": "Des signalements indiquent que les firmwares 50.43.1.0 et 50.43.2.0 des WHOOP 5.0 / MG bloquent l’accès aux données. Le Bluetooth peut quand même se connecter. OpenStrap ne peut pas émettre le jeton d’abonnement signé par WHOOP nécessaire pour débloquer les bracelets concernés. Nous travaillons sur une solution, mais aucun correctif n’est encore disponible.",

@@ -87,5 +87,20 @@ void main() {
       expect(s.toLowerCase(), isNot(contains('age')));
       expect(s.toLowerCase(), isNot(contains('wrist')));
     });
+
+    test('a night with no recovery input says so, not the developer note', () {
+      // The composite's own note quotes the em-dash it renders as. On a first
+      // run it reached the Recovery ring verbatim.
+      for (final note in [
+        'no readiness inputs present — "—" (never imputed).',
+        'no readiness inputs present — "—" (never imputed). '
+            'Refused: hrv (artefact).',
+      ]) {
+        final s = whyFromNote(note)!;
+        expect(s, startsWith('No night with the band on to score.'));
+        expect(s, isNot(contains('imputed')));
+        expect(s, isNot(contains('"—"')));
+      }
+    });
   });
 }

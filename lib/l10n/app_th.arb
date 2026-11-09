@@ -1,5 +1,8 @@
 {
   "@@locale": "th",
+  "homeRecoveryNoNightToScore": "ยังไม่มีคืนที่สวมสายรัดให้คำนวณคะแนน การฟื้นตัวคำนวณจากการนอนของคุณ จึงควรสวมสายรัดตอนกลางคืน",
+  "homeAnalyzingFirstBody": "จำนวนก้าวและความหนักจะค่อยๆ เติมระหว่างวัน การนอนและการฟื้นตัวต้องใช้หนึ่งคืนที่สวมสายรัด",
+  "homeAnalyzingFirstTitle": "กำลังอ่านข้อมูลแรกของคุณ",
   "whoopFirmwareWarningTitle": "ผู้ใช้ WHOOP: อย่าเชื่อมต่อกับแอป WHOOP อีก",
   "whoopFirmwareWarningAction": "หากคุณใช้ OpenStrap หรือแอปโอเพนซอร์สอื่น หรือวางแผนจะเปลี่ยนมาใช้ในภายหลัง อย่าเชื่อมต่อสายรัดกับแอป WHOOP อย่างเป็นทางการอีก แอปอาจติดตั้งการอัปเดตเฟิร์มแวร์โดยอัตโนมัติ ให้ถอนการติดตั้งหรือปิดใช้งานแอป WHOOP เพื่อไม่ให้อัปเดตสายรัดของคุณ",
   "whoopFirmwareWarningDetails": "มีรายงานว่าเฟิร์มแวร์ 50.43.1.0 และ 50.43.2.0 ของ WHOOP 5.0 / MG บล็อกการเข้าถึงข้อมูล บลูทูธอาจยังเชื่อมต่อได้ OpenStrap ไม่สามารถออกโทเค็นสมาชิกที่ WHOOP ลงนามซึ่งจำเป็นต่อการปลดล็อกสายรัดที่ได้รับผลกระทบ เรากำลังหาทางแก้ไข แต่ยังไม่มีวิธีแก้ในตอนนี้",
@@ -7420,7 +7423,7 @@
   "@homeSyncingBody": {
     "description": "Body shown on a bare day while records are actively arriving from the band."
   },
-  "homeAnalyzingTitle": "กำลังคำนวณข้อมูลเมื่อคืน",
+  "homeAnalyzingTitle": "กำลังอัปเดตตัวเลขของคุณ",
   "@homeAnalyzingTitle": {
     "description": "Title shown on a bare day once the backlog has landed and a derive job is computing today's numbers."
   },

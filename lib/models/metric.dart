@@ -252,6 +252,13 @@ String? whyFromNote(String? note, {String unit = 'nights'}) {
     final c = _noteCounts.firstMatch(s);
     return c == null ? why : '$why There were ${c[1]}, and it needs ${c[2]}.';
   }
+  // The readiness composite's "no input at all" note is a developer string
+  // (it quotes the em-dash it renders as). On a first run, or a night the
+  // band was off, it is the whole story: there was no night to score.
+  if (s.startsWith('no readiness inputs present')) {
+    return 'No night with the band on to score. Recovery comes from your '
+        'sleep, so wear the band overnight.';
+  }
   if (s.startsWith('unknown_device_family')) {
     return 'These recordings are not stamped with which strap made them, and '
         'this number has to be calibrated per strap, so it is withheld rather '

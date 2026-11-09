@@ -120,6 +120,8 @@ String localizedText(AppLocalizations? l, String text) {
     "Resting heart rate has been raised" => l.findingIllnessTitle,
     "Recent nights put your resting heart rate above your usual, from one very high night or a few slightly raised ones. One signal: a pattern, not a cause." =>
       l.findingIllnessDetail,
+    "No night with the band on to score. Recovery comes from your sleep, so wear the band overnight." =>
+      l.homeRecoveryNoNightToScore,
     "Low recovery" => l.findingLowReadinessTitle,
     "Recovery was in its lowest band. Taken together, that night's signals sat well below your usual." =>
       l.findingLowReadinessDetail,

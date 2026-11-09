@@ -1,5 +1,8 @@
 {
   "@@locale": "es",
+  "homeRecoveryNoNightToScore": "No hay ninguna noche con la banda puesta que puntuar. La recuperación sale de tu sueño, así que llévala puesta por la noche.",
+  "homeAnalyzingFirstBody": "Los pasos y el esfuerzo se van completando a lo largo del día. El sueño y la recuperación necesitan una noche con la banda puesta.",
+  "homeAnalyzingFirstTitle": "Leyendo tus primeros datos",
   "whoopFirmwareWarningTitle": "Si tienes una WHOOP: no vuelvas a conectarla a la app de WHOOP",
   "whoopFirmwareWarningAction": "Si usas OpenStrap u otra app de código abierto, o piensas pasarte a una más adelante, no vuelvas a conectar tu banda a la app oficial de WHOOP. Puede instalar actualizaciones de firmware automáticamente. Desinstala o desactiva la app de WHOOP para que no actualice tu banda.",
   "whoopFirmwareWarningDetails": "Hay informes de que el firmware 50.43.1.0 y 50.43.2.0 de WHOOP 5.0 / MG bloquea el acceso a los datos. El Bluetooth puede seguir conectando. OpenStrap no puede emitir el token de membresía firmado por WHOOP que hace falta para desbloquear las bandas afectadas. Estamos buscando una solución, pero todavía no hay ningún arreglo.",
@@ -1464,7 +1467,7 @@
   "homeNothingDerivedBody": "Todavía no se ha procesado ninguna grabación de la correa.",
   "homeSyncingTitle": "Sincronizando con tu banda",
   "homeSyncingBody": "Descargando datos — puede tardar unos minutos si hay mucho acumulado.",
-  "homeAnalyzingTitle": "Calculando los números de anoche",
+  "homeAnalyzingTitle": "Actualizando tus números",
   "homeAnalyzingBody": "Los datos ya están — ahora vienen el sueño, la recuperación y el esfuerzo.",
   "homeConnectingTitle": "Conectando con tu banda",
   "homeConnectingBody": "Un momento — esto suele tardar unos segundos.",
