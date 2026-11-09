@@ -1565,9 +1565,6 @@ class _Rise extends StatelessWidget {
 
 // ═══════════════════ the screen ═══════════════════
 
-/// Days of history a "your usual" needs before Home compares against it.
-const kUsualMinDays = 7;
-
 /// Mean of the 28 measured days before [day] for [key], or null when there
 /// are fewer than [kUsualMinDays] of them (or no database to ask).
 Future<double?> usualBefore(String key, String? day) async {
@@ -1643,7 +1640,8 @@ class HomeData {
   final Metric hrv, resp;
 
   /// The mean of the 28 scored days BEFORE this one for HRV, resting HR and
-  /// breathing rate — null until there are at least [kUsualMinDays] of them,
+  /// breathing rate — null until there are at least [kUsualMinDays] of them
+  /// (the same abstention every "usual" in the app uses),
   /// so no arrow is drawn against a baseline that is not one yet.
   final double? hrvUsual, rhrUsual, respUsual;
 
