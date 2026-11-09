@@ -327,6 +327,11 @@ void main() {
   );
 
   testWidgets('category search accepts original and Russian blurb', (t) async {
+    // Tall enough that the WHOOP firmware warning above the search field does
+    // not push the matching category row out of the lazily-built list.
+    t.view.physicalSize = const Size(800, 2400);
+    t.view.devicePixelRatio = 1;
+    addTearDown(t.view.reset);
     await t.pumpWidget(page(const DevicePickerScreen()));
     await t.pumpAndSettle();
     final entry = kBleHrs;

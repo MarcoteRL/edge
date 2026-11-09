@@ -56,6 +56,7 @@ import '../activity/tiles.dart';
 import '../activity/share.dart' show ShareSheet, shareOrigin;
 import '../activity/summary.dart';
 import '../onboarding/welcome.dart' show ImportOutcome, ImportReport;
+import '../pairing/whoop_firmware_warning.dart';
 // Screens are deliberately not re-exported from the ui2 barrel (see the
 // barrel test), so their components are imported by path.
 import '../screens/screens.dart';
@@ -237,6 +238,7 @@ Map<String, Widget> componentCases() => {
             'nothing to measure.',
         fix: 'How wear position affects this',
       ),
+      'whoop_firmware_warning': const WhoopFirmwareWarning(),
       'deep_dive': DeepDiveCard('Heart rate variability', '7h 42m', 'ms',
           'Open the full night', C.purple,
           preview: SizedBox(

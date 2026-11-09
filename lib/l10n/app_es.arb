@@ -1,5 +1,8 @@
 {
   "@@locale": "es",
+  "whoopFirmwareWarningTitle": "Si tienes una WHOOP: no vuelvas a conectarla a la app de WHOOP",
+  "whoopFirmwareWarningAction": "Si usas OpenStrap u otra app de código abierto, o piensas pasarte a una más adelante, no vuelvas a conectar tu banda a la app oficial de WHOOP. Puede instalar actualizaciones de firmware automáticamente. Desinstala o desactiva la app de WHOOP para que no actualice tu banda.",
+  "whoopFirmwareWarningDetails": "Hay informes de que el firmware 50.43.1.0 y 50.43.2.0 de WHOOP 5.0 / MG bloquea el acceso a los datos. El Bluetooth puede seguir conectando. OpenStrap no puede emitir el token de membresía firmado por WHOOP que hace falta para desbloquear las bandas afectadas. Estamos buscando una solución, pero todavía no hay ningún arreglo.",
   "appTitle": "OpenStrap",
   "profileTitle": "Perfil",
   "profileMyDevices": "Mis dispositivos",
@@ -2764,6 +2767,8 @@
   "reportTitleHint": "Una línea sobre qué salió mal",
   "reportDescriptionLabel": "Qué pasó",
   "reportDescriptionHint": "Qué hiciste, qué esperabas, qué viste",
+  "reportContactLabel": "Contacto (opcional)",
+  "reportContactHint": "Correo o Discord, solo si quieres que te respondamos",
   "reportAttachGroup": "Adjuntos",
   "reportScreenshotRow": "Añadir una captura de pantalla",
   "reportScreenshotRemove": "Quitar la captura de pantalla",
