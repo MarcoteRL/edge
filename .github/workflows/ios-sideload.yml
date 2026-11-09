@@ -1,0 +1,99 @@
+name: ios-sideload
+
+# Personal-repo build: unsigned .ipa for Sideloadly/AltStore, NO secrets needed.
+#
+# Why this exists next to build.yml: build.yml only runs on `v*` tags, needs the
+# upstream release secrets (Android keystore, Firebase config, companion URL),
+# and its "Mount Firebase Secrets" step overwrites lib/firebase_options.dart
+# with an empty file when the secret is unset, which breaks the Dart compile.
+# This workflow skips all of that and relies on what the project already ships
+# for secretless builds:
+#   - lib/firebase_options.dart is committed (dummy values), main() catches a
+#     failed Firebase.initializeApp and carries on without Firebase.
+#   - the "Ensure GoogleService-Info.plist" Xcode phase writes an inert
+#     placeholder plist when the file is missing.
+#   - the Crashlytics symbol-upload phase ends in `|| true`.
+# See docs/development/IOS_BUILD_PIPELINE.md.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'guides/**'
+      - 'screenshots/**'
+
+concurrency:
+  group: ios-sideload-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ipa:
+    # Never runs on the upstream repo, which has its own release pipeline.
+    if: github.repository != 'OpenStrap/edge'
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: subosito/flutter-action@v2
+        with:
+          # Same pin as build.yml/test.yml. Bump all three together.
+          flutter-version: '3.41.6'
+          channel: stable
+          cache: true
+
+      # No .env / --dart-define: every build-time define defaults off.
+      # COMPANION_URL and BACKEND_URL default to '' (OTA pointer, BYOK proxy and
+      # legacy cloud import disabled; both can still be set at runtime in
+      # Settings) and ENABLE_HEALTH_DATA_CONTRIBUTION defaults to false, so the
+      # health-data upload feature is compiled out of this personal build.
+
+      # Upstream's release job installs it for the Crashlytics build phase. That
+      # phase tolerates its absence (`|| true`); installing keeps us on the same
+      # known-good path.
+      - name: Install flutterfire CLI
+        run: dart pub global activate flutterfire_cli 1.4.0
+
+      - run: flutter pub get
+
+      - name: Build unsigned iOS app
+        run: flutter build ios --release --no-codesign
+
+      # The Watch companion cannot survive a per-user free-account resign
+      # (WKCompanionAppBundleIdentifier no longer matches). Same as build.yml.
+      - name: Strip Watch companion
+        run: rm -rf "build/ios/iphoneos/Runner.app/Watch"
+
+      - name: Package unsigned IPA
+        id: ipa
+        run: |
+          set -euo pipefail
+          ver=$(grep -E '^version:' pubspec.yaml | head -1 | awk '{print $2}')
+          name="openstrap-edge-${ver%%+*}-${GITHUB_SHA::7}-unsigned.ipa"
+          cd build/ios/iphoneos
+          rm -rf Payload && mkdir Payload
+          cp -R Runner.app Payload/Runner.app
+          zip -qr -y "$GITHUB_WORKSPACE/$name" Payload
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Unsigned IPA"
+            echo "- File: \`$name\` ($(du -h "$GITHUB_WORKSPACE/$name" | cut -f1))"
+            echo "- Version: \`$ver\`, commit \`${GITHUB_SHA::7}\`"
+            echo "- Bundle id: \`$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' Runner.app/Info.plist)\`"
+            echo "- Sign and install with Sideloadly. Widgets/Live Activities may not work on a free Apple ID (App Groups)."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.ipa.outputs.name }}
+          path: ${{ steps.ipa.outputs.name }}
+          if-no-files-found: error
+          retention-days: 14
