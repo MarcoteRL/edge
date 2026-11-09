@@ -3564,5 +3564,6 @@
   "healthspanRhrDetail": "{value} lpm de noche · equilibrio en 60 (la lectura nocturna sale más baja, así que esto tiende a rejuvenecer)",
   "healthspanPace": "Ritmo de envejecimiento: {pace}x",
   "healthspanPaceNotYet": "Ritmo de envejecimiento: necesita un mes más de datos",
-  "healthspanPaceHelp": "1x envejece al ritmo del calendario, 0x se mantiene, por debajo de 0 rejuvenece. Compara el último mes con el anterior."
+  "healthspanPaceHelp": "1x envejece al ritmo del calendario, 0x se mantiene, por debajo de 0 rejuvenece. Compara el último mes con el anterior.",
+  "homeVitalUsual": "Media {value}"
 }

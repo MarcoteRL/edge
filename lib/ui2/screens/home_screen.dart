@@ -871,7 +871,10 @@ class RingTrio extends StatelessWidget {
   Widget build(BuildContext c) {
     final p = P.of(c);
     final l = AppLocalizations.of(c);
-    final rings = [for (final k in HomeRingKind.values) _ringOf(k, d, l)];
+    // The day in the order it happened: the night, what it gave back, what
+    // the day has spent since. Recovery sits in the middle, larger, because
+    // it is the number the morning is about.
+    final rings = [for (final k in kHomeRingOrder) _ringOf(k, d, l)];
     final gaps = rings.where((r) => r.why != null).toList();
     // THERE IS NO "THESE TWO ARE FROM SATURDAY" LINE ANY MORE, and there is
     // nothing left for one to explain. Recovery and sleep used to be served
@@ -895,12 +898,15 @@ class RingTrio extends StatelessWidget {
           ]
         else
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               for (var i = 0; i < rings.length; i++) ...[
-                if (i > 0) const SizedBox(width: S.x3),
+                if (i > 0) const SizedBox(width: S.x2),
                 Expanded(
-                    child: _RingColumn(rings[i], onTap: _open(rings[i].kind))),
+                    flex: rings[i].kind == HomeRingKind.recovery ? 5 : 4,
+                    child: _RingColumn(rings[i],
+                        hero: rings[i].kind == HomeRingKind.recovery,
+                        onTap: _open(rings[i].kind))),
               ],
             ],
           ),
@@ -978,6 +984,13 @@ String? recoveryStateLine(Map<String, dynamic> head, AppLocalizations? l) =>
 /// night gave back, what the day has cost, and what the night was made of.
 enum HomeRingKind { recovery, strain, sleep }
 
+/// The order the three are drawn in, left to right.
+const kHomeRingOrder = [
+  HomeRingKind.sleep,
+  HomeRingKind.recovery,
+  HomeRingKind.strain,
+];
+
 /// One ring's resolved state — the only place a metric becomes a shape.
 class _RingState {
   final HomeRingKind kind;
@@ -1013,7 +1026,12 @@ class _RingState {
     this.need,
     this.why,
     this.provisional = false,
+    this.bandFrom,
+    this.bandTo,
   });
+
+  /// The day's target zone on this ring, 0…1 of the circle (strain only).
+  final double? bandFrom, bandTo;
 
   /// A number that may still move (the night is still draining), drawn grey.
   final bool provisional;
@@ -1082,7 +1100,20 @@ _RingState _ringOf(HomeRingKind k, HomeData d, AppLocalizations? l) {
           ? _gap(k, l?.homeRingStrain ?? 'Strain', LucideIcons.zap, C.purple,
               d.strain, l?.homeRingNoStrain ?? 'No strain', l, unit: 'days')
           : _RingState(k, l?.homeRingStrain ?? 'Strain', LucideIcons.zap, C.purple,
-              value: displayFixed(v, 1), sub: l?.homeStrainOf21 ?? 'of 21', frac: v / 21);
+              value: displayFixed(v, 1),
+              sub: l?.homeStrainOf21 ?? 'of 21',
+              frac: v / 21,
+              // The target the plan already states, drawn where the strain
+              // is: a band on the same 0–21 dial. Only a real low/high pair
+              // from the coach block; nothing is drawn otherwise.
+              bandFrom: switch (d.strainTarget?['low']) {
+                final num lo => lo / 21,
+                _ => null,
+              },
+              bandTo: switch (d.strainTarget?['high']) {
+                final num hi => hi / 21,
+                _ => null,
+              });
     case HomeRingKind.sleep:
       final v = d.sleepMin.value;
       final need = d.sleepNeedMin.value;
@@ -1139,27 +1170,71 @@ class _Dial extends StatelessWidget {
   final _RingState r;
   final double stroke, icon;
 
-  const _Dial(this.r, {required this.stroke, required this.icon});
+  /// Draw the reading inside the circle instead of the icon. Only the
+  /// three-across layout asks for it; the accessibility row keeps the number
+  /// beside the ring, where it has the width it needs.
+  final bool valueInside;
+  final bool hero;
+
+  const _Dial(this.r,
+      {required this.stroke,
+      required this.icon,
+      this.valueInside = false,
+      this.hero = false});
 
   @override
   Widget build(BuildContext c) {
     final p = P.of(c);
-    return Stack(alignment: Alignment.center, children: [
-      CustomPaint(
-        size: Size.infinite,
-        // Calibrating draws as discrete dashes filling in night by night;
-        // a finished (or absent-but-not-calibrating) ring draws the
-        // continuous arc, solid only once it is an actual measurement.
-        painter: r.calibrating
-            // One dash per night the baseline needs, not a fixed count —
-            // "6 of 14" draws as 14 divisions with 6 filled.
-            ? DashedRing(r.frac ?? 0, r.arc(p), p.track,
-                stroke: stroke, segments: r.need ?? 24)
-            : Ring(r.frac ?? 0, r.arc(p), p.track,
-                stroke: stroke, t: animate(c, 1), solid: r.measured),
-      ),
-      Icon(r.icon, size: icon, color: r.ink(p)),
-    ]);
+    final inside = valueInside && r.measured;
+    // The arc draws itself in from empty once, on first paint. Reduced motion
+    // gets the finished ring straight away (motion() collapses the duration).
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: motion(c, Motion.sweep),
+      curve: Curves.easeOutCubic,
+      builder: (c, t, _) => Stack(alignment: Alignment.center, children: [
+        CustomPaint(
+          size: Size.infinite,
+          // Calibrating draws as discrete dashes filling in night by night;
+          // a finished (or absent-but-not-calibrating) ring draws the
+          // continuous arc, solid only once it is an actual measurement.
+          painter: r.calibrating
+              // One dash per night the baseline needs, not a fixed count —
+              // "6 of 14" draws as 14 divisions with 6 filled.
+              ? DashedRing(r.frac ?? 0, r.arc(p), p.track,
+                  stroke: stroke, segments: r.need ?? 24)
+              : Ring(r.frac ?? 0, r.arc(p), p.track,
+                  stroke: stroke,
+                  t: animate(c, t),
+                  solid: r.measured,
+                  bandFrom: r.bandFrom,
+                  bandTo: r.bandTo),
+        ),
+        if (inside)
+          Padding(
+            padding: EdgeInsets.all(stroke * 2),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    presentationText(AppLocalizations.of(c), r.value),
+                    style: (hero ? F.n34 : F.n24)
+                        .copyWith(color: r.provisional ? p.ink3 : p.ink),
+                  ),
+                  if (r.kind == HomeRingKind.recovery)
+                    Text('%', style: F.cap.copyWith(color: p.ink3)),
+                ],
+              ),
+            ),
+          )
+        else
+          Icon(r.icon, size: icon, color: r.ink(p)),
+      ]),
+    );
   }
 }
 
@@ -1169,8 +1244,9 @@ class _Dial extends StatelessWidget {
 class _RingColumn extends StatelessWidget {
   final _RingState r;
   final VoidCallback? onTap;
+  final bool hero;
 
-  const _RingColumn(this.r, {this.onTap});
+  const _RingColumn(this.r, {this.onTap, this.hero = false});
 
   @override
   Widget build(BuildContext c) => Pressable(
@@ -1178,14 +1254,18 @@ class _RingColumn extends StatelessWidget {
         semanticLabel: r.spoken,
         child: Column(children: [
           ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 96),
+            constraints: BoxConstraints(maxWidth: hero ? 132 : 92),
             child: AspectRatio(
               aspectRatio: 1,
-              child: _Dial(r, stroke: 7, icon: 20),
+              child: _Dial(r,
+                  stroke: hero ? 10 : 7,
+                  icon: hero ? 24 : 20,
+                  valueInside: true,
+                  hero: hero),
             ),
           ),
-          const SizedBox(height: S.x3),
-          _RingText(r, align: TextAlign.center),
+          const SizedBox(height: S.x2),
+          _RingText(r, align: TextAlign.center, valueShown: r.measured),
         ]),
       );
 }
@@ -1220,7 +1300,10 @@ class _RingText extends StatelessWidget {
   final _RingState r;
   final TextAlign align;
 
-  const _RingText(this.r, {required this.align});
+  /// The reading is already drawn inside the ring; say only what it is.
+  final bool valueShown;
+
+  const _RingText(this.r, {required this.align, this.valueShown = false});
 
   @override
   Widget build(BuildContext c) {
@@ -1234,13 +1317,14 @@ class _RingText extends StatelessWidget {
         const SizedBox(height: S.x1),
         // Absent reads as words, never as a dash and never as a zero — so it
         // takes the sentence weight rather than the numeral one.
-        Text(
-          presentationText(AppLocalizations.of(c), r.value),
-          style: r.measured
-              ? F.n24.copyWith(color: r.provisional ? p.ink3 : p.ink)
-              : F.body.copyWith(color: p.ink2),
-          textAlign: align,
-        ),
+        if (!valueShown)
+          Text(
+            presentationText(AppLocalizations.of(c), r.value),
+            style: r.measured
+                ? F.n24.copyWith(color: r.provisional ? p.ink3 : p.ink)
+                : F.body.copyWith(color: p.ink2),
+            textAlign: align,
+          ),
         if (r.sub.isNotEmpty) ...[
           const SizedBox(height: 2),
           Text(
@@ -1304,7 +1388,198 @@ class _GapRow extends StatelessWidget {
   }
 }
 
+/// Last night's three vitals in one row under the rings: HRV, resting heart
+/// rate, breathing rate — each with an arrow against the user's own usual and
+/// the usual itself underneath, so the arrow is never a claim without its
+/// reference. Only readings that exist are drawn; nothing renders when none
+/// does (the glance below still owns the written absence of resting HR).
+class _VitalsStrip extends StatelessWidget {
+  final HomeData d;
+  final void Function(String key) onOpen;
+
+  const _VitalsStrip(this.d, {required this.onOpen});
+
+  static bool has(HomeData d) =>
+      !d.hrv.isEmpty || !d.rhr.isEmpty || !d.resp.isEmpty;
+
+  @override
+  Widget build(BuildContext c) {
+    final l = AppLocalizations.of(c);
+    final tiles = <Widget>[
+      if (d.hrv.value case final v?)
+        _Vital(
+          label: l?.homeDriverHrv ?? 'HRV',
+          value: '${v.round()}',
+          unit: 'ms',
+          usual: d.hrvUsual?.round().toString(),
+          trend: _trend(v.toDouble(), d.hrvUsual, (d.hrvUsual ?? 0) * .05),
+          good: _Good.up,
+          onTap: () => onOpen('hrv'),
+        ),
+      if (d.rhr.value case final v?)
+        _Vital(
+          label: l?.homeDriverRhr ?? 'Resting heart rate',
+          value: '${v.round()}',
+          unit: 'bpm',
+          usual: d.rhrUsual?.round().toString(),
+          trend: _trend(v.toDouble(), d.rhrUsual, 2),
+          good: _Good.down,
+          onTap: () => onOpen('resting_hr'),
+        ),
+      if (d.resp.value case final v?)
+        _Vital(
+          label: l?.homeDriverResp ?? 'Breathing rate',
+          value: displayFixed(v, 1),
+          unit: 'br/min',
+          usual: d.respUsual == null ? null : displayFixed(d.respUsual!, 1),
+          trend: _trend(v.toDouble(), d.respUsual, .5),
+          good: _Good.neither,
+          onTap: () => onOpen('resp_rate'),
+        ),
+    ];
+    if (tiles.isEmpty) return const SizedBox.shrink();
+    return IntrinsicHeight(
+      child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        for (var i = 0; i < tiles.length; i++) ...[
+          if (i > 0) const SizedBox(width: S.x2),
+          Expanded(child: tiles[i]),
+        ],
+      ]),
+    );
+  }
+}
+
+enum _Good { up, down, neither }
+
+/// +1 above the usual by more than [tol], -1 below it, 0 within it; null with
+/// no usual to compare against.
+int? _trend(double v, double? usual, double tol) {
+  if (usual == null) return null;
+  if (v - usual > tol) return 1;
+  if (usual - v > tol) return -1;
+  return 0;
+}
+
+class _Vital extends StatelessWidget {
+  final String label, value, unit;
+  final String? usual;
+  final int? trend;
+  final _Good good;
+  final VoidCallback onTap;
+
+  const _Vital({
+    required this.label,
+    required this.value,
+    required this.unit,
+    required this.usual,
+    required this.trend,
+    required this.good,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext c) {
+    final p = P.of(c);
+    final l = AppLocalizations.of(c);
+    final t = trend;
+    final favourable = t == null || t == 0 || good == _Good.neither
+        ? null
+        : (t > 0) == (good == _Good.up);
+    final arrowColor = switch (favourable) {
+      true => p.on(C.green),
+      false => p.on(C.orange),
+      null => p.ink3,
+    };
+    final u = presentationText(l, unit);
+    final usualText = usual == null
+        ? null
+        : (l?.homeVitalUsual('$usual $u') ?? 'Usual $usual $u');
+    return Surface(
+      onTap: onTap,
+      pad: const EdgeInsets.symmetric(horizontal: S.x3, vertical: S.x3),
+      semanticLabel: [label, '$value $u', ?usualText].join('. '),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(label.toUpperCase(),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: F.over.copyWith(color: p.ink3)),
+        const SizedBox(height: S.x1),
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.end,
+          spacing: 3,
+          children: [
+            Text(value, style: F.n24.copyWith(color: p.ink)),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 3),
+              child: Text(u, style: F.cap.copyWith(color: p.ink3)),
+            ),
+            if (t != null && t != 0)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Icon(
+                    t > 0 ? LucideIcons.arrowUp : LucideIcons.arrowDown,
+                    size: 14,
+                    color: arrowColor),
+              ),
+          ],
+        ),
+        if (usualText != null) ...[
+          const SizedBox(height: 2),
+          Text(usualText, style: F.cap.copyWith(color: p.ink3)),
+        ],
+      ]),
+    );
+  }
+}
+
+/// Rises into place once: a short fade and lift, staggered by [index] so the
+/// screen assembles top to bottom. [play] false (any build after the first)
+/// paints the child as it is; reduced motion collapses it to nothing.
+class _Rise extends StatelessWidget {
+  final int index;
+  final bool play;
+  final Widget child;
+
+  const _Rise(this.index, {required this.play, required this.child});
+
+  @override
+  Widget build(BuildContext c) {
+    if (!Motion.enabled(c)) return child;
+    final start = (index * .09).clamp(0.0, .6);
+    // Always the same widget, so a rebuild mid-entrance neither restarts it
+    // nor tears down the rings' own sweep underneath. `begin` only counts
+    // when the element is created: a section that first appears on a later
+    // build starts finished.
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: play ? 0 : 1, end: 1),
+      duration: motion(c, Motion.entrance) * (1 + start),
+      curve: Interval(start / (1 + start), 1, curve: Curves.easeOutCubic),
+      child: child,
+      builder: (c, t, child) => Opacity(
+        opacity: t,
+        child: Transform.translate(offset: Offset(0, (1 - t) * 18), child: child),
+      ),
+    );
+  }
+}
+
 // ═══════════════════ the screen ═══════════════════
+
+/// Days of history a "your usual" needs before Home compares against it.
+const kUsualMinDays = 7;
+
+/// Mean of the 28 measured days before [day] for [key], or null when there
+/// are fewer than [kUsualMinDays] of them (or no database to ask).
+Future<double?> usualBefore(String key, String? day) async {
+  if (day == null) return null;
+  try {
+    final vs = await LocalDb.trailingSeriesValues(key, 28, before: day);
+    if (vs.length < kUsualMinDays) return null;
+    return vs.reduce((a, b) => a + b) / vs.length;
+  } catch (_) {
+    return null;
+  }
+}
 
 class HomeData {
   final String? name;
@@ -1363,6 +1638,15 @@ class HomeData {
   /// `{from, to, at}` when today's final recovery changed after it was shown.
   final Map<String, dynamic>? readinessUpdate;
 
+  /// Last night's HRV (RMSSD, ms) and breathing rate (breaths/min). Both come
+  /// off the same night [sleepMin] does and are left empty whenever it is.
+  final Metric hrv, resp;
+
+  /// The mean of the 28 scored days BEFORE this one for HRV, resting HR and
+  /// breathing rate — null until there are at least [kUsualMinDays] of them,
+  /// so no arrow is drawn against a baseline that is not one yet.
+  final double? hrvUsual, rhrUsual, respUsual;
+
   const HomeData({
     this.name,
     this.dayId,
@@ -1386,6 +1670,11 @@ class HomeData {
     this.absentDiag,
     this.recoveryState,
     this.readinessUpdate,
+    this.hrv = Metric.empty,
+    this.resp = Metric.empty,
+    this.hrvUsual,
+    this.rhrUsual,
+    this.respUsual,
   });
 
   /// The three illness fields, replaced together. Test-facing sugar, and they
@@ -1414,6 +1703,11 @@ class HomeData {
         absentDiag: absentDiag,
         recoveryState: recoveryState,
         readinessUpdate: readinessUpdate,
+        hrv: hrv,
+        resp: resp,
+        hrvUsual: hrvUsual,
+        rhrUsual: rhrUsual,
+        respUsual: respUsual,
       );
 
   /// A day OTHER than today, for the Home day switcher.
@@ -1448,6 +1742,7 @@ class HomeData {
       dayId: date,
       readiness: readiness,
       absentDiag: absentDiag,
+      rhrUsual: await usualBefore('rhr', date),
       rhr: metricOf(overview['resting_hr']),
       strain: metricOf(strain['strain']),
       steps: metricOf(strain['steps']),
@@ -1505,6 +1800,19 @@ class HomeData {
         : await LocalDb.readinessAbsentDiag(
             (today['status'] as Map?)?['today_day']?.toString());
 
+    // HRV and breathing ride the night that sleep does: when the overnight
+    // gate refuses the night, they go with it.
+    final sleepMin = overnightMetric(today, s('duration_min'), l);
+    final hrvBlock = today['hrv'];
+    final respBlock = today['resp'];
+    final hrv = sleepMin.isEmpty || hrvBlock is! Map
+        ? Metric.empty
+        : metricOf(hrvBlock['rmssd']);
+    final resp = sleepMin.isEmpty || respBlock is! Map
+        ? Metric.empty
+        : metricOf(respBlock['value']);
+    final dayId = (today['status'] as Map?)?['today_day']?.toString();
+
     return HomeData(
       name: profile['name']?.toString(),
       dayId: (today['status'] as Map?)?['today_day']?.toString(),
@@ -1521,8 +1829,13 @@ class HomeData {
           if (e is Map) e.cast<String, dynamic>(),
       ],
       strain: metricOf(d('strain')),
-      sleepMin: overnightMetric(today, s('duration_min'), l),
+      sleepMin: sleepMin,
       rhr: overnightMetric(today, d('resting_hr'), l),
+      hrv: hrv,
+      resp: resp,
+      hrvUsual: hrv.isEmpty ? null : await usualBefore('rmssd', dayId),
+      rhrUsual: await usualBefore('rhr', dayId),
+      respUsual: resp.isEmpty ? null : await usualBefore('resp_rate', dayId),
       steps: metricOf(d('steps')),
       calories: metricOf(d('calories')),
       caloriesTotal: metricOf(d('calories_total')),
@@ -1604,6 +1917,9 @@ DateTime Function() debugHomeWallClock = DateTime.now;
 class _HomeScreenState extends State<HomeScreen> with RevisionReload {
   HomeData? _d;
   bool _loading = true;
+
+  /// Whether Home has already played its entrance (see [_Rise]).
+  bool _entered = false;
 
   /// The day requested by the switcher, or null for "today" — the same
   /// null-means-today convention [_load] and [HomeData.load] already used
@@ -2017,6 +2333,13 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
     // to start, that outranks anything else this screen has to say today.
     final rebuilt = dbRebuiltCard(dbRebuildOf(c), l);
 
+    // The entrance plays on the first full paint of real data only; every
+    // later build (a sync landing, a day switch) shows the screen as it is.
+    final play = !_entered;
+    if (play) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _entered = true);
+    }
+
     return _refreshable(ListView(padding: pad, children: [
       if (rebuilt != null) ...[const SizedBox(height: S.x3), rebuilt],
 
@@ -2032,7 +2355,7 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
       ...?_bodyWatch(c, d, todayLabel(widget.now)),
       // ── greeting ──
       Padding(
-        padding: const EdgeInsets.only(top: S.x3, bottom: S.x5),
+        padding: const EdgeInsets.only(top: S.x3, bottom: S.x4),
         child: Row(children: [
           Expanded(
             child:
@@ -2054,15 +2377,18 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
               // How far the band's data reaches, always — the question "am I
               // looking at today, or at last night?" used to be answerable
               // only by opening Profile > Devices.
-              syncedThroughLine(c, d.dayId, l),
-              // Its own line, not squeezed into the sync line's row: at
-              // accessibility text sizes that row has no slack left, and
-              // `Expanded` would only shrink the sync text into extra wrapped
-              // lines to make room rather than ever actually overflow.
-              if (batteryLine(c) case final battery?) ...[
-                const SizedBox(height: 2),
-                battery,
-              ],
+              // Sync and battery share one line and wrap onto a second only
+              // when the text size needs it — a Wrap, not a Row with an
+              // `Expanded`, so neither is ever squeezed into extra lines.
+              Wrap(
+                spacing: S.x3,
+                runSpacing: 2,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  syncedThroughLine(c, d.dayId, l),
+                  ?batteryLine(c),
+                ],
+              ),
             ]),
           ),
           const SizedBox(width: S.x3),
@@ -2131,7 +2457,7 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
         // one tap away, on the Readiness screen: a wall of per-input
         // diagnostics on Home makes the app read as broken.
         if (RingTrio.has(d))
-          RingTrio(
+          _Rise(0, play: play, child: RingTrio(
             d: d,
             onOpen: (k) => go(
                 c,
@@ -2148,7 +2474,7 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
                   // pick resolves to that one.
                   HomeRingKind.sleep => SleepDetail(day: isToday ? null : _day),
                 }),
-          )
+          ))
         else
           Builder(builder: (c) {
             final need = needMessageFromNote(d.readiness.note);
@@ -2182,8 +2508,19 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
             );
           }),
 
+        if (_VitalsStrip.has(d)) ...[
+          const SizedBox(height: S.x3),
+          _Rise(1,
+              play: play,
+              child: _VitalsStrip(d,
+                  onOpen: (k) => go(
+                      c,
+                      isToday || _day == null
+                          ? MetricDetail(k)
+                          : metricDayScreen(k, _day!)))),
+        ],
         const SizedBox(height: S.x3),
-        const DetectedActivitiesCard(),
+        _Rise(2, play: play, child: const DetectedActivitiesCard()),
         const CommunityNudge(),
 
         // ── the rollup was withheld, not absent ──
@@ -2193,8 +2530,10 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
         // First, in the first weeks too: resting HR, steps and the night's
         // sleep are real from night one, so they lead and the "what arrives
         // when" card follows them.
-        Section(l?.homeAtAGlance ?? 'At a glance',
-            _glance(c, d, isToday: isToday)),
+        _Rise(3,
+            play: play,
+            child: Section(l?.homeAtAGlance ?? 'At a glance',
+                _glance(c, d, isToday: isToday))),
         if (firstWeeks) ...[
           const SizedBox(height: S.x3),
           firstWeekCard(c,
@@ -2207,7 +2546,10 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
         // Skipped on a past day — "3,000 steps left" or "aim for 11.4
         // strain" about a day already over is an instruction, not a fact.
         if (isToday)
-          Section(l?.homeTodaysPlan ?? "Today's plan", _plan(c, p, d)),
+          _Rise(4,
+              play: play,
+              child: Section(
+                  l?.homeTodaysPlan ?? "Today's plan", _plan(c, p, d))),
 
         // ── the way into the whole day ──
         //
@@ -2350,7 +2692,10 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
     // Sleep is a RING now, duration and all — the card here was the same
     // number twice on one screen, and the ring is the one that says what the
     // duration was measured against.
-    add(
+    // A measured resting rate is drawn in the vitals row under the rings now;
+    // drawing it again here would be the same number twice on one screen.
+    // Its ABSENCE still belongs to this section's one missing-data card.
+    if (d.rhr.isEmpty) add(
       d.rhr,
       () => SignalCard(LucideIcons.heart, C.red, l?.homeHeartRate ?? 'Heart rate',
           '${d.rhr.value!.round()}',

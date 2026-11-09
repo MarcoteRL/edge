@@ -393,6 +393,13 @@ class Motion {
   static const base = Duration(milliseconds: 180);
   static const slow = Duration(milliseconds: 280);
 
+  /// Home's first paint: the sections rise into place one after another.
+  /// Runs once per screen lifetime, never on a reload.
+  static const entrance = Duration(milliseconds: 650);
+
+  /// A score ring drawing itself from empty to its value.
+  static const sweep = Duration(milliseconds: 1100);
+
   /// The session clock. A live workout counts REAL seconds, so this is the one
   /// duration that must NOT pass through [motion] — reduced motion silences
   /// animation, it does not stop time. It lives here because theme.dart is the

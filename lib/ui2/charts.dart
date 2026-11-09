@@ -611,8 +611,17 @@ class Ring extends CustomPainter {
   /// calibrating" and "this is missing" into one look.
   final bool solid;
 
+  /// An optional target zone, 0…1 of the full circle, laid on the track under
+  /// the arc (Home's strain ring draws the day's strain target here). Both or
+  /// neither; nothing is drawn unless `bandTo > bandFrom`.
+  final double? bandFrom, bandTo;
+
   Ring(this.v, this.color, this.track,
-      {this.stroke = 10, this.t = 1, this.solid = false});
+      {this.stroke = 10,
+      this.t = 1,
+      this.solid = false,
+      this.bandFrom,
+      this.bandTo});
 
   @override
   void paint(Canvas cv, Size s) {
@@ -627,6 +636,20 @@ class Ring extends CustomPainter {
         ..strokeWidth = stroke
         ..color = track,
     );
+    final bf = bandFrom, bt = bandTo;
+    if (bf != null && bt != null && bt > bf) {
+      final from = bf.clamp(0.0, 1.0), to = bt.clamp(0.0, 1.0);
+      cv.drawArc(
+        Rect.fromCircle(center: c, radius: r),
+        -pi / 2 + 2 * pi * from,
+        2 * pi * (to - from) * t.clamp(0, 1),
+        false,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = stroke
+          ..color = color.withValues(alpha: .25),
+      );
+    }
     final sweep = 2 * pi * v.clamp(0, 1) * t.clamp(0, 1);
     if (sweep <= 0) return;
     cv.drawArc(
@@ -652,7 +675,12 @@ class Ring extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant Ring o) =>
-      o.v != v || o.t != t || o.solid != solid || o.color != color;
+      o.v != v ||
+      o.t != t ||
+      o.solid != solid ||
+      o.color != color ||
+      o.bandFrom != bandFrom ||
+      o.bandTo != bandTo;
 }
 
 /// A ring made of discrete dashes rather than a continuous arc — for a value

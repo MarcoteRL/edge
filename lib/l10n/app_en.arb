@@ -16625,5 +16625,14 @@
   "healthspanPaceHelp": "1x ages with the calendar, 0x holds steady, below 0 is getting younger. From the last month against the month before.",
   "@healthspanPaceHelp": {
     "description": "Fork physiological-age screen (lib/ui2/screens/healthspan_screen.dart)."
+  },
+  "homeVitalUsual": "Usual {value}",
+  "@homeVitalUsual": {
+    "description": "Under a vital on Home: the user's own 28-day mean with its unit, e.g. 'Usual 61 ms'.",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
   }
 }
