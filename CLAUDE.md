@@ -34,8 +34,10 @@ AGENTS.md §3 invariant, get an independent review pass before calling it done.
 - Local (Windows): `flutter analyze` and `flutter test --concurrency=1`
   (Flutter 3.41.6 exactly). `--concurrency=1` is required: tests share sqflite
   files.
-- CI on your repo: `test.yml` (analyze + tests) on every push to `main`;
-  `ios-sideload.yml` builds the unsigned IPA. An iOS build cannot run on
+- CI on your repo: `test.yml` is **disabled** (private repo, ~90 min/run of
+  quota): tests run locally on the owner's PC. `ios-sideload.yml` builds the
+  unsigned IPA. Re-enable `test` with
+  `gh api -X PUT repos/MarcoteRL/edge/actions/workflows/test.yml/enable`. An iOS build cannot run on
   Windows. Say so instead of claiming it ran.
 - Never claim hardware validation without a real band. Write "unit-tested,
   not hardware-validated".

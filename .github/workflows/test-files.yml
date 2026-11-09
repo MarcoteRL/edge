@@ -1,0 +1,64 @@
+name: test-files
+
+# Fork-only, manual: analyze + a CHOSEN set of test files on any branch.
+# The full suite (test.yml) is disabled on this private repo because it costs
+# ~90 quota minutes per run; this validates one change in a few minutes.
+# Run: Actions -> test-files -> Run workflow -> pick branch, list files.
+
+on:
+  workflow_dispatch:
+    inputs:
+      files:
+        description: 'Space-separated test files, e.g. test/a_test.dart test/b_test.dart (empty = analyze only)'
+        required: false
+        default: ''
+      analyze:
+        description: 'Run flutter analyze first'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    if: github.repository != 'OpenStrap/edge'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      # Same pin as test.yml. Bump together.
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.41.6
+          channel: stable
+          cache: true
+
+      - name: Guard — the lock pins sibling commits, and the pins aren't stale
+        run: bash .github/scripts/check_sibling_pins.sh
+
+      - run: flutter pub get
+
+      - name: Analyze
+        if: inputs.analyze
+        run: flutter analyze
+
+      # The input goes through an env var and is validated, never interpolated
+      # into the script, so a crafted value cannot run commands.
+      - name: Test chosen files
+        if: inputs.files != ''
+        env:
+          FILES: ${{ inputs.files }}
+        run: |
+          set -euo pipefail
+          read -r -a list <<< "$FILES"
+          for f in "${list[@]}"; do
+            if [[ ! "$f" =~ ^test/[A-Za-z0-9_/.-]+_test\.dart$ ]] || [[ "$f" == *..* ]] || [[ ! -f "$f" ]]; then
+              echo "::error::not a test file in this repo: $f"
+              exit 1
+            fi
+          done
+          flutter test --concurrency=1 --reporter=expanded "${list[@]}"

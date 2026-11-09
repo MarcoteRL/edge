@@ -49,6 +49,7 @@ unit test where the logic is pure. Device check on the sideloaded build.
 | ID | Task | Type | Pri | Cx | Status |
 |---|---|---|---|---|---|
 | CI-03 | Fix stale phosphor reason in `test.yml` comment (F-04), upstream PR | DEBT | P3 | S | todo |
+| CI-06 | Run tests locally on Windows (Flutter 3.41.6); confirm the local baseline matches AUD-01 | DEBT | P1 | S | todo (owner) |
 | CI-05 | Fix the 8 pre-existing l10n/gallery test failures (upstream main), upstream PR | BUG | P2 | S | todo |
 | CI-04 | Cache CocoaPods in `ios-sideload.yml` once the first run shows build time | ENH | P3 | S | todo |
 

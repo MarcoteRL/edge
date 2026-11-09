@@ -55,6 +55,15 @@ Any failure outside this list after a change is a regression.
 
 ## Log
 
+### 2026-11-09 — Tests move to local (decision)
+- Repo stays private (owner's choice). Full suite costs ~90 quota min/run, so
+  `test` workflow disabled via the Actions API (file unchanged). Tests run
+  locally on Windows: Flutter 3.41.6, `flutter test --concurrency=1`. The
+  zone-dependent goldens (+05:30, -04:00) can't be forced via `TZ` on Windows
+  and skip locally.
+- `ios-sideload` still runs on push to `main` (~110 quota min each). Option:
+  switch it to manual-only if the quota gets tight.
+
 ### 2026-11-09 — Pushed to own repo (CI-02)
 - Owner created private `MarcoteRL/edge`. Pushed full upstream history
   (2,757 commits) + one commit with the fork docs and
