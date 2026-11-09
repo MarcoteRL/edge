@@ -169,3 +169,22 @@ numbers" (es "Calculando los números de anoche") and the Recovery ring showed
   PNGs (1024 marketing icon stays alpha-free). iOS build: pending CI run.
 - Run #7 (d0c0902) had been cancelled with "job was not acquired by Runner"
   (macOS capacity); re-run succeeded.
+
+## 2026-11-09 — UX-02: Home redesign, part 1 (branch `feat/home-redesign`)
+
+- Rings in day order (sleep · recovery · strain), recovery larger in the
+  middle, reading drawn inside the dial, arcs sweep in once (`Motion.sweep`).
+- Strain ring draws the coach's `strain_target` low–high as a band on the
+  same 0–21 dial (`Ring.bandFrom/bandTo`); nothing drawn without a real pair.
+- Vitals row under the rings: HRV, resting HR, breathing rate, each with an
+  arrow and "Usual …" against the 28 days before (`usualBefore`, abstains
+  under `kUsualMinDays` = 14, the app-wide threshold). HRV/breathing ride the
+  overnight gate with sleep. Resting HR left the glance (no number twice);
+  its absence card stays there.
+- Sections rise in once per screen lifetime (`_Rise`, `Motion.entrance`);
+  all motion collapses under reduced motion. Sync + battery share one
+  wrapping line. `Pressable` gives a selection haptic.
+- No new dependencies: Flutter's implicit animations cover it.
+- Evidence: test-files run 42708664184 (analyze + 29 home/ui2/l10n files,
+  574 tests passed), run 42709538906 (`test/home_redesign_test.dart`, 9 new).
+  Unit-tested, not hardware-validated; IPA from ios-sideload on the branch.
