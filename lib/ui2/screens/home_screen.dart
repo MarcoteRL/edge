@@ -323,6 +323,21 @@ bool derivingOf(BuildContext c) {
   }
 }
 
+/// "Day 3 of 12." for a derive pass spanning more than one day, else null. A
+/// first sync of a band that holds days of history can take minutes, and a
+/// card that only spins for that long reads as stuck.
+String? deriveProgressLine(BuildContext c, AppLocalizations? l) {
+  final ({int done, int total}) p;
+  try {
+    p = c.select<AppState, ({int done, int total})>((a) => a.deriveProgress);
+  } catch (_) {
+    return null;
+  }
+  if (p.total <= 1 || p.done <= 0) return null;
+  return l?.homeAnalyzingProgress(p.done, p.total) ??
+      'Day ${p.done} of ${p.total}.';
+}
+
 /// Read a metric envelope. `_scalarMetric` writes the literal string `'—'` for
 /// an absent value, so this must never be replaced by `map['value'] as num`.
 Metric metricOf(Object? raw) => Metric.parse(raw);
@@ -1808,18 +1823,21 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
       );
     }
     if (deriving) {
+      final progress = deriveProgressLine(c, l);
+      String withProgress(String body) =>
+          progress == null ? body : '$body $progress';
       return firstRun
           ? StatusCard(
               l?.homeAnalyzingFirstTitle ?? 'Reading your first data',
-              l?.homeAnalyzingFirstBody ??
+              withProgress(l?.homeAnalyzingFirstBody ??
                   'Steps and strain fill in as the day goes. Sleep and '
-                      'recovery need a night with the band on.',
+                      'recovery need a night with the band on.'),
               leading: spinner,
             )
           : StatusCard(
               l?.homeAnalyzingTitle ?? 'Updating your numbers',
-              l?.homeAnalyzingBody ?? 'The data is in — sleep, recovery and '
-                  'strain are next.',
+              withProgress(l?.homeAnalyzingBody ??
+                  'The data is in — sleep, recovery and strain are next.'),
               leading: spinner,
             );
     }

@@ -1,5 +1,6 @@
 {
   "@@locale": "fr",
+  "homeAnalyzingProgress": "Jour {done} sur {total}.",
   "homeRecoveryNoNightToScore": "Aucune nuit avec le bracelet à évaluer. La récupération vient de votre sommeil : portez le bracelet la nuit.",
   "homeAnalyzingFirstBody": "Les pas et l’effort se complètent au fil de la journée. Le sommeil et la récupération ont besoin d’une nuit avec le bracelet.",
   "homeAnalyzingFirstTitle": "Lecture de vos premières données",

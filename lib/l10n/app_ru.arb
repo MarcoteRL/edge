@@ -1,5 +1,6 @@
 {
   "@@locale": "ru",
+  "homeAnalyzingProgress": "День {done} из {total}.",
   "homeRecoveryNoNightToScore": "Нет ночи с браслетом, которую можно оценить. Восстановление считается по сну, поэтому носите браслет ночью.",
   "homeAnalyzingFirstBody": "Шаги и нагрузка заполняются в течение дня. Для сна и восстановления нужна ночь с браслетом.",
   "homeAnalyzingFirstTitle": "Читаем первые данные",

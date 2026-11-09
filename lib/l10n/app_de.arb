@@ -1,5 +1,6 @@
 {
   "@@locale": "de",
+  "homeAnalyzingProgress": "Tag {done} von {total}.",
   "homeRecoveryNoNightToScore": "Keine Nacht mit dem Band, die bewertet werden kann. Die Erholung kommt aus deinem Schlaf, also trag das Band über Nacht.",
   "homeAnalyzingFirstBody": "Schritte und Strain füllen sich im Lauf des Tages. Schlaf und Erholung brauchen eine Nacht mit dem Band.",
   "homeAnalyzingFirstTitle": "Deine ersten Daten werden gelesen",

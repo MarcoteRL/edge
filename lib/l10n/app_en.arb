@@ -7445,6 +7445,18 @@
   "@homeAnalyzingFirstBody": {
     "description": "Body of the derive card on a first run, before any night has been scored."
   },
+  "homeAnalyzingProgress": "Day {done} of {total}.",
+  "@homeAnalyzingProgress": {
+    "description": "Appended to the derive card while a pass spanning several days runs.",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "homeRecoveryNoNightToScore": "No night with the band on to score. Recovery comes from your sleep, so wear the band overnight.",
   "@homeRecoveryNoNightToScore": {
     "description": "Why recovery is missing when there was no night with any recovery input (first run, or the band was off overnight)."

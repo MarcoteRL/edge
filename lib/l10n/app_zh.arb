@@ -1,5 +1,6 @@
 {
   "@@locale": "zh",
+  "homeAnalyzingProgress": "第 {done} 天，共 {total} 天。",
   "homeRecoveryNoNightToScore": "没有戴着腕带的夜晚可供评分。恢复来自你的睡眠，所以请在夜间佩戴腕带。",
   "homeAnalyzingFirstBody": "步数和负荷会在一天中逐步补全。睡眠和恢复需要戴着腕带过一夜。",
   "homeAnalyzingFirstTitle": "正在读取你的第一批数据",

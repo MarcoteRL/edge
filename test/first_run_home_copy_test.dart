@@ -27,4 +27,11 @@ void main() {
     final es = lookupAppLocalizations(const Locale('es'));
     expect(es.homeAnalyzingTitle, 'Actualizando tus números');
   });
+
+  test('derive progress reads as a day count', () {
+    expect(lookupAppLocalizations(const Locale('en')).homeAnalyzingProgress(3, 12),
+        'Day 3 of 12.');
+    expect(lookupAppLocalizations(const Locale('es')).homeAnalyzingProgress(3, 12),
+        'Día 3 de 12.');
+  });
 }

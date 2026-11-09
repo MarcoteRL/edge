@@ -1,5 +1,6 @@
 {
   "@@locale": "hi",
+  "homeAnalyzingProgress": "दिन {done} / {total}.",
   "homeRecoveryNoNightToScore": "स्कोर करने के लिए बैंड पहनकर बिताई कोई रात नहीं है। रिकवरी आपकी नींद से आती है, इसलिए रात में बैंड पहनें।",
   "homeAnalyzingFirstBody": "कदम और स्ट्रेन दिन भर में भरते जाते हैं। नींद और रिकवरी के लिए बैंड पहनकर एक रात चाहिए।",
   "homeAnalyzingFirstTitle": "आपका पहला डेटा पढ़ा जा रहा है",

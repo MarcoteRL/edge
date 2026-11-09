@@ -67,6 +67,15 @@ class DeriveCoordinator {
   bool _closed = false;
   bool get _disposed => _closed || _hostDisposed();
 
+  /// How far the derive pass running now has got, day by day, so a screen
+  /// that would otherwise only spin can say "day 3 of 12". `(0, 0)` while no
+  /// pass is running or before it has finished its first day. Reset in the
+  /// pass's `finally`, so a throwing pass cannot leave a stale count behind.
+  ({int done, int total}) get progress =>
+      (done: _progressDone, total: _progressTotal);
+  int _progressDone = 0;
+  int _progressTotal = 0;
+
   late final DeriveScheduler scheduler = DeriveScheduler(
     run: ({required DeriveJobKind kind}) =>
         afterDrain(heavy: kind == DeriveJobKind.heavy),
@@ -100,6 +109,8 @@ class DeriveCoordinator {
       TelemetryService.instance.setContext('derive_mode', mode);
       TelemetryService.instance.setContext('derive_active', true);
       TelemetryService.instance.breadcrumb('derive: $mode start');
+      _progressDone = 0;
+      _progressTotal = 0;
       // Refresh the UI after EACH day so Today/trends fill in as the sweep runs,
       // not only at the end (a multi-day backfill can be many days of work).
       await TelemetryService.instance.traced('derive_$mode', () {
@@ -108,6 +119,8 @@ class DeriveCoordinator {
           _profile(),
           heavy: heavy,
           onDayDone: (day, index, total) async {
+            _progressDone = index;
+            _progressTotal = total;
             if (index == total || index == 1 || index % 3 == 0) {
               _notify();
             }
@@ -191,6 +204,8 @@ class DeriveCoordinator {
       // fatal: the app keeps running, but this is worth knowing about.
       TelemetryService.instance.recordNonFatal(e, st, reason: 'post_drain_failed');
     } finally {
+      _progressDone = 0;
+      _progressTotal = 0;
       TelemetryService.instance.setContext('derive_active', false);
     }
   }

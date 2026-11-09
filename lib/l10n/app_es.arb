@@ -1,5 +1,6 @@
 {
   "@@locale": "es",
+  "homeAnalyzingProgress": "Día {done} de {total}.",
   "homeRecoveryNoNightToScore": "No hay ninguna noche con la banda puesta que puntuar. La recuperación sale de tu sueño, así que llévala puesta por la noche.",
   "homeAnalyzingFirstBody": "Los pasos y el esfuerzo se van completando a lo largo del día. El sueño y la recuperación necesitan una noche con la banda puesta.",
   "homeAnalyzingFirstTitle": "Leyendo tus primeros datos",

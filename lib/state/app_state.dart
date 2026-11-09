@@ -5682,6 +5682,9 @@ class AppState extends ChangeNotifier {
   bool get derivePending =>
       _deriveScheduler.pendingLight || _deriveScheduler.pendingHeavy;
 
+  /// Day-by-day progress of the derive pass running now; `(0, 0)` otherwise.
+  ({int done, int total}) get deriveProgress => _deriveCoordinator.progress;
+
   Future<bool> bluetoothReady() async {
     if (!await FlutterBluePlus.isSupported) return false;
     // CoreBluetooth boots in `unknown` before settling — `.first` loses that
