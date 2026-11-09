@@ -83,6 +83,9 @@ double? friendVo2maxMedian(int age, String sex) {
   return table[i] + (table[i + 1] - table[i]) * t;
 }
 
+/// How far back a GPS VO2max estimate still counts as current fitness.
+const Duration kHealthspanVo2Window = Duration(days: 180);
+
 const double kMlPerMet = 3.5;
 const double kFitnessRrPerMet = 0.87; // Kodama 2009
 const double kFitnessMaxMets = 4.0; // ~low-to-high CRF span in Kodama's bands

@@ -19,9 +19,6 @@ import '../ui2.dart';
 import 'home_screen.dart' show envValue;
 import 'metric_detail.dart' show detailScaffold;
 
-/// How far back a GPS VO2max estimate still counts as current fitness.
-const Duration kHealthspanVo2Window = Duration(days: 180);
-
 typedef HealthspanInputs = ({
   int? age,
   String? sex,
