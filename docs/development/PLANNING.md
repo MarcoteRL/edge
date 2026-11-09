@@ -55,7 +55,7 @@ unit test where the logic is pure. Device check on the sideloaded build.
 | FP-HS | Estimated physiological age (fork module) | ENH | P2 | M | done (run 42688204660) |
 | UX-01 | First-run Home: honest derive copy, no developer note on empty Recovery, day-by-day derive progress | BUG (UX) | P1 | S | done (runs 42683191519, 42684463978) |
 | UX-02 | Home redesign, part 1: day-order hero rings (reading inside, strain target band, sweep-in), vitals row vs 28-day usual, staggered entrance, compact header, haptics | ENH (UX) | P1 | M | done (runs 42708664184: 574 tests; 42709538906: home_redesign_test); device check pending |
-| UX-03 | Home redesign, part 2: activities timeline, recovery-tinted hero, then the same language on Sleep/Recovery/Strain screens | ENH (UX) | P2 | M | todo |
+| UX-03 | Home redesign, part 2: Activities list, recovery-tinted heroes, shared entrance on every detail screen (detailScaffold + Sleep tab), Recovery ring sweep | ENH (UX) | P2 | M | done (run 42712259267: analyze + 156 ui2/l10n files, 1767 passed); device check pending |
 | ES-01 | Translate the 621 missing Spanish strings + coverage guard | ENH | P1 | M | done (run 42677830073) |
 | CI-04 | Cache CocoaPods in `ios-sideload.yml` once the first run shows build time | ENH | P3 | S | todo |
 

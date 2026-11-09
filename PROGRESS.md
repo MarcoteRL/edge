@@ -188,3 +188,18 @@ numbers" (es "Calculando los números de anoche") and the Recovery ring showed
 - Evidence: test-files run 42708664184 (analyze + 29 home/ui2/l10n files,
   574 tests passed), run 42709538906 (`test/home_redesign_test.dart`, 9 new).
   Unit-tested, not hardware-validated; IPA from ios-sideload on the branch.
+
+## 2026-11-09 — UX-03: redesign part 2, merged to main
+
+- `Rise`/`risen()`/`SweepIn`/`tintedCard()` moved into grammar.dart (gallery
+  entries added). `detailScaffold` (19 screens) and the embedded Sleep tab
+  stagger their sections in, keyed by position+type so a reload plays nothing
+  and a loading placeholder's replacement does. Semantics kept during fades.
+- Recovery detail: ring sweeps in; a final score tints its card with the
+  band hue (provisional stays plain). Home's ring card does the same.
+- Home "Activities": the day's finished sessions (`sessionsOfDay`, local
+  midnight → next local midnight built from the calendar, DST-safe), oldest
+  first, strain when scored; rows open the hour-by-hour day view.
+- Evidence: test-files run 42712259267 — analyze clean, 156 ui2/l10n test
+  files, +1767 ~5 (skips pre-existing), incl. 14 cases in
+  `test/home_redesign_test.dart`. Unit-tested, not hardware-validated.
