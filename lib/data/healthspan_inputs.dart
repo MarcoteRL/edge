@@ -73,7 +73,7 @@ Future<List<double>> _series(String key, String from, String to) async {
     for (final r in rows)
       if ((r['date'] ?? '').toString().compareTo(from) >= 0 &&
           (r['date'] ?? '').toString().compareTo(to) <= 0)
-        if ((r['value'] as num?)?.toDouble() case final v?) v,
+        ?(r['value'] as num?)?.toDouble(),
   ];
 }
 
