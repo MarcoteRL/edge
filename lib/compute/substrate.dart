@@ -1183,6 +1183,27 @@ class PhysioDay {
 /// cannot drift apart again.
 const int kNocturnalSearchLookbackSec = 12 * 3600;
 
+/// Whether an auto-detected rest block is TONIGHT's night still in progress
+/// rather than the night that ended today: the day's slice is cut at the data
+/// edge (the edge is before the day's own midnight), the block is still open
+/// there (ends within the analytics' own unfinished-night margin of it), and
+/// it began on this calendar day after the stager's daytime band opens — so it
+/// cannot be the night that ended this morning. A night begun before midnight,
+/// or in the small hours, and still going at a morning sync is NOT caught:
+/// that one really is today's night, in progress.
+bool tonightStillGoing({
+  required int onsetSec,
+  required int offsetSec,
+  required int dayStartSec,
+  required int dayEndSec,
+  required int dataEndSec,
+  required int onsetLocalHour,
+}) =>
+    dataEndSec < dayEndSec &&
+    offsetSec >= dataEndSec - ana.kUnfinishedNightEdgeSec &&
+    onsetSec >= dayStartSec &&
+    onsetLocalHour >= ana.AdvancedSleepStager.daytimeBandStartHour;
+
 /// A user-asserted sleep window for one day — manual entry (Approach 1) or a
 /// confirmation of the HR-led fallback (Approach 2). Passed into [calendarDays]
 /// so it overrides auto detection for the matching [dayId].
@@ -1442,6 +1463,37 @@ List<PhysioDay> calendarDays(
             why = 'not_staged';
           }
           vendorIgnored.add('VENDOR_SLEEP_IGNORED:${vn.source}:$why');
+        }
+      }
+
+      // TONIGHT IS NOT TODAY'S NIGHT. On the day the data edge sits in, the
+      // search slice stops at "now", so a rest block still going there is cut
+      // at the edge and would be published as a night that ENDED today — an
+      // evening of sitting still at a desk from 20:57 read as "2 h 38 m of
+      // sleep, ending now". A block that began this afternoon or evening and
+      // is still open at the edge is tonight's night in progress: it belongs to
+      // the day it ends, and that day's slice will see its real wake. The
+      // analytics side has the same rule (`recordContinues`) but drops EVERY
+      // group at the cut, including a real night begun before midnight that is
+      // legitimately in progress at a 06:00 sync — so it is applied here,
+      // narrowly, instead. Auto detection only: a user-set window is theirs.
+      if (ov == null &&
+          (src == 'auto' || src == 'auto_fallback') &&
+          s.present &&
+          s.window?.onsetMs != null &&
+          s.window?.offsetMs != null) {
+        final on = s.window!.onsetMs! ~/ 1000;
+        final off = s.window!.offsetMs! ~/ 1000 + (s.bandOffsetTrimSec ?? 0);
+        if (tonightStillGoing(
+          onsetSec: on,
+          offsetSec: off,
+          dayStartSec: dayStart,
+          dayEndSec: dayEnd,
+          dataEndSec: dataEnd,
+          onsetLocalHour: ((on + tzOffset(on)) % 86400) ~/ 3600,
+        )) {
+          s = ana.SleepSegmentation.absent;
+          src = 'none';
         }
       }
 
