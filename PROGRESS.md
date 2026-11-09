@@ -56,6 +56,30 @@ Any failure outside this list after a change is a regression.
 
 ## Log
 
+### 2026-11-09 — FP-01 sideload expiry + FP-HS physiological age (merged)
+- **FP-01** (`feat/sideload-expiry`): `ProvisioningBridge` in
+  `ios/Runner/AppDelegate.swift` reads `ExpirationDate` from
+  `embedded.mobileprovision`; `lib/platform/provisioning.dart` decides
+  (card inside 48 h, one notification per expiry inside 24 h via
+  `NotificationCenter.emit`, hooked into the foreground cadence check and both
+  background-sync exits). Tests: `sideload_expiry_test` (run 42686340140).
+  Swift compiled by `ios-sideload` run 42686373738 (success). Not exercised on
+  a device yet.
+- **FP-HS** (`feat/healthspan`): estimated physiological age, fork module
+  `lib/compute/healthspan.dart` + `HealthspanScreen` behind a Health-tab row.
+  Pillars and sources: VO2max vs FRIEND 2015 p50 (RR 0.87/MET, Kodama 2009);
+  SRI vs UK Biobank median 81 (RR 0.813/SD, Windred 2024); sleep length
+  (<6 h RR 1.12, >=9 h RR 1.30, Cappuccio 2010); years = 8·log2(RR) (Gompertz).
+  RHR and steps deliberately excluded. Computed on read, not persisted, no
+  kAlgoVersion bump. Owner chose edge over an analytics fork. Tests:
+  `healthspan_test` (runs 42687628989 then 42688204660, 139 pass).
+- **Not done, with reasons:** FP-03 skin temperature to Apple Health (wrist
+  skin temp is not body temperature; Apple's sleeping-wrist type appears to
+  be Apple-generated; would need a device test to even try). Habit
+  streaks (the design system bans streaks on purpose; 14-day consistency
+  already exists). Multi-signal illness alert (already exists as the
+  Mahalanobis overnight-anomaly finding beside the RHR CUSUM).
+
 ### 2026-11-09 — UX-01 first-run Home (branch `fix/first-run-home-copy`, merged)
 Owner report: on a first connection Home said "Crunching last night's
 numbers" (es "Calculando los números de anoche") and the Recovery ring showed

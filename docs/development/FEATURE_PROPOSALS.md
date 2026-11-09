@@ -6,7 +6,13 @@ DB export, scheduled backups, CSV export, GPX export, HealthKit export of
 sleep/RHR/HRV/energy/workouts, widgets, Live Activities, Shortcuts, firmware
 access warning (#680).
 
-Ranked by value × feasibility ÷ maintenance cost. Nothing here is implemented.
+Ranked by value × feasibility ÷ maintenance cost.
+
+**Status (2026-11-09):** FP-01 done. Physiological age (WHOOP Age-style) done
+as a fork module, see `lib/compute/healthspan.dart`. FP-04 (skin temperature
+export) rejected for now: wrist skin temperature is not body temperature and
+the sleeping-wrist HealthKit type appears to be Apple-only. Streak calendars
+rejected: the design system bans streaks on purpose.
 
 | Rank | ID | Name | Value | Feasibility | Cx | Priority |
 |---|---|---|---|---|---|---|
