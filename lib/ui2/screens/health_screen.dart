@@ -29,6 +29,7 @@ import '../ui2.dart';
 import 'advanced.dart';
 import 'ecg.dart' show EcgEntryCard, pairedIsMaverickOf;
 import 'findings_log.dart';
+import 'healthspan_screen.dart';
 import 'home_screen.dart';
 import 'investigate.dart';
 import 'metric_detail.dart';
@@ -945,6 +946,19 @@ class _HealthScreenState extends State<HealthScreen> with RevisionReload {
       ],
 
       // Naps moved to the Sleep tab, beside the night (the Naps door there).
+
+      // FORK: estimated physiological age (lib/compute/healthspan.dart). A door,
+      // not a number on the tab: the estimate needs its explanation beside it.
+      Section(
+        l?.healthspanTitle ?? 'Physiological age',
+        detailLinkRow(
+            c,
+            LucideIcons.hourglass,
+            l?.healthspanLinkTitle ?? 'Estimated physiological age',
+            l?.healthspanLinkSub ??
+                'From your fitness and sleep, against published references',
+            () => go(c, const HealthspanScreen())),
+      ),
 
       // What used to be the Wellness tab: the things you tell the app back.
       // ONE door now, not one per tab: in the contributed data breathing,

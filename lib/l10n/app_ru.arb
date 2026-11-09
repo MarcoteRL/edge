@@ -1,5 +1,92 @@
 {
   "@@locale": "ru",
+  "healthspanTitle": "Физиологический возраст",
+  "healthspanLinkTitle": "Оценка физиологического возраста",
+  "healthspanLinkSub": "По вашей физической форме и сну, относительно опубликованных норм",
+  "healthspanNotYetTitle": "Пока недостаточно данных для оценки",
+  "healthspanNotYetBody": "Нужны возраст и пол в профиле и хотя бы два из трёх показателей ниже.",
+  "healthspanInputsTitle": "Что на него влияет",
+  "healthspanMethod": "Каждый показатель сравнивается с опубликованной популяционной нормой и переводится в годы через исследования смертности, на которых он основан: форма — по регистру FRIEND (Kaminsky 2015, Kodama 2009), регулярность сна — по UK Biobank (Windred 2024), длительность сна — по Cappuccio 2010. Риск удваивается примерно каждые восемь лет возраста, так риск превращается в годы. Пульс в покое и шаги не учитываются: ни для одного нет нормы, с которой этот браслет можно честно сравнить.",
+  "healthspanDisclaimer": "Оценка по популяционным исследованиям, а не медицинский возраст.",
+  "healthspanSameAsAge": "Совпадает с вашим возрастом",
+  "healthspanYounger": "На {years} лет моложе вашего возраста",
+  "@healthspanYounger": {
+    "placeholders": {
+      "years": {
+        "type": "String"
+      }
+    }
+  },
+  "healthspanOlder": "На {years} лет старше вашего возраста",
+  "@healthspanOlder": {
+    "placeholders": {
+      "years": {
+        "type": "String"
+      }
+    }
+  },
+  "healthspanEstimateLabel": "ОЦЕНКА",
+  "healthspanYourAge": "Ваш возраст: {age}",
+  "@healthspanYourAge": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "healthspanFitness": "Форма (VO2max)",
+  "healthspanRegularity": "Регулярность сна",
+  "healthspanDuration": "Длительность сна",
+  "healthspanFitnessMissing": "Запишите пробежку или быструю ходьбу с GPS, чтобы её оценить.",
+  "healthspanRegularityMissing": "Нужна неделя или больше ночей с браслетом.",
+  "healthspanDurationMissing": "Нужно не менее 7 записанных ночей.",
+  "healthspanNoEffect": "±0 лет",
+  "healthspanMinusYears": "−{years} лет",
+  "@healthspanMinusYears": {
+    "placeholders": {
+      "years": {
+        "type": "String"
+      }
+    }
+  },
+  "healthspanPlusYears": "+{years} лет",
+  "@healthspanPlusYears": {
+    "placeholders": {
+      "years": {
+        "type": "String"
+      }
+    }
+  },
+  "healthspanFitnessDetail": "{value} мл/кг/мин при норме {reference} для вашего возраста",
+  "@healthspanFitnessDetail": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      },
+      "reference": {
+        "type": "String"
+      }
+    }
+  },
+  "healthspanRegularityDetail": "Индекс {value} при норме {reference}",
+  "@healthspanRegularityDetail": {
+    "placeholders": {
+      "value": {
+        "type": "int"
+      },
+      "reference": {
+        "type": "int"
+      }
+    }
+  },
+  "healthspanDurationDetail": "В среднем {hours} ч за ночь",
+  "@healthspanDurationDetail": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
   "sideloadExpiryTitle": "Эта установка перестанет открываться через {hours} ч",
   "@sideloadExpiryTitle": {
     "placeholders": {

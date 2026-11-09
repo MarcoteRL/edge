@@ -16392,5 +16392,151 @@
   "notifSideloadExpiryBody": "This install stops opening within a day. Re-sign it with Sideloadly to keep syncing.",
   "@notifSideloadExpiryBody": {
     "description": "Notification body a day before a sideloaded build stops opening."
+  },
+  "healthspanTitle": "Physiological age",
+  "@healthspanTitle": {
+    "description": "Fork physiological-age screen (lib/ui2/screens/healthspan_screen.dart)."
+  },
+  "healthspanLinkTitle": "Estimated physiological age",
+  "@healthspanLinkTitle": {
+    "description": "Fork physiological-age screen (lib/ui2/screens/healthspan_screen.dart)."
+  },
+  "healthspanLinkSub": "From your fitness and sleep, against published references",
+  "@healthspanLinkSub": {
+    "description": "Fork physiological-age screen (lib/ui2/screens/healthspan_screen.dart)."
+  },
+  "healthspanNotYetTitle": "Not enough to estimate yet",
+  "@healthspanNotYetTitle": {
+    "description": "Fork physiological-age screen (lib/ui2/screens/healthspan_screen.dart)."
+  },
+  "healthspanNotYetBody": "It needs your age and sex in your profile and at least two of the three inputs below.",
+  "@healthspanNotYetBody": {
+    "description": "Fork physiological-age screen (lib/ui2/screens/healthspan_screen.dart)."
+  },
+  "healthspanInputsTitle": "What moves it",
+  "@healthspanInputsTitle": {
+    "description": "Fork physiological-age screen (lib/ui2/screens/healthspan_screen.dart)."
+  },
+  "healthspanMethod": "Each input is compared with a published population reference and turned into years through the mortality research behind it: fitness against the FRIEND registry (Kaminsky 2015, Kodama 2009), sleep regularity against UK Biobank (Windred 2024), sleep length against Cappuccio 2010. Risk doubles about every eight years of age, which is how a risk becomes years. Resting heart rate and steps are left out: neither has a reference this band can be fairly placed against.",
+  "@healthspanMethod": {
+    "description": "Fork physiological-age screen (lib/ui2/screens/healthspan_screen.dart)."
+  },
+  "healthspanDisclaimer": "An estimate from population studies, not a medical age.",
+  "@healthspanDisclaimer": {
+    "description": "Fork physiological-age screen (lib/ui2/screens/healthspan_screen.dart)."
+  },
+  "healthspanSameAsAge": "The same as your age",
+  "@healthspanSameAsAge": {
+    "description": "Fork physiological-age screen (lib/ui2/screens/healthspan_screen.dart)."
+  },
+  "healthspanYounger": "{years} years younger than your age",
+  "@healthspanYounger": {
+    "description": "Fork physiological-age screen (lib/ui2/screens/healthspan_screen.dart).",
+    "placeholders": {
+      "years": {
+        "type": "String"
+      }
+    }
+  },
+  "healthspanOlder": "{years} years older than your age",
+  "@healthspanOlder": {
+    "description": "Fork physiological-age screen (lib/ui2/screens/healthspan_screen.dart).",
+    "placeholders": {
+      "years": {
+        "type": "String"
+      }
+    }
+  },
+  "healthspanEstimateLabel": "ESTIMATED",
+  "@healthspanEstimateLabel": {
+    "description": "Fork physiological-age screen (lib/ui2/screens/healthspan_screen.dart)."
+  },
+  "healthspanYourAge": "Your age: {age}",
+  "@healthspanYourAge": {
+    "description": "Fork physiological-age screen (lib/ui2/screens/healthspan_screen.dart).",
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "healthspanFitness": "Fitness (VO2max)",
+  "@healthspanFitness": {
+    "description": "Fork physiological-age screen (lib/ui2/screens/healthspan_screen.dart)."
+  },
+  "healthspanRegularity": "Sleep regularity",
+  "@healthspanRegularity": {
+    "description": "Fork physiological-age screen (lib/ui2/screens/healthspan_screen.dart)."
+  },
+  "healthspanDuration": "Sleep length",
+  "@healthspanDuration": {
+    "description": "Fork physiological-age screen (lib/ui2/screens/healthspan_screen.dart)."
+  },
+  "healthspanFitnessMissing": "Record a run or brisk walk with GPS to estimate it.",
+  "@healthspanFitnessMissing": {
+    "description": "Fork physiological-age screen (lib/ui2/screens/healthspan_screen.dart)."
+  },
+  "healthspanRegularityMissing": "Needs a week or more of nights with the band.",
+  "@healthspanRegularityMissing": {
+    "description": "Fork physiological-age screen (lib/ui2/screens/healthspan_screen.dart)."
+  },
+  "healthspanDurationMissing": "Needs at least 7 recorded nights.",
+  "@healthspanDurationMissing": {
+    "description": "Fork physiological-age screen (lib/ui2/screens/healthspan_screen.dart)."
+  },
+  "healthspanNoEffect": "±0 years",
+  "@healthspanNoEffect": {
+    "description": "Fork physiological-age screen (lib/ui2/screens/healthspan_screen.dart)."
+  },
+  "healthspanMinusYears": "−{years} years",
+  "@healthspanMinusYears": {
+    "description": "Fork physiological-age screen (lib/ui2/screens/healthspan_screen.dart).",
+    "placeholders": {
+      "years": {
+        "type": "String"
+      }
+    }
+  },
+  "healthspanPlusYears": "+{years} years",
+  "@healthspanPlusYears": {
+    "description": "Fork physiological-age screen (lib/ui2/screens/healthspan_screen.dart).",
+    "placeholders": {
+      "years": {
+        "type": "String"
+      }
+    }
+  },
+  "healthspanFitnessDetail": "{value} mL/kg/min against {reference} typical for your age",
+  "@healthspanFitnessDetail": {
+    "description": "Fork physiological-age screen (lib/ui2/screens/healthspan_screen.dart).",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      },
+      "reference": {
+        "type": "String"
+      }
+    }
+  },
+  "healthspanRegularityDetail": "Index {value} against {reference} typical",
+  "@healthspanRegularityDetail": {
+    "description": "Fork physiological-age screen (lib/ui2/screens/healthspan_screen.dart).",
+    "placeholders": {
+      "value": {
+        "type": "int"
+      },
+      "reference": {
+        "type": "int"
+      }
+    }
+  },
+  "healthspanDurationDetail": "{hours} h a night on average",
+  "@healthspanDurationDetail": {
+    "description": "Fork physiological-age screen (lib/ui2/screens/healthspan_screen.dart).",
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
   }
 }

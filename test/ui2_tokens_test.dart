@@ -195,6 +195,8 @@ void main() {
 const _notComponents = {
   // shell and routing
   'AppShell', 'Domain', 'GalleryScreen',
+  // Fork screen: reads the database on open (healthspan_screen.dart).
+  'HealthspanScreen',
   // WHOOP MG ECG routes: the Heart Screener entry reads the database and
   // pushes; the capture screen owns a live BLE reading (a gallery case would
   // start one); the detail screen reads and deletes a reading and routes to
