@@ -157,3 +157,15 @@ numbers" (es "Calculando los números de anoche") and the Recovery ring showed
 - No app code changed. No commits made.
 - Chose CI-01 over a code fix: without any toolchain, a Dart fix couldn't be
   analyzed or tested, and CI is the validation path for everything after it.
+
+## 2026-11-09 — CI-07: fork branding on the sideload IPA
+
+- `ios-sideload.yml` gains a "Fork branding" step running
+  `.github/scripts/fork_branding.py` on the CI checkout before the build:
+  home-screen name `Edge Dev`, icon hue +150° (red/magenta). Both are
+  `workflow_dispatch` inputs. Nothing upstream is edited; bundle id untouched,
+  so an over-install keeps its data.
+- Verified locally: script rewrites `CFBundleDisplayName` and all 21 AppIcon
+  PNGs (1024 marketing icon stays alpha-free). iOS build: pending CI run.
+- Run #7 (d0c0902) had been cancelled with "job was not acquired by Runner"
+  (macOS capacity); re-run succeeded.

@@ -17,6 +17,13 @@ name: ios-sideload
 
 on:
   workflow_dispatch:
+    inputs:
+      app_name:
+        description: Home-screen name (keep it short, ~12 chars)
+        default: Edge Dev
+      icon_hue:
+        description: Icon hue shift in degrees (0 = upstream colours)
+        default: '150'
   push:
     branches: [main]
     paths-ignore:
@@ -63,6 +70,18 @@ jobs:
         run: dart pub global activate flutterfire_cli 1.4.0
 
       - run: flutter pub get
+
+      # Different home-screen name and icon colour so this build can't be
+      # mistaken for upstream's. Applied to the CI checkout only, never
+      # committed; the bundle id is untouched so installs keep their data.
+      - name: Fork branding
+        env:
+          APP_NAME: ${{ inputs.app_name || 'Edge Dev' }}
+          ICON_HUE: ${{ inputs.icon_hue || '150' }}
+        run: |
+          python3 -m venv "$RUNNER_TEMP/brand"
+          "$RUNNER_TEMP/brand/bin/pip" install -q pillow
+          "$RUNNER_TEMP/brand/bin/python" .github/scripts/fork_branding.py "$APP_NAME" "$ICON_HUE"
 
       - name: Build unsigned iOS app
         run: flutter build ios --release --no-codesign
