@@ -56,6 +56,23 @@ Any failure outside this list after a change is a regression.
 
 ## Log
 
+### 2026-11-09 — UX-01 first-run Home (branch `fix/first-run-home-copy`, merged)
+Owner report: on a first connection Home said "Crunching last night's
+numbers" (es "Calculando los números de anoche") and the Recovery ring showed
+`no readiness inputs present — "—" (never imputed)`.
+- Root causes: (1) the derive card used "last night" copy for EVERY derive,
+  including first-run and mid-day passes; (2) `whyFromNote` passed the
+  analytics composite's developer note through verbatim.
+- Fix: neutral title "Updating your numbers"; first-run variant (no night
+  scored yet) explaining that sleep/recovery need a night with the band;
+  `whyFromNote` maps the no-input note to a plain sentence, translated in all
+  locales; derive card shows "Day X of N" from `DeriveCoordinator.progress`
+  (reset in `finally`).
+- Validated: test-files runs 42683191519 (142 tests + analyze), 42684463978
+  (211 tests). New tests: `first_run_home_copy_test`, `derive_progress_test`,
+  extra case in `absence_reason_test`. UI only: no metric/derive/schema
+  change, no kAlgoVersion bump. Not hardware-validated.
+
 ### 2026-11-09 — CI-05 + ES-01 (branch `fix/ci-05-l10n-gallery`, merged to main)
 - **CI-05 fixed** the 8 pre-existing failures: translated
   `whoopFirmwareWarning*` (7 locales) and `reportContact*` (es, fr, hi, zh),

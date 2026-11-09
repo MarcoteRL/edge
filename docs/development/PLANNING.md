@@ -51,6 +51,7 @@ unit test where the logic is pure. Device check on the sideloaded build.
 | CI-03 | Fix stale phosphor reason in `test.yml` comment (F-04), upstream PR | DEBT | P3 | S | todo |
 | CI-06 | Run tests locally on Windows (Flutter 3.41.6); confirm the local baseline matches AUD-01 | DEBT | P1 | S | todo (owner) |
 | CI-05 | Fix the 8 pre-existing l10n/gallery test failures (upstream main), upstream PR | BUG | P2 | S | done (runs 42676487905, 42677071191); upstream PR: todo |
+| UX-01 | First-run Home: honest derive copy, no developer note on empty Recovery, day-by-day derive progress | BUG (UX) | P1 | S | done (runs 42683191519, 42684463978) |
 | ES-01 | Translate the 621 missing Spanish strings + coverage guard | ENH | P1 | M | done (run 42677830073) |
 | CI-04 | Cache CocoaPods in `ios-sideload.yml` once the first run shows build time | ENH | P3 | S | todo |
 
