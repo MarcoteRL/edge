@@ -10,8 +10,7 @@ Append new entries at the top of "Log". Keep "Status" current.
 - **Remotes:** `upstream` = github.com/OpenStrap/edge. `origin` =
   github.com/MarcoteRL/edge (private, standalone repo, not a GitHub fork).
 - **In progress:** CI-01 (secretless unsigned IPA workflow).
-- **Next:** check the first `test` + `ios-sideload` runs → AUD-01 baseline →
-  sideload on device → BUG-566 / BUG-558 triage.
+- **Next:** sideload the IPA on device → BUG-566 / BUG-558 triage.
 - **Blockers:** no Dart/Flutter toolchain in the Claude session (pub.dev +
   Flutter SDK host blocked), so analyze/test only run on CI or your PC.
   No macOS. Hardware checks need you.
@@ -34,8 +33,25 @@ Append new entries at the top of "Log". Keep "Status" current.
 | 2026-11-09 | `flutter --version`, `pub get`, `analyze`, `test` | **not run**: toolchain unreachable in session |
 | 2026-11-09 | `actionlint` 1.7.12 + shellcheck on `ios-sideload.yml` | clean |
 | 2026-11-09 | `actionlint` on upstream `build.yml`/`test.yml` | 1 shellcheck info (SC2086) in upstream `build.yml`. Pre-existing, not touched |
-| — | `ios-sideload` run on GitHub | pending (needs your repo) |
+| 2026-11-09 | `ios-sideload` run 42655280078 (macOS, 55d56bb) | **success**: 11 min total, artifact `openstrap-edge-0.11.3-55d56bb-unsigned.ipa` (20 MB) |
+| 2026-11-09 | `test` run 42655279966 (Ubuntu, 55d56bb): pin guard, `pub get`, `flutter analyze` | **pass** (analyze clean) |
+| 2026-11-09 | same run, `flutter test --concurrency=1` | **7010 pass, 28 skip, 8 fail** in 90 min. Zone-dependent step skipped (runs only if tests pass). **All 8 pre-existing upstream**, see AUD-01 baseline below |
 | — | Install + pair + sync on device | pending |
+
+## AUD-01 baseline: pre-existing failures (upstream `38a83e9`)
+
+Commit `55d56bb` adds only docs + a workflow, no Dart/ARB, so these come from
+upstream main. Mostly from #680 (WHOOP firmware warning) landing without
+translations or a gallery entry:
+
+- `settings_report_l10n_test.dart` ×4 (es, fr, hi, zh): `reportContactLabel`,
+  `reportContactHint` untranslated
+- `ui2_tokens_test.dart` "every component is in the gallery": `WhoopFirmwareWarning` missing
+- `russian_localization_test.dart`, `thai_l10n_test.dart`: `whoopFirmwareWarning*` keys missing
+- `russian_review_findings_test.dart` "category search accepts original and
+  Russian blurb": finds 0 widgets with text "Bluetooth-датчик пульса"
+
+Any failure outside this list after a change is a regression.
 
 ## Log
 

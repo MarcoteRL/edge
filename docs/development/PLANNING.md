@@ -9,9 +9,9 @@ done (with evidence) / blocked. Complexity: S / M / L.
 | ID | Task | Type | Pri | Cx | Deps | Status |
 |---|---|---|---|---|---|---|
 | SETUP-01 | Local clone, `upstream` remote, docs scaffold | DEBT | P1 | S | — | done (2026-11-09) |
-| CI-01 | Secretless unsigned-IPA workflow `ios-sideload.yml` | BUG (F-01) | P1 | S | — | in-progress: written, actionlint clean, **awaiting first run** |
+| CI-01 | Secretless unsigned-IPA workflow `ios-sideload.yml` | BUG (F-01) | P1 | S | — | done on CI (run 42655280078, IPA built); device install pending |
 | CI-02 | Create your GitHub repo, push, disable star-history/soak/pr-agent | DEBT (F-05) | P1 | S | SETUP-01 | done (2026-11-09): MarcoteRL/edge |
-| AUD-01 | Record test/analyze baseline from first `test.yml` run | DEBT | P1 | S | CI-02 | todo |
+| AUD-01 | Record test/analyze baseline from first `test.yml` run | DEBT | P1 | S | CI-02 | done (2026-11-09): run 42655279966, 8 pre-existing l10n/gallery failures (PROGRESS.md) |
 | AUD-02 | Deep bug sweep of hotspots (db, derivation, ble_engine, app_state) | DEBT | P2 | L | AUD-01 | todo |
 | AUD-03 | `flutter pub outdated` + advisory check, no upgrades | DEBT | P2 | S | toolchain | todo |
 
@@ -49,6 +49,7 @@ unit test where the logic is pure. Device check on the sideloaded build.
 | ID | Task | Type | Pri | Cx | Status |
 |---|---|---|---|---|---|
 | CI-03 | Fix stale phosphor reason in `test.yml` comment (F-04), upstream PR | DEBT | P3 | S | todo |
+| CI-05 | Fix the 8 pre-existing l10n/gallery test failures (upstream main), upstream PR | BUG | P2 | S | todo |
 | CI-04 | Cache CocoaPods in `ios-sideload.yml` once the first run shows build time | ENH | P3 | S | todo |
 
 ## Phase D — iOS / Android
