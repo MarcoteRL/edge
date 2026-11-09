@@ -56,6 +56,21 @@ Any failure outside this list after a change is a regression.
 
 ## Log
 
+### 2026-11-09 — Physiological age rebuilt on WHOOP's nine contributors
+- Owner asked for "the same as WHOOP". Rebuilt `lib/compute/healthspan.dart`
+  on WHOOP's published structure (nine contributors, six months, break-even
+  at the guideline, Gompertz years, Pace of Ageing -1..3x). WHOOP's formulas
+  are not published; every curve is cited in the file header: Windred 2024,
+  Cappuccio 2010, Lee 2022 (zones), Momma 2022 (strength), Banach 2023
+  (steps), FRIEND/Kodama (VO2max), Zhang 2016 (RHR).
+- No runs needed: without a GPS VO2max in 90 days it uses the Jackson 1990
+  non-exercise model, PA-R scored from measured zone minutes. Resting HR is
+  included and flagged as leaning young (night reading). Lean mass stays
+  absent until a body-composition scale exists.
+- Data loading in `lib/data/healthspan_inputs.dart` (zones and strength from
+  sessions; weekly minutes over worn days only, absent under 14).
+- Validated: test-files run 42691158015 (136 tests + analyze).
+
 ### 2026-11-09 — FP-01 sideload expiry + FP-HS physiological age (merged)
 - **FP-01** (`feat/sideload-expiry`): `ProvisioningBridge` in
   `ios/Runner/AppDelegate.swift` reads `ExpirationDate` from
