@@ -239,6 +239,13 @@ Map<String, Widget> componentCases() => {
         fix: 'How wear position affects this',
       ),
       'whoop_firmware_warning': const WhoopFirmwareWarning(),
+      'rise': const Rise(0, play: false, child: Text('Settles into place once')),
+      'sweep_in': SweepIn(
+          builder: (c, t) => SizedBox(
+              width: 64,
+              height: 64,
+              child: CustomPaint(
+                  painter: Ring(.7, C.green, P.of(c).track, t: t, solid: true)))),
       'deep_dive': DeepDiveCard('Heart rate variability', '7h 42m', 'ms',
           'Open the full night', C.purple,
           preview: SizedBox(

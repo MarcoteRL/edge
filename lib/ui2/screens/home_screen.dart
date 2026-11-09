@@ -64,6 +64,7 @@ import '../../state/app_state.dart';
 import '../../state/clock_format.dart' show formatClockOf;
 import '../../state/units_controller.dart';
 import '../../theme/theme_switcher.dart' show themedRoute;
+import '../activity/catalogue.dart' show activityByName, catalogueName;
 import '../activity/day_strain.dart' show DayStrainDetail;
 import '../profile/alarm.dart'
     show AlarmArmState, alarmArmOf, alarmDoor, alarmGlanceCard;
@@ -885,8 +886,17 @@ class RingTrio extends StatelessWidget {
     // ([overnightMetric]), so a ring with no night behind it is a gap row with
     // the reason in it — same place every other absence on this screen goes.
 
+    // A final recovery washes the card in its band's hue, faintly: the state
+    // reads before the number does. Provisional, sleeping and absent stay
+    // plain — there is no state to colour yet.
+    final rv = d.readiness.value;
+    final tint = rv != null && d.recoveryState != 'provisional' &&
+            d.recoveryState != 'night_in_progress'
+        ? readinessBand(rv, l).color
+        : null;
     return Surface(
       elevation: 2,
+      color: tintedCard(p, tint),
       child: Column(children: [
         if (bigText(c))
           // Past ~1.3× a 100 pt column cannot hold the word "Recovery" on one
@@ -1532,33 +1542,87 @@ class _Vital extends StatelessWidget {
   }
 }
 
-/// Rises into place once: a short fade and lift, staggered by [index] so the
-/// screen assembles top to bottom. [play] false (any build after the first)
-/// paints the child as it is; reduced motion collapses it to nothing.
-class _Rise extends StatelessWidget {
-  final int index;
-  final bool play;
-  final Widget child;
+/// The day's sessions as a list, the way the day went: what, when, for how
+/// long, and the strain it cost when the session has one. One card, rows
+/// divided; any row opens the day's hour-by-hour view, where the session
+/// sits on the timeline.
+class _Activities extends StatelessWidget {
+  final List<Map<String, dynamic>> sessions;
+  final VoidCallback onOpen;
 
-  const _Rise(this.index, {required this.play, required this.child});
+  const _Activities(this.sessions, {required this.onOpen});
 
   @override
   Widget build(BuildContext c) {
-    if (!Motion.enabled(c)) return child;
-    final start = (index * .09).clamp(0.0, .6);
-    // Always the same widget, so a rebuild mid-entrance neither restarts it
-    // nor tears down the rings' own sweep underneath. `begin` only counts
-    // when the element is created: a section that first appears on a later
-    // build starts finished.
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: play ? 0 : 1, end: 1),
-      duration: motion(c, Motion.entrance) * (1 + start),
-      curve: Interval(start / (1 + start), 1, curve: Curves.easeOutCubic),
-      child: child,
-      builder: (c, t, child) => Opacity(
-        opacity: t,
-        child: Transform.translate(offset: Offset(0, (1 - t) * 18), child: child),
-      ),
+    final p = P.of(c);
+    final l = AppLocalizations.of(c);
+    String clockAt(num ts) =>
+        formatClockOf(DateTime.fromMillisecondsSinceEpoch(ts.toInt() * 1000));
+    return Surface(
+      pad: const EdgeInsets.symmetric(horizontal: S.x4, vertical: S.x1),
+      child: Column(children: [
+        for (var i = 0; i < sessions.length; i++) ...[
+          if (i > 0) Divider(color: p.line, height: 1),
+          Builder(builder: (c) {
+            final s = sessions[i];
+            final type = s['type']?.toString() ?? 'other';
+            final a = activityByName(type);
+            final name = a?.displayName(c) ?? catalogueName(l, type);
+            final color = a?.color ?? C.purple;
+            final mins = s['duration_min'] as num?;
+            final strain = s['strain'] as num?;
+            final when = [
+              '${clockAt(s['start_ts'] as num)}–${clockAt(s['end_ts'] as num)}',
+              if (mins != null && mins > 0) hm(mins),
+            ].join(' · ');
+            return Pressable(
+              onTap: onOpen,
+              semanticLabel: [
+                name,
+                when,
+                if (strain != null) '${l?.homeRingStrain ?? 'Strain'} ${displayFixed(strain, 1)}',
+              ].join('. '),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: S.x3),
+                child: Row(children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: .14),
+                      borderRadius: R.rPill,
+                    ),
+                    child: Icon(a?.icon ?? LucideIcons.activity,
+                        size: 18, color: p.on(color)),
+                  ),
+                  const SizedBox(width: S.x3),
+                  Expanded(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: F.body.copyWith(
+                                  color: p.ink, fontWeight: FontWeight.w600)),
+                          Text(when, style: F.cap.copyWith(color: p.ink3)),
+                        ]),
+                  ),
+                  if (strain != null) ...[
+                    const SizedBox(width: S.x2),
+                    Icon(LucideIcons.zap, size: 14, color: p.on(C.purple)),
+                    const SizedBox(width: 2),
+                    Text(displayFixed(strain, 1),
+                        style: F.n17.copyWith(color: p.ink)),
+                  ],
+                  const SizedBox(width: S.x1),
+                  Icon(LucideIcons.chevronRight, size: 15, color: p.ink3),
+                ]),
+              ),
+            );
+          }),
+        ],
+      ]),
     );
   }
 }
@@ -1575,6 +1639,32 @@ Future<double?> usualBefore(String key, String? day) async {
     return vs.reduce((a, b) => a + b) / vs.length;
   } catch (_) {
     return null;
+  }
+}
+
+/// The finished sessions that started on [day] (a LOCAL day label), oldest
+/// first. The day runs local midnight to the next local midnight, built from
+/// the calendar rather than by adding 86 400 s, so a DST day is its real
+/// length. Empty on any failure: a list of workouts is not worth a broken Home.
+Future<List<Map<String, dynamic>>> sessionsOfDay(
+    LocalRepository repo, String? day) async {
+  final start = day == null ? null : DateTime.tryParse(day);
+  if (start == null) return const [];
+  final end = DateTime(start.year, start.month, start.day + 1);
+  try {
+    final rows = await repo.getSessions(
+        from: start.millisecondsSinceEpoch ~/ 1000,
+        to: end.millisecondsSinceEpoch ~/ 1000 - 1,
+        includeDetected: false);
+    return [
+      for (final r in rows)
+        if (r['start_ts'] is num &&
+            r['end_ts'] is num &&
+            (r['start_ts'] as num) >= start.millisecondsSinceEpoch ~/ 1000)
+          r,
+    ]..sort((a, b) => (a['start_ts'] as num).compareTo(b['start_ts'] as num));
+  } catch (_) {
+    return const [];
   }
 }
 
@@ -1645,6 +1735,9 @@ class HomeData {
   /// so no arrow is drawn against a baseline that is not one yet.
   final double? hrvUsual, rhrUsual, respUsual;
 
+  /// The day's finished sessions, oldest first (see [sessionsOfDay]).
+  final List<Map<String, dynamic>> sessions;
+
   const HomeData({
     this.name,
     this.dayId,
@@ -1673,6 +1766,7 @@ class HomeData {
     this.hrvUsual,
     this.rhrUsual,
     this.respUsual,
+    this.sessions = const [],
   });
 
   /// The three illness fields, replaced together. Test-facing sugar, and they
@@ -1706,6 +1800,7 @@ class HomeData {
         hrvUsual: hrvUsual,
         rhrUsual: rhrUsual,
         respUsual: respUsual,
+        sessions: sessions,
       );
 
   /// A day OTHER than today, for the Home day switcher.
@@ -1741,6 +1836,7 @@ class HomeData {
       readiness: readiness,
       absentDiag: absentDiag,
       rhrUsual: await usualBefore('rhr', date),
+      sessions: await sessionsOfDay(repo, date),
       rhr: metricOf(overview['resting_hr']),
       strain: metricOf(strain['strain']),
       steps: metricOf(strain['steps']),
@@ -1833,6 +1929,7 @@ class HomeData {
       resp: resp,
       hrvUsual: hrv.isEmpty ? null : await usualBefore('rmssd', dayId),
       rhrUsual: await usualBefore('rhr', dayId),
+      sessions: await sessionsOfDay(repo, dayId),
       respUsual: resp.isEmpty ? null : await usualBefore('resp_rate', dayId),
       steps: metricOf(d('steps')),
       calories: metricOf(d('calories')),
@@ -1916,7 +2013,7 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
   HomeData? _d;
   bool _loading = true;
 
-  /// Whether Home has already played its entrance (see [_Rise]).
+  /// Whether Home has already played its entrance (see [Rise]).
   bool _entered = false;
 
   /// The day requested by the switcher, or null for "today" — the same
@@ -2455,7 +2552,7 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
         // one tap away, on the Readiness screen: a wall of per-input
         // diagnostics on Home makes the app read as broken.
         if (RingTrio.has(d))
-          _Rise(0, play: play, child: RingTrio(
+          Rise(0, play: play, child: RingTrio(
             d: d,
             onOpen: (k) => go(
                 c,
@@ -2508,7 +2605,7 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
 
         if (_VitalsStrip.has(d)) ...[
           const SizedBox(height: S.x3),
-          _Rise(1,
+          Rise(1,
               play: play,
               child: _VitalsStrip(d,
                   onOpen: (k) => go(
@@ -2518,7 +2615,15 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
                           : metricDayScreen(k, _day!)))),
         ],
         const SizedBox(height: S.x3),
-        _Rise(2, play: play, child: const DetectedActivitiesCard()),
+        Rise(2, play: play, child: const DetectedActivitiesCard()),
+        if (d.sessions.isNotEmpty)
+          Rise(3,
+              play: play,
+              child: Section(
+                  l?.homeActivitiesTitle ?? 'Activities',
+                  _Activities(d.sessions,
+                      onOpen: () =>
+                          go(c, DayTimelineScreen(day: _day ?? d.dayId))))),
         const CommunityNudge(),
 
         // ── the rollup was withheld, not absent ──
@@ -2528,7 +2633,7 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
         // First, in the first weeks too: resting HR, steps and the night's
         // sleep are real from night one, so they lead and the "what arrives
         // when" card follows them.
-        _Rise(3,
+        Rise(4,
             play: play,
             child: Section(l?.homeAtAGlance ?? 'At a glance',
                 _glance(c, d, isToday: isToday))),
@@ -2544,7 +2649,7 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
         // Skipped on a past day — "3,000 steps left" or "aim for 11.4
         // strain" about a day already over is an instruction, not a fact.
         if (isToday)
-          _Rise(4,
+          Rise(5,
               play: play,
               child: Section(
                   l?.homeTodaysPlan ?? "Today's plan", _plan(c, p, d))),

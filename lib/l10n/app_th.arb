@@ -16377,5 +16377,6 @@
   "healthspanPace": "อัตราการแก่ตัว: {pace}x",
   "healthspanPaceNotYet": "อัตราการแก่ตัว: ต้องมีข้อมูลอีกหนึ่งเดือน",
   "healthspanPaceHelp": "1x แก่ตามปฏิทิน 0x คงที่ ต่ำกว่า 0 คืออ่อนลง เทียบเดือนล่าสุดกับเดือนก่อนหน้า",
-  "homeVitalUsual": "ปกติ {value}"
+  "homeVitalUsual": "ปกติ {value}",
+  "homeActivitiesTitle": "กิจกรรม"
 }

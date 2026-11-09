@@ -8083,5 +8083,6 @@
         "type": "String"
       }
     }
-  }
+  },
+  "homeActivitiesTitle": "Активности"
 }

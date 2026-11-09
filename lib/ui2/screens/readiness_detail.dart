@@ -276,17 +276,22 @@ class _ReadinessDetailState extends State<ReadinessDetail> {
           }),
         ] else
           Surface(
+            // The band's hue, faintly, behind a final score — the state
+            // reads before the number does. A provisional score stays plain.
+            color: d.provisional ? null : tintedCard(p, band.color),
             child: Column(children: [
               SizedBox(
                 width: 150,
                 height: 150,
                 child: Stack(alignment: Alignment.center, children: [
-                  CustomPaint(
-                    size: const Size(150, 150),
-                    painter: Ring(d.readiness.normalized(100),
-                        d.provisional ? p.ink3 : p.on(band.color),
-                        p.track,
-                        stroke: 14, t: animate(c, 1)),
+                  SweepIn(
+                    builder: (c, t) => CustomPaint(
+                      size: const Size(150, 150),
+                      painter: Ring(d.readiness.normalized(100),
+                          d.provisional ? p.ink3 : p.on(band.color),
+                          p.track,
+                          stroke: 14, t: t),
+                    ),
                   ),
                   Column(mainAxisSize: MainAxisSize.min, children: [
                     Text('${v.round()}',

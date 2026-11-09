@@ -145,4 +145,91 @@ void main() {
     await t.pumpAndSettle();
     expect(find.textContaining('No resting heart rate'), findsOneWidget);
   });
+
+  testWidgets('the day\'s sessions are listed, oldest first, with strain',
+      (t) async {
+    _tall(t);
+    final day = DateTime(2026, 5, 20);
+    int at(int h, int m) =>
+        DateTime(day.year, day.month, day.day, h, m).millisecondsSinceEpoch ~/
+        1000;
+    await t.pumpWidget(_host(HomeScreen(
+        data: HomeData(
+          dayId: '2026-05-20',
+          readiness: const Metric(
+              value: 72, confidence: .8, tier: MetricTier.high),
+          sessions: [
+            {
+              'type': 'running',
+              'start_ts': at(7, 5),
+              'end_ts': at(7, 50),
+              'duration_min': 45,
+              'strain': 11.2,
+            },
+            {
+              'type': 'cycling',
+              'start_ts': at(18, 0),
+              'end_ts': at(18, 30),
+              'duration_min': 30,
+            },
+          ],
+        ),
+        hour: 9)));
+    await t.pumpAndSettle();
+    expect(find.text('Activities'), findsOneWidget);
+    expect(find.text('11.2'), findsOneWidget);
+    expect(find.textContaining('45m'), findsOneWidget);
+    expect(find.textContaining('30m'), findsOneWidget);
+    expect(t.getTopLeft(find.textContaining('45m')).dy,
+        lessThan(t.getTopLeft(find.textContaining('30m')).dy));
+  });
+
+  testWidgets('no sessions, no activities section', (t) async {
+    _tall(t);
+    await t.pumpWidget(_host(const HomeScreen(data: _day, hour: 9)));
+    await t.pumpAndSettle();
+    expect(find.text('Activities'), findsNothing);
+  });
+
+  testWidgets('a final recovery tints the ring card; provisional does not',
+      (t) async {
+    _tall(t);
+    Color? cardOf(WidgetTester t) => t
+        .widget<Surface>(find
+            .descendant(of: find.byType(RingTrio), matching: find.byType(Surface))
+            .first)
+        .color;
+    await t.pumpWidget(_host(const RingTrio(d: _day)));
+    await t.pumpAndSettle();
+    final p = P.of(t.element(find.byType(RingTrio)));
+    expect(cardOf(t), isNot(p.card));
+    await t.pumpWidget(_host(const RingTrio(
+        d: HomeData(
+            readiness: Metric(value: 28, confidence: .8, tier: MetricTier.high),
+            recoveryState: 'provisional'))));
+    await t.pumpAndSettle();
+    expect(cardOf(t), p.card);
+  });
+
+  testWidgets('Rise and SweepIn finish at once under reduced motion',
+      (t) async {
+    await t.pumpWidget(_host(
+        Column(children: [
+          const Rise(3, child: Text('section')),
+          SweepIn(builder: (c, v) => Text('t=$v')),
+        ]),
+        reduceMotion: true));
+    await t.pump();
+    expect(
+        find.ancestor(of: find.text('section'), matching: find.byType(Opacity)),
+        findsNothing);
+    expect(find.text('t=1.0'), findsOneWidget);
+  });
+
+  testWidgets('risen() keys by position and type', (t) async {
+    final a = risen([const Text('a'), const SizedBox()]);
+    expect((a[0] as Rise).key, const ValueKey((0, Text)));
+    expect((a[1] as Rise).key, const ValueKey((1, SizedBox)));
+  });
 }
+

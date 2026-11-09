@@ -1974,7 +1974,8 @@ Widget detailScaffold(BuildContext c, String title, List<Widget> body,
         Expanded(
           child: ListView(
               padding: const EdgeInsets.fromLTRB(S.x4, 0, S.x4, S.x12),
-              children: body),
+              // Every detail screen assembles the same way (see [Rise]).
+              children: risen(body)),
         ),
       ]),
     ),

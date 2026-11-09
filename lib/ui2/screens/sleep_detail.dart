@@ -487,7 +487,7 @@ class _SleepDetailState extends State<SleepDetail> with RevisionReload {
               padding: const EdgeInsets.only(left: S.x1, bottom: S.x2),
               child: Text(sub, style: F.over.copyWith(color: p.ink3)),
             ),
-          ...body,
+          ...risen(body),
           // Not under a read error: `_d` may still be the latest night while
           // the asked-for one failed.
           if (!_failed && (_d?.isLatestNight ?? _day == null))

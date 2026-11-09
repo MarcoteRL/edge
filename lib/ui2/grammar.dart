@@ -125,6 +125,73 @@ class _PressableState extends State<Pressable> {
   }
 }
 
+/// ── RISE ── a section settling into place ──────────────────────────────────
+///
+/// A short fade and lift, staggered by [index] so a screen assembles top to
+/// bottom instead of appearing all at once. It is the same widget on every
+/// build, so a rebuild mid-entrance neither restarts it nor tears down any
+/// animation inside it; [play] only counts when the element is created — a
+/// section that first appears on a later build starts finished. Reduced
+/// motion returns the child untouched. Semantics stay on throughout, so a
+/// screen reader never meets a half-faded section as missing.
+class Rise extends StatelessWidget {
+  final int index;
+  final bool play;
+  final Widget child;
+
+  const Rise(this.index, {super.key, this.play = true, required this.child});
+
+  @override
+  Widget build(BuildContext c) {
+    if (!Motion.enabled(c)) return child;
+    final start = (index * .09).clamp(0.0, .6);
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: play ? 0 : 1, end: 1),
+      duration: motion(c, Motion.entrance) * (1 + start),
+      curve: Interval(start / (1 + start), 1, curve: Curves.easeOutCubic),
+      child: child,
+      builder: (c, t, child) => Opacity(
+        opacity: t,
+        alwaysIncludeSemantics: true,
+        child: Transform.translate(
+            offset: Offset(0, (1 - t) * 18), child: child),
+      ),
+    );
+  }
+}
+
+/// [Rise] over a whole list of sections, keyed by position AND type: when a
+/// loading placeholder is replaced by the real content the new section gets
+/// a fresh element (and so its entrance), while a reload that keeps the same
+/// shape keeps every element and plays nothing.
+List<Widget> risen(List<Widget> sections) => [
+      for (final (i, w) in sections.indexed)
+        Rise(i, key: ValueKey((i, w.runtimeType)), child: w),
+    ];
+
+/// A painter's progress `t`, 0 → 1, eased in once on first paint — what a
+/// score ring uses to draw itself in. Reduced motion hands the builder 1.
+class SweepIn extends StatelessWidget {
+  final Widget Function(BuildContext c, double t) builder;
+
+  const SweepIn({super.key, required this.builder});
+
+  @override
+  Widget build(BuildContext c) => TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0, end: 1),
+        duration: motion(c, Motion.sweep),
+        curve: Curves.easeOutCubic,
+        builder: (c, t, _) => builder(c, animate(c, t)),
+      );
+}
+
+/// A card surface washed with a score's own colour — the recovery hero takes
+/// its band's hue, faintly, so the state reads before the number does. Null
+/// keeps the plain card.
+Color tintedCard(P p, Color? hue) => hue == null
+    ? p.card
+    : Color.alphaBlend(hue.withValues(alpha: p.dark ? .14 : .08), p.card);
+
 /// ── SCRUBBER ── the only continuous drag in lib/ui2 ───────────────────────
 ///
 /// It lives here for the same reason [Pressable] does: a drag is a gesture, and

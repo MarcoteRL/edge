@@ -16634,5 +16634,9 @@
         "type": "String"
       }
     }
+  },
+  "homeActivitiesTitle": "Activities",
+  "@homeActivitiesTitle": {
+    "description": "Home section listing the day's finished workout sessions."
   }
 }
