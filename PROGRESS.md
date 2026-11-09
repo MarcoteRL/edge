@@ -24,6 +24,7 @@ Append new entries at the top of "Log". Keep "Status" current.
 | F-03 dummy Firebase options target a real-format 3rd-party project | P2 | open: keep telemetry OFF in self-builds |
 | F-05 upstream cron/secret workflows in personal repo | P2 | open: disable in GitHub UI |
 | F-04 stale phosphor comment in test.yml | P3 | open |
+| AUD-01 8 l10n/gallery failures | P2 | fixed (CI-05) |
 | Upstream #566, #558, #471, #450, #277, #186, #593 | — | reported upstream, not reproduced |
 
 ## Latest validation
@@ -54,6 +55,24 @@ translations or a gallery entry:
 Any failure outside this list after a change is a regression.
 
 ## Log
+
+### 2026-11-09 — CI-05 + ES-01 (branch `fix/ci-05-l10n-gallery`, merged to main)
+- **CI-05 fixed** the 8 pre-existing failures: translated
+  `whoopFirmwareWarning*` (7 locales) and `reportContact*` (es, fr, hi, zh),
+  added `WhoopFirmwareWarning` to the gallery, gave the ru device-picker
+  search test a tall view (root cause: the firmware warning pushed the row out
+  of the lazy list). Validated with `test-files` runs 42676487905 (analyze +
+  7 files, 71 tests) and 42677071191 (gallery/sweep files): all pass.
+- **ES-01**: Spanish had 621 English-fallback strings. All translated,
+  validated by script (keys, placeholders, plural/select structure, no
+  existing value changed) and by run 42677830073 (analyze clean + 10 l10n
+  files, 140 tests pass). New fork-only guard `test/spanish_l10n_test.dart`.
+- **BUG-566** (WHOOP 5 "Not sleep" lost after reanalysis, reported on 0.10.0):
+  not reproduced. Upstream since then made `_reanalyzeForOverride` wait for a
+  running derive instead of dropping the edit, with tests
+  (`sleep_override_rederive_test.dart`, `sleep_correction_sticks_test.dart`).
+  Likely fixed; verify on device.
+- Unit-tested only. Not hardware-validated.
 
 ### 2026-11-09 — Tests move to local (decision)
 - Repo stays private (owner's choice). Full suite costs ~90 quota min/run, so

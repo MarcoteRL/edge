@@ -26,7 +26,7 @@ syncs. *Testing:* actionlint (done), then the run itself, then the device.
 | ID | Task | Type | Pri | Cx | Deps | Status |
 |---|---|---|---|---|---|---|
 | BUG-601 | Sync deadlock on below-floor/event-only bursts (F-02) | BUG | P1 | M | AUD-01, capture or gen4 band | todo |
-| BUG-566 | WHOOP 5 "Not sleep" correction lost after reanalysis | BUG (upstream) | P1 | M | AUD-01, triage | todo: reproduce first |
+| BUG-566 | WHOOP 5 "Not sleep" correction lost after reanalysis | BUG (upstream) | P1 | M | AUD-01, triage | likely fixed upstream after 0.10.0 (edit now waits for a running derive); verify on device |
 | BUG-558 | HR not exported to Apple Health | BUG (upstream) | P1 | M | CI-01 (device) | todo: reproduce first |
 | BUG-186 | Smart alarm not firing | BUG (upstream) | P2 | M | device | todo |
 | PRIV-01 | Inert Firebase options for self-builds (F-03), propose upstream | DEBT | P2 | S | device test | todo |
@@ -50,7 +50,8 @@ unit test where the logic is pure. Device check on the sideloaded build.
 |---|---|---|---|---|---|
 | CI-03 | Fix stale phosphor reason in `test.yml` comment (F-04), upstream PR | DEBT | P3 | S | todo |
 | CI-06 | Run tests locally on Windows (Flutter 3.41.6); confirm the local baseline matches AUD-01 | DEBT | P1 | S | todo (owner) |
-| CI-05 | Fix the 8 pre-existing l10n/gallery test failures (upstream main), upstream PR | BUG | P2 | S | todo |
+| CI-05 | Fix the 8 pre-existing l10n/gallery test failures (upstream main), upstream PR | BUG | P2 | S | done (runs 42676487905, 42677071191); upstream PR: todo |
+| ES-01 | Translate the 621 missing Spanish strings + coverage guard | ENH | P1 | M | done (run 42677830073) |
 | CI-04 | Cache CocoaPods in `ios-sideload.yml` once the first run shows build time | ENH | P3 | S | todo |
 
 ## Phase D — iOS / Android
