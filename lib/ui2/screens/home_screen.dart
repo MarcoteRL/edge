@@ -2012,6 +2012,24 @@ class _TrainingCardState extends State<_TrainingCard> {
         MuscleGroup.core => l?.muscleCore ?? 'Core',
       };
 
+  /// "Today 18:10", "Yesterday 18:10", "Mon 18:10" within the week, else
+  /// "3 Nov 18:10" — the block shows the last session of the past 7 days, so
+  /// a bare clock would not say which day it was.
+  static String _whenLifted(BuildContext c, DateTime at) {
+    final l = AppLocalizations.of(c);
+    final code = Localizations.localeOf(c).languageCode;
+    final days = calendarDaysBetween(at, DateTime.now());
+    String cap(String x) =>
+        x.isEmpty ? x : '${x[0].toUpperCase()}${x.substring(1)}';
+    final day = switch (days) {
+      0 => l?.logWorkoutToday ?? 'Today',
+      1 => l?.logWorkoutYesterday ?? 'Yesterday',
+      < 7 => cap(localizedDate(at, code, pattern: 'EEE')),
+      _ => localizedDate(at, code, pattern: 'd MMM'),
+    };
+    return '$day ${formatClockOf(at)}';
+  }
+
   static String _kg(double kg) =>
       kg == kg.roundToDouble() ? kg.toStringAsFixed(0) : displayFixed(kg, 1);
 
@@ -2055,7 +2073,7 @@ class _TrainingCardState extends State<_TrainingCard> {
                     ),
                     Text(
                         [
-                          formatClockOf(DateTime.fromMillisecondsSinceEpoch(
+                          _whenLifted(c, DateTime.fromMillisecondsSinceEpoch(
                               last.startTs * 1000)),
                           if (last.durationMin != null) hm(last.durationMin!),
                           if (last.strain != null)
