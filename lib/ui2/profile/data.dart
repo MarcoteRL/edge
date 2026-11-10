@@ -41,7 +41,7 @@ import '../onboarding/welcome.dart'
         PassphraseCancelled,
         askBackupPassphrase,
         runImport;
-import '../screens/home_screen.dart' show dbRebuiltCard;
+import '../screens/home_screen.dart' show dbRebuiltCard, go;
 import '../ui2.dart';
 import 'hevy_screen.dart';
 import 'phone_import.dart';
