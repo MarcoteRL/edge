@@ -31,6 +31,7 @@ import 'coach_config.dart';
 import 'coach_db.dart';
 import 'coach_prompt.dart';
 import 'coach_responses.dart';
+import '../state/locale_controller.dart' show LocaleController;
 
 // ── value types ──────────────────────────────────────────────────────────────
 
@@ -832,12 +833,59 @@ class CoachEngine {
     return m != null && int.parse(m.group(1)!) >= 3;
   }
 
+  /// Language names the model is told to write in, by app language code.
+  static const Map<String, String> replyLanguageNames = {
+    'es': 'Spanish (español)',
+    'de': 'German (Deutsch)',
+    'fr': 'French (français)',
+    'ru': 'Russian (русский)',
+    'th': 'Thai (ไทย)',
+    'hi': 'Hindi (हिन्दी)',
+    'zh': 'Simplified Chinese (简体中文)',
+    'pt': 'Portuguese (português)',
+    'it': 'Italian (italiano)',
+    'ja': 'Japanese (日本語)',
+  };
+
+  /// [body] with the app's language stated in its system message, so every
+  /// model reply (coach chat, briefings, journal) reads in the language the
+  /// app is shown in. English needs nothing. Structure the app parses stays
+  /// as specified: only the human-readable text changes language.
+  static Map<String, dynamic> withReplyLanguage(
+      Map<String, dynamic> body, String code) {
+    final name = replyLanguageNames[code];
+    final msgs = body['messages'];
+    if (name == null || msgs is! List) return body;
+    final rule = 'LANGUAGE: write every human-readable word of your reply in '
+        '$name, whatever language the data, these instructions or the user\'s '
+        'previous messages are in, unless the user explicitly asks for another '
+        'language. Keep any required format exactly as specified: separators, '
+        'JSON keys, field names, tool names, tags, units and numbers stay as '
+        'they are.';
+    final out = [for (final m in msgs) m is Map ? {...m} : m];
+    final i = out.indexWhere((m) => m is Map && m['role'] == 'system');
+    if (i >= 0) {
+      final m = out[i] as Map;
+      final content = m['content'];
+      if (content is String && content.contains('LANGUAGE: write every')) {
+        return body;
+      }
+      m['content'] = content is String ? '$content\n\n$rule' : rule;
+    } else {
+      out.insert(0, {'role': 'system', 'content': rule});
+    }
+    return {...body, 'messages': out};
+  }
+
   static Future<Map<String, dynamic>> _postChatOnce(
     CoachConfig config,
     Map<String, dynamic> body, {
     http.Client? client,
   }) async {
     final c = client ?? http.Client();
+    try {
+      body = withReplyLanguage(body, LocaleController.displayLanguageCode);
+    } catch (_) {/* no binding (a bare test): the prompt as written */}
     final model = body['model'] as String? ?? '';
     final api = config.api;
     final apiBase = config.apiBase;
