@@ -24,6 +24,9 @@ on:
       icon_hue:
         description: Icon hue shift in degrees (0 = upstream colours)
         default: '150'
+      runner:
+        description: macOS runner (macos-15-intel when arm64 has no capacity)
+        default: macos-latest
   push:
     branches: [main]
     paths-ignore:
@@ -43,7 +46,7 @@ jobs:
   ipa:
     # Never runs on the upstream repo, which has its own release pipeline.
     if: github.repository != 'OpenStrap/edge'
-    runs-on: macos-latest
+    runs-on: ${{ inputs.runner || 'macos-latest' }}
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
