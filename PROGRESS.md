@@ -292,3 +292,26 @@ numbers" (es "Calculando los números de anoche") and the Recovery ring showed
   (implicit tween on the value, not a 0→1 sweep), numbers cross-fade.
 - Evidence: test-files 42819433586 — analyze clean, 21 files, +275.
   Unit-tested, not hardware-validated.
+
+## 2026-11-10 — UX-06: Home "B+" (owner's pick from the concepts artifact)
+
+- RingTrio's default layout is now the B headline: recovery in F.n72 with
+  "▲/▼ n vs yesterday" (metricValueOn, final scores only) or "Best this
+  week" (≥ 3 of the 6 prior days), then recovery / sleep / strain as bars
+  (`HomeBarPainter`; strain target zone; values glide). The recovery number
+  is shown once. Accessibility layout (big text) keeps the ring rows.
+- Coach card near the top: the morning briefing (already generated once the
+  night is final) — one-liner typed once, first lines, the inputs as chips;
+  pending / connect states. The duplicate briefing row in the plan is gone.
+  The morning briefing's inputs now include the strength log.
+- Day strip: night band, sessions and the HR curve (`getDayTimeline`), with a
+  placeholder of the same size while it loads.
+- Training block: `data/strength_summary.dart` (last session's top sets and
+  records vs earlier sessions, working sets per muscle group over 7 days,
+  calendar days since each group, most-rested group + a recovery-band clause
+  only on a final score). Hevy sync stores lift muscles from
+  /v1/exercise_templates/{id} in exercise_def.
+- Evidence: test-files 42828079164 (analyze clean, 164 files, +1854 -4),
+  42830207591 (app_state_regressions passes alone: timing-flaky, untouched
+  code), 42830765178 (the 3 real ones fixed: calendar days; day-switcher test
+  now ensureVisible before tap). Unit-tested, not hardware-validated.
