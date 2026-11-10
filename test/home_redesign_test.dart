@@ -231,5 +231,29 @@ void main() {
     expect((a[0] as Rise).key, const ValueKey((0, Text)));
     expect((a[1] as Rise).key, const ValueKey((1, SizedBox)));
   });
+
+  testWidgets('calibrating: Recovery and Strain shown greyed, and say so',
+      (t) async {
+    _tall(t);
+    await t.pumpWidget(_host(const RingTrio(
+        d: HomeData(
+            readiness: Metric(note: 'need_baseline:have=2,need=14'),
+            readinessCalibrating: (value: 63.4, nights: 2, need: 14),
+            strain: Metric(note: 'need_baseline:have=1,need=3'),
+            strainCalibrating: 7.2))));
+    await t.pumpAndSettle();
+    expect(find.text('63'), findsOneWidget);
+    expect(find.text('Calibrating · 3 of 14'), findsOneWidget);
+    expect(find.text('7.2'), findsOneWidget);
+    expect(find.text('Calibrating'), findsOneWidget);
+  });
+
+  testWidgets('no estimate: the calibrating absence as before', (t) async {
+    _tall(t);
+    await t.pumpWidget(_host(const RingTrio(
+        d: HomeData(readiness: Metric(note: 'need_baseline:have=2,need=14')))));
+    await t.pumpAndSettle();
+    expect(find.textContaining('Calibrating ·'), findsNothing);
+  });
 }
 

@@ -66,6 +66,7 @@ class CoachDb {
     'v_baselines',
     'v_insights',
     'v_ecg_readings',
+    'v_strength_sets',
   };
 
   // Keywords that must never appear as standalone tokens (anything mutating or

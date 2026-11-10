@@ -43,6 +43,7 @@ import '../onboarding/welcome.dart'
         runImport;
 import '../screens/home_screen.dart' show dbRebuiltCard;
 import '../ui2.dart';
+import 'hevy_screen.dart';
 import 'phone_import.dart';
 import 'profile.dart';
 
@@ -554,6 +555,11 @@ class _DataScreenState extends State<DataScreen> {
                 ]),
                 const SizedBox(height: S.x5),
                 settingsGroup(c, l?.dataBringDataInGroup ?? 'Bring data in', [
+                  SetRow(LucideIcons.dumbbell, C.blue,
+                      l?.hevyTitle ?? 'Hevy',
+                      sub: l?.hevyRowSub ??
+                          'Strength workouts from Hevy: exercises, sets and weights',
+                      onTap: _busy ? null : () => go(c, const HevyScreen())),
                   SetRow(LucideIcons.upload, C.orange,
                       l?.dataImportFile ?? 'Import a file',
                       sub: l?.dataImportFileSub ??

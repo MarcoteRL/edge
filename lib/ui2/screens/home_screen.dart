@@ -1081,6 +1081,17 @@ _RingState _ringOf(HomeRingKind k, HomeData d, AppLocalizations? l) {
             frac: v / 100,
             provisional: true);
       }
+      // Still building the baseline: the greyed estimate, said to be one.
+      if (d.readinessCalibrating case final cal? when v == null) {
+        final have = cal.nights + 1;
+        return _RingState(k, l?.homeRingRecovery ?? 'Recovery',
+            LucideIcons.batteryCharging, readinessBand(cal.value, l).color,
+            value: '${cal.value.round()}',
+            sub: l?.homeCalibratingProgress(have, cal.need) ??
+                'Calibrating · $have of ${cal.need}',
+            frac: cal.value / 100,
+            provisional: true);
+      }
       return v == null
           ? _gap(k, l?.homeRingRecovery ?? 'Recovery', LucideIcons.batteryCharging,
               C.green, d.readiness, l?.homeReadinessNotScored ?? 'Not scored', l,
@@ -1105,6 +1116,14 @@ _RingState _ringOf(HomeRingKind k, HomeData d, AppLocalizations? l) {
               value: '${v.round()}', sub: band.label, frac: v / 100);
     case HomeRingKind.strain:
       final v = d.strain.value;
+      if (d.strainCalibrating case final cal? when v == null) {
+        return _RingState(k, l?.homeRingStrain ?? 'Strain', LucideIcons.zap,
+            C.purple,
+            value: displayFixed(cal, 1),
+            sub: l?.homeCalibrating ?? 'Calibrating',
+            frac: cal / 21,
+            provisional: true);
+      }
       // 0–21 is the scale's own ceiling, not a target invented here.
       return v == null
           ? _gap(k, l?.homeRingStrain ?? 'Strain', LucideIcons.zap, C.purple,
@@ -1738,6 +1757,12 @@ class HomeData {
   /// The day's finished sessions, oldest first (see [sessionsOfDay]).
   final List<Map<String, dynamic>> sessions;
 
+  /// Greyed estimates while the real scores are still calibrating — see
+  /// `compute/calibration_estimate.dart`. Only set when the real one is absent
+  /// for a baseline shortfall; never stored, never notified.
+  final ({double value, int nights, int need})? readinessCalibrating;
+  final double? strainCalibrating;
+
   const HomeData({
     this.name,
     this.dayId,
@@ -1767,6 +1792,8 @@ class HomeData {
     this.rhrUsual,
     this.respUsual,
     this.sessions = const [],
+    this.readinessCalibrating,
+    this.strainCalibrating,
   });
 
   /// The three illness fields, replaced together. Test-facing sugar, and they
@@ -1801,6 +1828,8 @@ class HomeData {
         rhrUsual: rhrUsual,
         respUsual: respUsual,
         sessions: sessions,
+        readinessCalibrating: readinessCalibrating,
+        strainCalibrating: strainCalibrating,
       );
 
   /// A day OTHER than today, for the Home day switcher.
@@ -1934,6 +1963,15 @@ class HomeData {
       hrvUsual: hrv.isEmpty ? null : await usualBefore('rmssd', dayId),
       rhrUsual: await usualBefore('rhr', dayId),
       sessions: await sessionsOfDay(repo, dayId),
+      readinessCalibrating: switch (d('readiness_calibrating')) {
+        {'value': final num v, 'nights': final num n, 'need': final num need} =>
+          (value: v.toDouble(), nights: n.toInt(), need: need.toInt()),
+        _ => null,
+      },
+      strainCalibrating: switch (d('strain_calibrating')) {
+        {'value': final num v} => v.toDouble(),
+        _ => null,
+      },
       respUsual: resp.isEmpty ? null : await usualBefore('resp_rate', dayId),
       steps: metricOf(d('steps')),
       calories: metricOf(d('calories')),

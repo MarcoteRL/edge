@@ -7318,7 +7318,7 @@
   "@homeWhyLabel": {
     "description": "Short label introducing the readiness driver list on Home."
   },
-  "homeCalibrating": "กำลังเรียนรู้ช่วงปกติของคุณ",
+  "homeCalibrating": "กำลังปรับเทียบ",
   "@homeCalibrating": {
     "description": "Ring value shown while a metric is still building its baseline."
   },
@@ -16379,5 +16379,19 @@
   "healthspanPaceHelp": "1x แก่ตามปฏิทิน 0x คงที่ ต่ำกว่า 0 คืออ่อนลง เทียบเดือนล่าสุดกับเดือนก่อนหน้า",
   "homeVitalUsual": "ปกติ {value}",
   "homeActivitiesTitle": "กิจกรรม",
-  "homeImAwake": "ฉันตื่นแล้ว"
+  "homeImAwake": "ฉันตื่นแล้ว",
+  "homeCalibratingProgress": "กำลังปรับเทียบ · {have} จาก {need}",
+  "coachFallbackLabel": "โมเดลสำรอง",
+  "coachFallbackHint": "ไม่บังคับ ลองหนึ่งครั้งถ้าโมเดลไม่ว่างหรือไม่มีแล้ว",
+  "hevyTitle": "Hevy",
+  "hevyRowSub": "การเวทจาก Hevy: ท่า เซ็ต และน้ำหนัก",
+  "hevyIntro": "วางคีย์ API ของ Hevy (Hevy Pro ที่ hevy.com/settings?developer) ระบบอ่านการออกกำลังกายเท่านั้น ไม่แก้ไข แต่ละรายการจะจับคู่กับเซสชันของสายรัดที่เกิดขึ้นพร้อมกัน หรือบันทึกเป็นเซสชันเวทใหม่ที่ให้คะแนนจากสายรัด",
+  "hevyKeyLabel": "คีย์ API",
+  "hevyKeyHint": "จาก hevy.com/settings?developer",
+  "hevySaveSync": "บันทึกและซิงค์",
+  "hevySyncNow": "ซิงค์ตอนนี้",
+  "hevyDisconnect": "ยกเลิกการเชื่อมต่อ",
+  "hevyConnected": "เชื่อมต่อแล้ว · ซิงค์ล่าสุด {when}",
+  "hevyResult": "ใหม่: {created} · จับคู่กับเซสชันสายรัด: {attached} · อัปเดต: {updated} · {sets} เซ็ต",
+  "hevyError": "ซิงค์ไม่สำเร็จ: {message}"
 }

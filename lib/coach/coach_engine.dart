@@ -799,6 +799,44 @@ class CoachEngine {
     Map<String, dynamic> body, {
     http.Client? client,
   }) async {
+    try {
+      return await _postChatOnce(config, body, client: client);
+    } on CoachException catch (e) {
+      // The configured fallback model, once, on the same endpoint and key —
+      // only for a failure a different model can plausibly avoid (quota or
+      // overload, a server error, a model that is not there). Never for a
+      // bad key, a refused payload or a malformed request: those would fail
+      // the same way and spend the user's quota twice.
+      final fb = config.fallbackModel;
+      final model = body['model'] as String? ?? '';
+      if (config.usesChatGpt ||
+          fb.isEmpty ||
+          fb == model ||
+          !fallbackWorthTrying(e.status)) {
+        rethrow;
+      }
+      return _postChatOnce(config, {...body, 'model': fb}, client: client);
+    }
+  }
+
+  /// Statuses another model on the same endpoint may answer differently:
+  /// 404 (model id unknown or retired), 429 (quota / rate), 5xx (overload).
+  static bool fallbackWorthTrying(int? status) =>
+      status == 404 || status == 429 || (status != null && status >= 500);
+
+  /// Gemini 3.x and later ignore the sampling params today and will reject
+  /// them ("deprecated: temperature, top_p, top_k"), on Google's own endpoint
+  /// and through any pass-through ("google/gemini-…"). Older Gemini keep them.
+  static bool geminiRejectsSampling(String model) {
+    final m = RegExp(r'gemini-(\d+)').firstMatch(model.toLowerCase());
+    return m != null && int.parse(m.group(1)!) >= 3;
+  }
+
+  static Future<Map<String, dynamic>> _postChatOnce(
+    CoachConfig config,
+    Map<String, dynamic> body, {
+    http.Client? client,
+  }) async {
     final c = client ?? http.Client();
     final model = body['model'] as String? ?? '';
     final api = config.api;
@@ -820,7 +858,9 @@ class CoachEngine {
       // own endpoint and through any pass-through provider alike. Strip them for
       // exactly those model versions; older Claude models and every other
       // provider keep their sampling params untouched.
-      if (claudeRejectsSampling(body['model'] as String? ?? '')) {
+      final sentModel = body['model'] as String? ?? '';
+      if (claudeRejectsSampling(sentModel) ||
+          geminiRejectsSampling(sentModel)) {
         body = {...body}
           ..remove('temperature')
           ..remove('top_p')
@@ -853,9 +893,11 @@ class CoachEngine {
           )
           .timeout(config.requestTimeout);
       if (resp.statusCode != 200) {
-        throw CoachException(chatgpt
-            ? chatGptHttpError(resp.statusCode, utf8.decode(resp.bodyBytes))
-            : 'Provider error (${resp.statusCode}): ${_briefErr(resp.body)}');
+        throw CoachException(
+            chatgpt
+                ? chatGptHttpError(resp.statusCode, utf8.decode(resp.bodyBytes))
+                : 'Provider error (${resp.statusCode}): ${_briefErr(resp.body)}',
+            status: resp.statusCode);
       }
       final Object? j;
       try {
@@ -1178,6 +1220,9 @@ class CoachEngine {
         'duration_min,steps,hrr_bpm,source,zone_min_json) — date is the LOCAL '
         'calendar day; filter "today\'s workout" by date, never by converting '
         'start_ts/end_ts yourself; '
+        'v_strength_sets(session_id,date,exercise,set_index,reps,load_kg,rpe,'
+        'hold_sec,note) — lifted sets, join v_sessions on session_id; '
+        'exercise "hevy:<name>" came from Hevy; '
         'v_baselines(key,value,mean,z,delta,ratio,n,updated_at); '
         'v_insights(id,kind,title,body,date,created_at,read); '
         'v_ecg_readings(id,start_ts,end_ts,date,wrist,status,category,'
@@ -1327,7 +1372,10 @@ class CoachEngine {
 
 class CoachException implements Exception {
   final String message;
-  CoachException(this.message);
+
+  /// The provider's HTTP status when the failure was an HTTP error reply.
+  final int? status;
+  CoachException(this.message, {this.status});
   @override
   String toString() => message;
 }

@@ -89,6 +89,10 @@ tables exist to you.
 - v_sessions(id, start_ts, end_ts, date, type, status, calories, strain, max_hr,
   duration_min, steps, hrr_bpm, source, zone_min_json) — `date` is the LOCAL
   day; filter on it, never on start_ts, and never convert timestamps yourself.
+- v_strength_sets(session_id, date, exercise, set_index, reps, load_kg, rpe,
+  hold_sec, note) — every lifted set, joined to v_sessions by session_id;
+  `exercise` is a key (`hevy:Bench Press (Barbell)` = imported from Hevy);
+  note ∈ '', warmup, dropset, failure. Volume = SUM(reps*load_kg).
 - v_baselines(key, value, mean, z, delta, ratio, n, updated_at).
 - v_insights(id, kind, title, body, date, created_at, read).
 Rules: SELECT or WITH…SELECT, one statement, no comments, no quoted identifiers,

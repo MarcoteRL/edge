@@ -3567,5 +3567,19 @@
   "healthspanPaceHelp": "1x envejece al ritmo del calendario, 0x se mantiene, por debajo de 0 rejuvenece. Compara el último mes con el anterior.",
   "homeVitalUsual": "Media {value}",
   "homeActivitiesTitle": "Actividades",
-  "homeImAwake": "Ya estoy despierto"
+  "homeImAwake": "Ya estoy despierto",
+  "homeCalibratingProgress": "Calibrando · {have} de {need}",
+  "coachFallbackLabel": "Modelo de reserva",
+  "coachFallbackHint": "opcional, se prueba una vez si el modelo está saturado o no existe",
+  "hevyTitle": "Hevy",
+  "hevyRowSub": "Entrenos de fuerza de Hevy: ejercicios, series y pesos",
+  "hevyIntro": "Pega tu clave de API de Hevy (Hevy Pro, en hevy.com/settings?developer). Los entrenos solo se leen, nunca se modifican. Cada uno se une a la sesión de la banda en la que ocurrió, o se registra como una sesión nueva de pesas puntuada con los datos de la banda.",
+  "hevyKeyLabel": "Clave de API",
+  "hevyKeyHint": "de hevy.com/settings?developer",
+  "hevySaveSync": "Guardar y sincronizar",
+  "hevySyncNow": "Sincronizar ahora",
+  "hevyDisconnect": "Desconectar",
+  "hevyConnected": "Conectado · última sincronización {when}",
+  "hevyResult": "Nuevos: {created} · Unidos a sesiones de la banda: {attached} · Actualizados: {updated} · {sets} series",
+  "hevyError": "No se pudo sincronizar: {message}"
 }

@@ -7295,9 +7295,9 @@
   "@homeWhyLabel": {
     "description": "Short label introducing the readiness driver list on Home."
   },
-  "homeCalibrating": "Learning your usual",
+  "homeCalibrating": "Calibrating",
   "@homeCalibrating": {
-    "description": "Ring value shown while a metric is still building its baseline."
+    "description": "Under a greyed Strain estimate while the personal quiet level is still calibrating."
   },
   "homeCalibratingNights": "{have} of {need} nights",
   "@homeCalibratingNights": {
@@ -16642,5 +16642,93 @@
   "homeImAwake": "I'm awake",
   "@homeImAwake": {
     "description": "Home button while the night is still in progress: ends today's sleep now and scores it."
+  },
+  "homeCalibratingProgress": "Calibrating · {have} of {need}",
+  "@homeCalibratingProgress": {
+    "description": "Under a greyed Recovery estimate while the personal baseline is still filling: nights so far of the nights needed.",
+    "placeholders": {
+      "have": {
+        "type": "int"
+      },
+      "need": {
+        "type": "int"
+      }
+    }
+  },
+  "coachFallbackLabel": "Fallback model",
+  "@coachFallbackLabel": {
+    "description": "Coach setup: the model tried once when the main one fails with quota/overload/not-found."
+  },
+  "coachFallbackHint": "optional, tried once if the model is busy or gone",
+  "@coachFallbackHint": {
+    "description": "Coach setup: the model tried once when the main one fails with quota/overload/not-found."
+  },
+  "hevyTitle": "Hevy",
+  "@hevyTitle": {
+    "description": "Hevy integration (Settings → Your data → Bring data in)."
+  },
+  "hevyRowSub": "Strength workouts from Hevy: exercises, sets and weights",
+  "@hevyRowSub": {
+    "description": "Hevy integration (Settings → Your data → Bring data in)."
+  },
+  "hevyIntro": "Paste your Hevy API key (Hevy Pro, at hevy.com/settings?developer). Workouts are read, never changed. Each one is matched to the band session it happened in, or logged as a new weight training session scored from the band.",
+  "@hevyIntro": {
+    "description": "Hevy integration (Settings → Your data → Bring data in)."
+  },
+  "hevyKeyLabel": "API key",
+  "@hevyKeyLabel": {
+    "description": "Hevy integration (Settings → Your data → Bring data in)."
+  },
+  "hevyKeyHint": "from hevy.com/settings?developer",
+  "@hevyKeyHint": {
+    "description": "Hevy integration (Settings → Your data → Bring data in)."
+  },
+  "hevySaveSync": "Save and sync",
+  "@hevySaveSync": {
+    "description": "Hevy integration (Settings → Your data → Bring data in)."
+  },
+  "hevySyncNow": "Sync now",
+  "@hevySyncNow": {
+    "description": "Hevy integration (Settings → Your data → Bring data in)."
+  },
+  "hevyDisconnect": "Disconnect",
+  "@hevyDisconnect": {
+    "description": "Hevy integration (Settings → Your data → Bring data in)."
+  },
+  "hevyConnected": "Connected · last sync {when}",
+  "@hevyConnected": {
+    "description": "Hevy integration (Settings → Your data → Bring data in).",
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "hevyResult": "New: {created} · Matched to band sessions: {attached} · Updated: {updated} · {sets} sets",
+  "@hevyResult": {
+    "description": "Hevy integration (Settings → Your data → Bring data in).",
+    "placeholders": {
+      "created": {
+        "type": "int"
+      },
+      "attached": {
+        "type": "int"
+      },
+      "updated": {
+        "type": "int"
+      },
+      "sets": {
+        "type": "int"
+      }
+    }
+  },
+  "hevyError": "Couldn't sync: {message}",
+  "@hevyError": {
+    "description": "Hevy integration (Settings → Your data → Bring data in).",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
   }
 }

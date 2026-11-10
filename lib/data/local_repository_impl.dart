@@ -22,6 +22,7 @@ import 'package:flutter/foundation.dart' show visibleForTesting;
 
 import '../compute/derivation_engine.dart';
 import '../compute/findings.dart' show servedReadiness;
+import '../compute/calibration_estimate.dart';
 import '../compute/hr_max.dart';
 import '../compute/inputs/canonical.dart'
     show deviceFlagOn, withoutWearableEstimates;
@@ -587,6 +588,78 @@ class LocalRepositoryImpl extends LocalRepository {
         note: activityNote('steps'),
       ),
     };
+
+    // CALIBRATION ESTIMATES (calibration_estimate.dart): a greyed Recovery from
+    // the first scored night and a greyed Strain from the first day, while the
+    // real ones are absent for a baseline shortfall and ONLY then. Computed
+    // here from stored values, never stored themselves.
+    bool coldStart(Object? metric) {
+      final note = metric is Map ? metric['note'] : null;
+      return note is String && note.startsWith('need_baseline:');
+    }
+
+    if (showOvernight &&
+        sleepBundle != null &&
+        provisionalReadiness == null &&
+        coldStart(daily['readiness'])) {
+      final before = (sleepBundle['date'] as String?) ?? todayDay;
+      Future<List<double>> hist(String key) async {
+        try {
+          return await LocalDb.trailingSeriesValues(key, 28, before: before);
+        } catch (_) {
+          return const [];
+        }
+      }
+
+      final rmssdHist = await hist('rmssd');
+      final rhrHist = await hist('rhr');
+      final respHist = await hist('resp_rate');
+      final est = calibratingRecovery(
+        rmssdMs: _scalar(sleepBundle, 'rmssd')?.toDouble(),
+        rmssdHistoryMs: rmssdHist,
+        restingHr: _scalar(sleepBundle, 'rhr')?.toDouble(),
+        restingHrHistory: rhrHist,
+        respRate: _scalar(sleepBundle, 'resp_rate')?.toDouble(),
+        respHistory: respHist,
+      );
+      if (est != null) {
+        daily['readiness_calibrating'] = {
+          'value': double.parse(est.toStringAsFixed(1)),
+          'nights': [rmssdHist.length, rhrHist.length].reduce(math.max),
+          'need': ana.readinessCompositeMinBaseline,
+        };
+      }
+    }
+    if (activityBundle != null && coldStart(daily['strain'])) {
+      final profile = Profile.fromMap(getProfileMap());
+      final win = (_sub(activityBundle, 'sleep.window')?['value'] as Map?);
+      final on = (win?['onset_ms'] as num?)?.toInt();
+      final off = (win?['offset_ms'] as num?)?.toInt();
+      final curve =
+          (_sub(activityBundle, 'series')?['hr_curve'] as List?) ?? const [];
+      final wake = <double>[
+        for (final p in curve)
+          if (p is Map && p['t'] is num && p['v'] is num)
+            if (on == null ||
+                off == null ||
+                (p['t'] as num) * 1000 < on ||
+                (p['t'] as num) * 1000 >= off)
+              (p['v'] as num).toDouble(),
+      ];
+      final est = calibratingStrain(
+        wakeHrPerMin: wake,
+        restingHr: (showOvernight ? _scalar(sleepBundle, 'rhr') : null)
+                ?.toDouble() ??
+            profile.restingHrManual?.toDouble(),
+        maxHr: estimatedMaxHr(profile.ageYears, null),
+        female: profile.sex == 'f',
+      );
+      if (est != null) {
+        daily['strain_calibrating'] = {
+          'value': double.parse(est.toStringAsFixed(1)),
+        };
+      }
+    }
 
     final hrv = rmssd == null
         ? null

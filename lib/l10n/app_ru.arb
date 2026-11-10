@@ -3438,7 +3438,7 @@
   "homeInsightsNoVersionStamp": "Тренды обновляются. После синхронизации это занимает около минуты.",
   "homeSyncBand": "Синхронизировать браслет",
   "homeWhyLabel": "Почему?",
-  "homeCalibrating": "Изучаем ваш обычный уровень",
+  "homeCalibrating": "Калибровка",
   "homeCalibratingNights": "{have} из {need} ночей",
   "@homeCalibratingNights": {
     "placeholders": {
@@ -8085,5 +8085,59 @@
     }
   },
   "homeActivitiesTitle": "Активности",
-  "homeImAwake": "Я проснулся"
+  "homeImAwake": "Я проснулся",
+  "homeCalibratingProgress": "Калибровка · {have} из {need}",
+  "@homeCalibratingProgress": {
+    "placeholders": {
+      "have": {
+        "type": "int"
+      },
+      "need": {
+        "type": "int"
+      }
+    }
+  },
+  "coachFallbackLabel": "Резервная модель",
+  "coachFallbackHint": "необязательно; пробуется один раз, если модель перегружена или недоступна",
+  "hevyTitle": "Hevy",
+  "hevyRowSub": "Силовые тренировки из Hevy: упражнения, подходы и веса",
+  "hevyIntro": "Вставьте API-ключ Hevy (Hevy Pro, hevy.com/settings?developer). Тренировки только читаются, никогда не изменяются. Каждая привязывается к сессии браслета, в которую она прошла, или записывается как новая силовая тренировка с оценкой по данным браслета.",
+  "hevyKeyLabel": "API-ключ",
+  "hevyKeyHint": "из hevy.com/settings?developer",
+  "hevySaveSync": "Сохранить и синхронизировать",
+  "hevySyncNow": "Синхронизировать",
+  "hevyDisconnect": "Отключить",
+  "hevyConnected": "Подключено · последняя синхронизация {when}",
+  "@hevyConnected": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "hevyResult": "Новых: {created} · Привязано к сессиям браслета: {attached} · Обновлено: {updated} · подходов: {sets}",
+  "@hevyResult": {
+    "placeholders": {
+      "created": {
+        "type": "int"
+      },
+      "attached": {
+        "type": "int"
+      },
+      "updated": {
+        "type": "int"
+      },
+      "sets": {
+        "type": "int"
+      }
+    }
+  },
+  "hevyError": "Не удалось синхронизировать: {message}",
+  "@hevyError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  }
 }

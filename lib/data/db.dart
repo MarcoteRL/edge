@@ -5594,6 +5594,27 @@ class LocalDb {
     });
   }
 
+  /// The whole set list of one session, replaced in one transaction: an
+  /// import that re-reads a workout (Hevy) must not leave the tail of a
+  /// longer earlier copy behind, which [saveStrengthSets] alone would.
+  static Future<void> replaceStrengthSets(
+    String sessionId,
+    List<Map<String, Object?>> sets,
+  ) async {
+    final db = await instance;
+    await db.transaction((txn) async {
+      await txn.delete('strength_set',
+          where: 'session_id = ?', whereArgs: [sessionId]);
+      for (var i = 0; i < sets.length; i++) {
+        await txn.insert('strength_set', {
+          ...sets[i],
+          'session_id': sessionId,
+          'seq': i,
+        });
+      }
+    });
+  }
+
   static Future<List<Map<String, Object?>>> strengthSets(
     String sessionId,
   ) async {
@@ -5997,6 +6018,7 @@ class LocalDb {
       'v_baselines',
       'v_insights',
       'v_ecg_readings',
+      'v_strength_sets',
     ];
     for (final v in views) {
       await db.execute('DROP VIEW IF EXISTS $v');
@@ -6167,6 +6189,21 @@ class LocalDb {
       FROM sessions
       LEFT JOIN session_score_mask m ON m.session_id = sessions.id
       WHERE private = 0
+    ''');
+    // What was lifted: one row per set, on the LOCAL day of its session, from
+    // the in-app logger and Hevy alike (`exercise` is the storage key —
+    // `hevy:<title>` reads as is). A private session's sets stay out, as the
+    // session does from v_sessions.
+    await db.execute('''
+      CREATE VIEW v_strength_sets AS
+      SELECT s.session_id,
+             strftime('%Y-%m-%d', ses.start_ts, 'unixepoch', 'localtime')
+               AS date,
+             s.exercise_key AS exercise, s.set_index, s.reps, s.load_kg,
+             s.rpe, s.hold_sec, s.note
+      FROM strength_set s
+      JOIN sessions ses ON ses.id = s.session_id
+      WHERE ses.private = 0
     ''');
     // Rolling personal baselines (json_extract; missing paths return NULL safely).
     await db.execute('''

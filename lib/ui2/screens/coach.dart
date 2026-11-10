@@ -906,7 +906,12 @@ class _MenuRow extends StatelessWidget {
 class _Preset {
   final String label, sub, baseUrl;
   final bool local;
-  const _Preset(this.label, this.sub, this.baseUrl, {this.local = false});
+
+  /// Filled in on tap, still editable: a provider whose ids are not
+  /// guessable (Gemini) starts on a known-good pair instead of a blank field.
+  final String? model, fallback;
+  const _Preset(this.label, this.sub, this.baseUrl,
+      {this.local = false, this.model, this.fallback});
 }
 
 List<_Preset> _presets(BuildContext c) {
@@ -918,6 +923,8 @@ List<_Preset> _presets(BuildContext c) {
     _Preset('OpenAI', 'api.openai.com', 'https://api.openai.com/v1'),
     _Preset('Anthropic', 'api.anthropic.com', 'https://api.anthropic.com/v1'),
     _Preset('OpenRouter', 'openrouter.ai', 'https://openrouter.ai/api/v1'),
+    _Preset('Gemini', 'generativelanguage.googleapis.com', kGeminiBaseUrl,
+        model: kGeminiDefaultModel, fallback: kGeminiFallbackModel),
   ];
 }
 
@@ -933,6 +940,7 @@ class _CoachSetupState extends State<CoachSetup> {
   late final TextEditingController _key;
   late final TextEditingController _search;
   late final TextEditingController _timeout;
+  late final TextEditingController _fallback;
   late CoachApi _api;
 
   /// "ChatGPT" is chosen instead of a base URL + key. Saved by [_save] only;
@@ -975,6 +983,7 @@ class _CoachSetupState extends State<CoachSetup> {
     _key = TextEditingController(text: cfg.apiKey ?? '');
     _search = TextEditingController();
     _timeout = TextEditingController(text: cfg.timeoutSeconds.toString());
+    _fallback = TextEditingController(text: cfg.fallbackModel);
     _api = cfg.api;
     _chatgpt = cfg.usesChatGpt;
     _chatgptAuth = cfg.chatgpt;
@@ -1038,6 +1047,7 @@ class _CoachSetupState extends State<CoachSetup> {
     _key.dispose();
     _search.dispose();
     _timeout.dispose();
+    _fallback.dispose();
     super.dispose();
   }
 
@@ -1112,6 +1122,7 @@ class _CoachSetupState extends State<CoachSetup> {
           pendingKeyDelete: _pendingKeyDelete,
         ),
         model: chosen,
+        fallbackModel: _fallback.text,
         api: _api,
         timeoutSeconds: timeoutSeconds,
       );
@@ -1244,7 +1255,8 @@ class _CoachSetupState extends State<CoachSetup> {
           _base.text = preset.baseUrl;
           _api = CoachApi.defaultFor(preset.baseUrl);
           _models = const [];
-          _model = '';
+          _model = preset.model ?? '';
+          _fallback.text = preset.fallback ?? '';
         }),
         child: Row(
           children: [
@@ -1566,6 +1578,15 @@ class _CoachSetupState extends State<CoachSetup> {
                       ),
                     ),
                   ),
+                  if (!_chatgpt) ...[
+                    const SizedBox(height: S.x4),
+                    OsTextField(
+                      controller: _fallback,
+                      label: l?.coachFallbackLabel ?? 'Fallback model',
+                      hint: l?.coachFallbackHint ??
+                          'optional, tried once if the model is busy or gone',
+                    ),
+                  ],
                   if (_isLocal) ...[
                     const SizedBox(height: S.x4),
                     OsTextField(

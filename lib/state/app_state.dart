@@ -129,6 +129,7 @@ import '../notify/tap_router.dart';
 import '../notify/water_buzzer.dart';
 import '../sync/background_sync.dart' show checkSyncStaleness;
 import '../platform/provisioning.dart' show checkSideloadExpiry;
+import '../import/hevy_import.dart' show HevyStore, HevySync, HevySyncResult;
 import '../sync/band_ownership.dart';
 import '../sync/high_freq_wake_window.dart';
 import '../sync/ios_bg_task.dart';
@@ -2366,6 +2367,8 @@ class AppState extends ChangeNotifier {
       unawaited(checkSyncStaleness(allowPermissionPrompt: true));
       // A sideloaded build's 7-day signature (iOS only; no-op elsewhere).
       unawaited(checkSideloadExpiry(allowPermissionPrompt: true));
+      // Hevy workouts, at most every few hours and only with a key saved.
+      unawaited(hevyAutoSync());
     } catch (e) {
       _log('[notify] cadence checks skipped: $e');
     }
@@ -2806,6 +2809,36 @@ class AppState extends ChangeNotifier {
       source: source,
     );
     await _reanalyzeForOverride(date);
+  }
+
+  /// Pull new Hevy workouts unless a sync ran in the last [kHevyAutoEvery].
+  /// Silent: no key, no network, a refused key — nothing happens and the
+  /// next open tries again.
+  static const kHevyAutoEvery = Duration(hours: 4);
+  Future<void> hevyAutoSync() async {
+    final r = repo;
+    if (r == null) return;
+    try {
+      final last = await HevyStore.lastSync();
+      if (last != null && DateTime.now().difference(last) < kHevyAutoEvery) {
+        return;
+      }
+      final res = await HevySync.run(r);
+      if (res != null && res.created + res.attached + res.updated > 0) {
+        notifyListeners();
+      }
+    } catch (e) {
+      _log('[hevy] auto sync skipped: $e');
+    }
+  }
+
+  /// Run a Hevy sync now (the Hevy screen's button). Throws what Hevy said.
+  Future<HevySyncResult?> hevySyncNow() async {
+    final r = repo;
+    if (r == null) return null;
+    final res = await HevySync.run(r);
+    notifyListeners();
+    return res;
   }
 
   /// "I'm awake": end today's detected night NOW. Saves the night as a
