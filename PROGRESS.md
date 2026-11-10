@@ -229,3 +229,24 @@ numbers" (es "Calculando los números de anoche") and the Recovery ring showed
   inside derive_tonight_pending_test) + 42723979505 (the remaining 4 files,
   +10). New `test/tonight_not_today_test.dart` (8). test-files timeout → 90 min.
   Unit-tested, not hardware-validated.
+
+## 2026-11-10 — UX-04: a morning check sees its own night
+
+- Reported on device: after a full night Sleep showed the night but Home and
+  Health were empty ("still being worked out") — nothing appears until the
+  data edge runs 60 min past the wake; a first-week user has no older night
+  to show meanwhile.
+- `kWakeConfirmMarginSec` 30 → 15 min. `getToday` now serves today's own
+  bundle as the overnight as soon as `recovery_state == provisional`
+  (`status.overnight_provisional`), ahead of any held-over prior night; the
+  readiness headline keeps its provisional path (greyed, never pinned) and the
+  freeze/pin still waits for the settle hour, as does the recovery push.
+- "I'm awake" on Home while `night_in_progress`: `AppState.markAwakeNow` saves
+  the detected onset → now as a manual window; `overnightSettled(userSet:)`
+  settles a SLEEP_MANUAL window once the band edge is within the confirm
+  margin of its wake.
+- §4.2 hotspot (readiness/recompute): pin and push paths untouched; only the
+  read seam and the state machine's margin moved. Not independently reviewed.
+- Evidence: test-files 42779064344 — analyze clean, 70 files, +617 ~2.
+  New cases in `overnight_settled_test` (4) and `recovery_states_test` (2).
+  Unit-tested, not hardware-validated.

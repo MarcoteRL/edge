@@ -54,6 +54,7 @@ unit test where the logic is pure. Device check on the sideloaded build.
 | FP-01 | Sideload expiry warning (card + notification) | ENH | P2 | S | done (runs 42686340140, 42686373738); device check pending |
 | FP-HS | Estimated physiological age (fork module) | ENH | P2 | M | done (run 42688204660) |
 | UX-01 | First-run Home: honest derive copy, no developer note on empty Recovery, day-by-day derive progress | BUG (UX) | P1 | S | done (runs 42683191519, 42684463978) |
+| UX-04 | Morning check: last night visible 15 min after waking (provisional), "I'm awake" button closes and scores the night at once | ENH (UX) | P1 | S | done (run 42779064344: analyze + 70 files, 617 passed); device check pending |
 | BUG-T01 | Evening stillness at the data edge published as today's night ("2h 38m from 20:57" while awake); `tonightStillGoing` defers it to the day it ends | BUG | P1 | S | done (runs 42717737790: +1195 before the 45-min cap, 42723979505: remainder); device check pending |
 | UX-02 | Home redesign, part 1: day-order hero rings (reading inside, strain target band, sweep-in), vitals row vs 28-day usual, staggered entrance, compact header, haptics | ENH (UX) | P1 | M | done (runs 42708664184: 574 tests; 42709538906: home_redesign_test); device check pending |
 | UX-03 | Home redesign, part 2: Activities list, recovery-tinted heroes, shared entrance on every detail screen (detailScaffold + Sleep tab), Recovery ring sweep | ENH (UX) | P2 | M | done (run 42712259267: analyze + 156 ui2/l10n files, 1767 passed); device check pending |
