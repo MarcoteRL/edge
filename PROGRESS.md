@@ -203,3 +203,29 @@ numbers" (es "Calculando los números de anoche") and the Recovery ring showed
 - Evidence: test-files run 42712259267 — analyze clean, 156 ui2/l10n test
   files, +1767 ~5 (skips pre-existing), incl. 14 cases in
   `test/home_redesign_test.dart`. Unit-tested, not hardware-validated.
+
+## 2026-11-10 — BUG-T01: tonight's open rest block is not today's night
+
+- Reported on device: Sleep showed "2h 38m, 20:57 → now" while the user was
+  awake at a desk. Cause: the live-edge day's search slice stops at the data
+  edge, so a still block begun this evening and still open there was cut at
+  "now" and owned by today (its cut end lands in today). The analytics'
+  `recordContinues` (unfinished-night deferral) was never wired in edge; it is
+  not used as-is because it also drops a real night begun before midnight
+  that is in progress at a morning sync.
+- Fix (`lib/compute/substrate.dart`): `tonightStillGoing` — live-edge slice,
+  block still open within `kUnfinishedNightEdgeSec` of the edge, onset on this
+  day at/after the stager's daytime-band start (11:00) → auto window dropped
+  for this day; the day it ends owns it.
+- No `kAlgoVersion` bump: only the live-edge day's output changes, and that
+  day re-derives on every sync; once the edge passes midnight the old code
+  already cut the slice at midnight and gave the block to the next day, so no
+  finalized row holds the bad window.
+- Not fixed here (analytics, sibling repo): the HR confirmation compares the
+  block against the median HR of the same slice, so quiet sitting passes; and
+  the real night may still bridge to an evening still block ≤ 90 min before
+  it, pulling onset early. Workaround: edit the night's times on Sleep.
+- Evidence: test-files 42717737790 (+1195, 0 failures, cut at the 45-min cap
+  inside derive_tonight_pending_test) + 42723979505 (the remaining 4 files,
+  +10). New `test/tonight_not_today_test.dart` (8). test-files timeout → 90 min.
+  Unit-tested, not hardware-validated.
