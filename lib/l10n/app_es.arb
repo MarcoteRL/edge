@@ -3566,5 +3566,6 @@
   "healthspanPaceNotYet": "Ritmo de envejecimiento: necesita un mes más de datos",
   "healthspanPaceHelp": "1x envejece al ritmo del calendario, 0x se mantiene, por debajo de 0 rejuvenece. Compara el último mes con el anterior.",
   "homeVitalUsual": "Media {value}",
-  "homeActivitiesTitle": "Actividades"
+  "homeActivitiesTitle": "Actividades",
+  "homeImAwake": "Ya estoy despierto"
 }

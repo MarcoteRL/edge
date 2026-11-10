@@ -111,8 +111,10 @@ class ReadinessData {
 
     // Same rule as Home: a provisional night shows its own number, greyed.
     final head = todayHeadlineOf(today);
-    final readiness = head['recovery_state'] == 'provisional'
-        ? metricOf(daily is Map ? daily['readiness_provisional'] : null)
+    final provisional = daily is Map ? daily['readiness_provisional'] : null;
+    final readiness = head['recovery_state'] == 'provisional' &&
+            provisional != null
+        ? metricOf(provisional)
         : overnightMetric(
             today, daily is Map ? daily['readiness'] : null);
 

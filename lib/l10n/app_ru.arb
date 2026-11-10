@@ -8084,5 +8084,6 @@
       }
     }
   },
-  "homeActivitiesTitle": "Активности"
+  "homeActivitiesTitle": "Активности",
+  "homeImAwake": "Я проснулся"
 }

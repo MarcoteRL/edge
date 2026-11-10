@@ -16638,5 +16638,9 @@
   "homeActivitiesTitle": "Activities",
   "@homeActivitiesTitle": {
     "description": "Home section listing the day's finished workout sessions."
+  },
+  "homeImAwake": "I'm awake",
+  "@homeImAwake": {
+    "description": "Home button while the night is still in progress: ends today's sleep now and scores it."
   }
 }

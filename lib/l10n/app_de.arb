@@ -3525,5 +3525,6 @@
   "healthspanPaceNotYet": "Alterungstempo: braucht noch einen Monat Daten",
   "healthspanPaceHelp": "1x altert mit dem Kalender, 0x bleibt stabil, unter 0 wird jünger. Letzter Monat gegen den davor.",
   "homeVitalUsual": "Üblich {value}",
-  "homeActivitiesTitle": "Aktivitäten"
+  "homeActivitiesTitle": "Aktivitäten",
+  "homeImAwake": "Ich bin wach"
 }

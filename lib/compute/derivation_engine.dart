@@ -2153,7 +2153,16 @@ bool overnightSettled({
   required int? sleepOffsetSec,
   required int dataEdgeSec,
   int? nowSec,
+  bool userSet = false,
 }) {
+  // "I'm awake" (or any window the user set): the wake is the user's word,
+  // not where a drain stopped, so there is nothing to wait for once the band
+  // has recorded up to it — within the same tolerance a detected wake gets.
+  if (userSet &&
+      sleepOffsetSec != null &&
+      dataEdgeSec >= sleepOffsetSec - kWakeConfirmMarginSec) {
+    return true;
+  }
   if (sleepOffsetSec == null) {
     if (nowSec == null) return false;
     final now = DateTime.fromMillisecondsSinceEpoch(nowSec * 1000);
@@ -2169,8 +2178,12 @@ bool overnightSettled({
 /// wake counts as CONFIRMED rather than "where the sync happened to stop".
 /// Mid-drain the stager closes the window at the newest record, so a wake
 /// sitting at the edge is no wake at all.
-// ponytail: fixed 30 min; tune against real drain timings if provisional flickers.
-const int kWakeConfirmMarginSec = 30 * 60;
+// ponytail: fixed 15 min; tune against real drain timings if provisional flickers.
+// Was 30: on a phone that meant opening the app after waking to a night that
+// stayed "still being worked out" for half an hour, then an hour for the rest.
+// A provisional night is never pinned, so a wrong early wake (a bathroom trip)
+// costs one re-derive, not a frozen headline.
+const int kWakeConfirmMarginSec = 15 * 60;
 
 /// A pin is only trusted for the night whose wake is within this of its own.
 const int kPinWakeToleranceSec = 60 * 60;
@@ -2203,9 +2216,13 @@ RecoveryState? recoveryStateOf({
   required int? wakeSec,
   required int dataEdgeSec,
   int? nowSec,
+  bool userSet = false,
 }) {
   if (overnightSettled(
-      sleepOffsetSec: wakeSec, dataEdgeSec: dataEdgeSec, nowSec: nowSec)) {
+      sleepOffsetSec: wakeSec,
+      dataEdgeSec: dataEdgeSec,
+      nowSec: nowSec,
+      userSet: userSet)) {
     return RecoveryState.finalReady;
   }
   if (wakeSec == null) return null;

@@ -44,6 +44,24 @@ void main() {
           RecoveryState.provisional);
     });
 
+    test('a user-set wake is final once the band reaches it', () {
+      expect(
+          recoveryStateOf(
+              wakeSec: wake, dataEdgeSec: wake - 60, userSet: true),
+          RecoveryState.finalReady);
+      // ...but not while the band is still far behind it.
+      expect(
+          recoveryStateOf(
+              wakeSec: wake,
+              dataEdgeSec: wake - 2 * kWakeConfirmMarginSec,
+              userSet: true),
+          RecoveryState.nightInProgress);
+    });
+
+    test('a detected wake confirms after 15 minutes, not 30', () {
+      expect(kWakeConfirmMarginSec, 15 * 60);
+    });
+
     test('edge an hour past wake → final', () {
       expect(recoveryStateOf(wakeSec: wake, dataEdgeSec: wake + 3600),
           RecoveryState.finalReady);

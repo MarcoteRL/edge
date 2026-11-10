@@ -404,7 +404,17 @@ class LocalRepositoryImpl extends LocalRepository {
         todayFresh?['activity_state']?.toString() ?? 'missing';
     final showingPriorOvernight =
         todayFresh?['showing_prior_overnight'] == true;
-    final showOvernight = overnightState == 'ready' || showingPriorOvernight;
+    final recoveryState = todayFresh?['recovery_state']?.toString();
+    // A CONFIRMED wake (the edge has run [kWakeConfirmMarginSec] past it) shows
+    // today's own night straight away — sleep, HRV, resting HR — marked
+    // provisional, the way a morning check expects, instead of holding it
+    // back (or covering it with an older night) for the full settle hour.
+    // Only the readiness headline keeps its provisional treatment (greyed,
+    // never pinned): it is the one number the morning freezes.
+    final provisionalNight =
+        recoveryState == 'provisional' && overnightState != 'ready';
+    final showOvernight =
+        overnightState == 'ready' || showingPriorOvernight || provisionalNight;
     // Read the night freshness names (`overnight_day`, today when `ready`),
     // including a settled no-sleep night. _latestBundle skips no-sleep days
     // for the newest day WITH sleep, so it served an older night's numbers
@@ -412,7 +422,7 @@ class LocalRepositoryImpl extends LocalRepository {
     final overnightDay = todayFresh?['overnight_day']?.toString();
     final sleepBundle = !showOvernight
         ? null
-        : overnightState == 'ready'
+        : overnightState == 'ready' || provisionalNight
         ? todayBundle
         : (overnightDay == null ? null : await _bundle(overnightDay));
     final activityBundle = activityState == 'ready' ? todayBundle : null;
@@ -445,7 +455,7 @@ class LocalRepositoryImpl extends LocalRepository {
     // Readiness/recovery: when the composite abstains for lack of baseline, the
     // envelope carries a `need_baseline:have=H,need=N` note. Pass that note
     // through so the hero can render "Need N more nights" instead of a number.
-    var readinessScalar = showOvernight
+    var readinessScalar = showOvernight && !provisionalNight
         ? _scalar(sleepBundle, 'readiness')
         : null;
     // FROZEN MORNING HEADLINE (#128): once today's overnight first settled on a
@@ -459,7 +469,6 @@ class LocalRepositoryImpl extends LocalRepository {
     // The pin is only trusted for the night it was taken on (its wake within an
     // hour of today's window, see LocalDb.headlinePinFor); a pin from an older
     // build or an earlier sleep block yields to the live final value.
-    final recoveryState = todayFresh?['recovery_state']?.toString();
     Map<String, int>? readinessUpdate;
     if (overnightState == 'ready') {
       final pin = await LocalDb.headlinePinFor(todayDay);
@@ -647,11 +656,13 @@ class LocalRepositoryImpl extends LocalRepository {
         'activity_day': todayFresh?['activity_day'],
         'activity_computed_at': todayFresh?['activity_computed_at'],
         'overnight_state': overnightState,
-        'overnight_day': todayFresh?['overnight_day'],
+        'overnight_day':
+            provisionalNight ? todayDay : todayFresh?['overnight_day'],
         'overnight_computed_at': todayFresh?['overnight_computed_at'],
         'recovery_state': recoveryState,
+        'overnight_provisional': provisionalNight,
         'showing_prior_overnight':
-            todayFresh?['showing_prior_overnight'] == true,
+            !provisionalNight && todayFresh?['showing_prior_overnight'] == true,
       },
       'step_goal': await _stepGoal(),
     };

@@ -41,12 +41,14 @@ void main() {
     String? day,
     num? rmssd,
     num? readiness,
+    List<String>? flags,
   }) async {
     await db.insert('day_result', {
       'day_id': day ?? todayLabel(),
       'algo_version': kAlgoVersion,
       'payload_json': jsonEncode({
         'scalars': {'rmssd': ?rmssd, 'readiness': ?readiness},
+        'flags': ?flags,
         'sleep': {
           'window': {
             'value': {'offset_ms': wakeSec * 1000},
@@ -414,4 +416,75 @@ void main() {
       expect(h2['recovery_update'], isNull);
     });
   });
+
+  group('a morning check sees its own night', () {
+    Future<Map<String, dynamic>> today() async {
+      await LocalDb.refreshComputeFreshness();
+      return LocalRepositoryImpl(getProfileMap: () => const {}).getToday();
+    }
+
+    String yesterday() {
+      final y = DateTime.now().subtract(const Duration(days: 1));
+      return '${y.year.toString().padLeft(4, '0')}-'
+          '${y.month.toString().padLeft(2, '0')}-'
+          '${y.day.toString().padLeft(2, '0')}';
+    }
+
+    test('a confirmed wake serves tonight\'s night, provisional, over the '
+        'prior one', () async {
+      final wake = nowSec - 25 * 60;
+      await seed(
+        day: yesterday(),
+        wakeSec: wake - 24 * 3600,
+        edgeSec: wake - 20 * 3600,
+        rmssd: 77,
+      );
+      await seed(
+          wakeSec: wake,
+          edgeSec: wake + kWakeConfirmMarginSec,
+          rmssd: 11,
+          readiness: 27.6);
+      final t = await today();
+      expect(t['status']['recovery_state'], 'provisional');
+      expect(t['status']['overnight_provisional'], isTrue);
+      expect(t['status']['showing_prior_overnight'], isFalse);
+      expect(t['status']['overnight_day'], todayLabel());
+      expect(t['hrv']['rmssd'], 11);
+      // The headline stays provisional: greyed, never in the final slot.
+      final h = todayHeadlineOf(t);
+      expect(h['recovery_state'], 'provisional');
+      expect(h['recovery'], 27.6);
+      expect((t['daily']['readiness'] as Map)['value'], '—');
+    });
+
+    test('a wake still at the edge holds the night back as before', () async {
+      final wake = nowSec - 10 * 60;
+      await seed(wakeSec: wake, edgeSec: wake + 60, rmssd: 11);
+      final t = await today();
+      expect(t['status']['recovery_state'], 'night_in_progress');
+      expect(t['status']['overnight_provisional'], isFalse);
+      expect(t['hrv'], isNull);
+    });
+
+    test("an \"I'm awake\" window settles once the band reaches it", () async {
+      final wake = nowSec - 2 * 60;
+      await seed(
+          wakeSec: wake,
+          edgeSec: wake - 60,
+          rmssd: 11,
+          flags: const ['SLEEP_MANUAL']);
+      final t = await today();
+      expect(t['status']['overnight_state'], 'ready');
+      expect(t['status']['recovery_state'], 'final');
+      expect(t['hrv']['rmssd'], 11);
+    });
+
+    test('a detected wake at the same edge does not', () async {
+      final wake = nowSec - 2 * 60;
+      await seed(wakeSec: wake, edgeSec: wake - 60, rmssd: 11);
+      final t = await today();
+      expect(t['status']['overnight_state'], isNot('ready'));
+    });
+  });
 }
+

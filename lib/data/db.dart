@@ -13768,14 +13768,18 @@ class LocalDb {
       // without the stamp fall back to the band's edge.
       final edgeSec =
           (decoded['data_edge_sec'] as num?)?.toInt() ?? bandEdgeSec;
+      final flags = decoded['flags'];
+      // A window the user set ("I'm awake", or edited times) ends where they
+      // said, so it settles as soon as the band has recorded up to it.
+      final userSet = flags is List && flags.contains('SLEEP_MANUAL');
       if (dayId == today) {
         recoveryState = recoveryStateOf(
           wakeSec: wakeSec,
           dataEdgeSec: edgeSec,
           nowSec: nowSec,
+          userSet: userSet,
         )?.wire;
       }
-      final flags = decoded['flags'];
       // 'Not sleep' is the user's own verdict on the night, so it needs no
       // settling and is as final an overnight as a detected absence. Without
       // this a rejected today was never the overnight day: Home held the
@@ -13787,6 +13791,7 @@ class LocalDb {
             sleepOffsetSec: wakeSec,
             dataEdgeSec: edgeSec,
             nowSec: nowSec,
+            userSet: userSet,
           )) {
         // When the give-up lands; getToday re-checks then, since a quiet
         // strap triggers no derive to do it.

@@ -1886,9 +1886,13 @@ class HomeData {
     // read too. A provisional night shows its own number, greyed.
     final head = todayHeadlineOf(today);
     final recoveryState = head['recovery_state'] as String?;
-    final readiness = recoveryState == 'provisional'
-        ? metricOf(d('readiness_provisional'))
-        : overnightMetric(today, d('readiness'), l);
+    // Provisional shows its own greyed number when it has one; a provisional
+    // night with no number yet (still calibrating) reads the main envelope,
+    // which carries why.
+    final readiness =
+        recoveryState == 'provisional' && d('readiness_provisional') != null
+            ? metricOf(d('readiness_provisional'))
+            : overnightMetric(today, d('readiness'), l);
     final absentDiag = readiness.value != null
         ? null
         : await LocalDb.readinessAbsentDiag(
@@ -2015,6 +2019,22 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
 
   /// Whether Home has already played its entrance (see [Rise]).
   bool _entered = false;
+
+  /// "I'm awake" is saving the night (see [AppState.markAwakeNow]).
+  bool _waking = false;
+
+  Future<void> _imAwake(BuildContext c) async {
+    final app = c.read<AppState>();
+    setState(() => _waking = true);
+    try {
+      await app.markAwakeNow();
+    } catch (_) {
+      // The night stays as detected; it still settles on its own.
+    } finally {
+      if (mounted) setState(() => _waking = false);
+    }
+    if (mounted) await _load();
+  }
 
   /// The day requested by the switcher, or null for "today" — the same
   /// null-means-today convention [_load] and [HomeData.load] already used
@@ -2603,6 +2623,21 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
             );
           }),
 
+        // Still asleep as far as the band knows: one tap ends the night now
+        // and scores it, rather than waiting for the band to see the wake.
+        if (isToday &&
+            widget.data == null &&
+            d.recoveryState == 'night_in_progress') ...[
+          const SizedBox(height: S.x3),
+          BigButton(
+            l?.homeImAwake ?? "I'm awake",
+            icon: LucideIcons.sunrise,
+            color: C.blue,
+            soft: true,
+            busy: _waking,
+            onTap: _waking ? null : () => _imAwake(c),
+          ),
+        ],
         if (_VitalsStrip.has(d)) ...[
           const SizedBox(height: S.x3),
           Rise(1,

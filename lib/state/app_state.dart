@@ -2808,6 +2808,24 @@ class AppState extends ChangeNotifier {
     await _reanalyzeForOverride(date);
   }
 
+  /// "I'm awake": end today's detected night NOW. Saves the night as a
+  /// user-set window (the detected onset, the wake as this moment) and
+  /// re-derives, so it is scored as soon as the band has recorded up to now
+  /// instead of waiting for the edge to run past a detected wake (see
+  /// [overnightSettled]'s `userSet`). False when there is no night to end.
+  Future<bool> markAwakeNow() async {
+    if (repo == null) return false;
+    final day = todayLabel();
+    final sleep = await repo!.getDaySleep(day);
+    final onset = (sleep['onset_ts'] as num?)?.toInt();
+    if (onset == null) return false;
+    final now = DateTime.now();
+    if (now.millisecondsSinceEpoch ~/ 1000 <= onset) return false;
+    await setSleepOverride(
+        day, DateTime.fromMillisecondsSinceEpoch(onset * 1000), now);
+    return true;
+  }
+
   /// Confirm the HR-led fallback's proposal for [date] (Approach 2): accept the
   /// window it already computed, promoting 'auto_fallback' → 'confirmed' so the
   /// prompt stops showing. Reads the current window from the derived day.
