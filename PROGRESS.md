@@ -281,3 +281,14 @@ numbers" (es "Calculando los números de anoche") and the Recovery ring showed
   the 4 were coach_setup_api_test's lazy-list harness, fixed by a taller test
   view) and 42816248437 (all coach tests + tokens, +400). Unit-tested, not
   hardware-validated; Hevy not exercised against the live API (no key here).
+
+## 2026-11-10 — UX-05: quiet loading on Home
+
+- Owner: the "Updating your numbers" card on every open read as amateur.
+  Over a screen that already has numbers, sync/derive is now said in the
+  header line (`_syncLine`: small spinner + "Syncing…/Updating…/
+  Connecting…", cross-faded with "Synced through …"); the card stays only on
+  the bare path (nothing to show yet). Ring arcs glide old → new value
+  (implicit tween on the value, not a 0→1 sweep), numbers cross-fade.
+- Evidence: test-files 42819433586 — analyze clean, 21 files, +275.
+  Unit-tested, not hardware-validated.
