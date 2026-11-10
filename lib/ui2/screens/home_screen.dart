@@ -41,7 +41,7 @@ import '../../compute/findings.dart'
         kReadinessEasyBelow,
         kReadinessGoodFrom,
         kReadinessRestBelow;
-import '../../data/day_label.dart' show todayLabel, calendarDaysBetween;
+import '../../data/day_label.dart' show todayLabel, calendarDaysBetween, dayLabelOf;
 import '../../platform/provisioning.dart'
     show Provisioning, sideloadExpiryNotice;
 import '../../compute/onehz_pipeline.dart'
