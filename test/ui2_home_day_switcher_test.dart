@@ -410,6 +410,9 @@ void main() {
       final tile = find.text(label);
       await t.scrollUntilVisible(tile, 300,
           scrollable: find.byType(Scrollable).first);
+      // scrollUntilVisible stops once any part shows; tap needs the centre.
+      await t.ensureVisible(tile);
+      await t.pumpAndSettle();
       await t.tap(tile);
       await _settle(t);
 
