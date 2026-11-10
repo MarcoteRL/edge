@@ -53,6 +53,14 @@ jobs:
         with:
           persist-credentials: false
 
+      # BGContinuedProcessingTask needs the iOS 26 SDK. macos-latest already
+      # defaults to Xcode 26; the Intel image does not, so pick the newest 26.
+      - name: Select Xcode 26
+        run: |
+          x=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          if [ -n "$x" ]; then sudo xcode-select -s "$x"; fi
+          xcodebuild -version
+
       - uses: subosito/flutter-action@v2
         with:
           # Same pin as build.yml/test.yml. Bump all three together.
