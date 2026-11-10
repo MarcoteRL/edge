@@ -79,4 +79,24 @@ void main() {
           isNull);
     });
   });
+
+  test('templates and muscles from Hevy\'s shapes', () {
+    final w = {
+      'exercises': [
+        {'title': 'Squat (Barbell)', 'exercise_template_id': 'D04AC939'},
+        {'title': 'No template'},
+      ]
+    };
+    expect(hevyTemplatesOf(w), {'Squat (Barbell)': 'D04AC939'});
+    expect(
+        hevyMusclesOf({
+          'primary_muscle_group': 'quadriceps',
+          'secondary_muscle_groups': ['glutes', 'hamstrings'],
+        }),
+        {
+          'primary': ['quadriceps'],
+          'secondary': ['glutes', 'hamstrings'],
+        });
+  });
 }
+

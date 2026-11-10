@@ -5615,6 +5615,61 @@ class LocalDb {
     });
   }
 
+  /// Register (or refresh) one exercise's name and muscles — what an import
+  /// like Hevy knows about a lift the built-in catalogue does not.
+  /// [muscles] is `{primary: [...], secondary: [...]}`.
+  static Future<void> putExerciseDef(
+    String key,
+    String label,
+    Map<String, List<String>> muscles, {
+    String equipment = '',
+  }) async {
+    final db = await instance;
+    await db.insert(
+      'exercise_def',
+      {
+        'key': key,
+        'label': label,
+        'muscles_json': jsonEncode(muscles),
+        'equipment': equipment,
+        'custom': 1,
+        'created_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// `key → {label, primary, secondary}` for the given exercise keys that have
+  /// a stored definition; keys without one are simply missing.
+  static Future<Map<String, ({String label, List<String> primary, List<String> secondary})>>
+      exerciseDefs(Iterable<String> keys) async {
+    final ks = keys.toSet().toList();
+    if (ks.isEmpty) return const {};
+    final db = await instance;
+    final out = <String, ({String label, List<String> primary, List<String> secondary})>{};
+    for (var i = 0; i < ks.length; i += 400) {
+      final chunk = ks.sublist(i, i + 400 > ks.length ? ks.length : i + 400);
+      final rows = await db.query('exercise_def',
+          where: 'key IN (${List.filled(chunk.length, '?').join(',')})',
+          whereArgs: chunk);
+      for (final r in rows) {
+        List<String> list(Object? v) =>
+            v is List ? [for (final x in v) '$x'] : const <String>[];
+        Map? m;
+        try {
+          final j = jsonDecode('${r['muscles_json'] ?? '{}'}');
+          m = j is Map ? j : null;
+        } catch (_) {}
+        out['${r['key']}'] = (
+          label: '${r['label']}',
+          primary: list(m?['primary']),
+          secondary: list(m?['secondary']),
+        );
+      }
+    }
+    return out;
+  }
+
   static Future<List<Map<String, Object?>>> strengthSets(
     String sessionId,
   ) async {

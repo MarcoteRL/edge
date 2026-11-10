@@ -39,24 +39,25 @@ void _tall(WidgetTester t) {
   addTearDown(t.view.reset);
 }
 
-Iterable<Ring> _rings(WidgetTester t) => t
+Iterable<HomeBarPainter> _bars(WidgetTester t) => t
     .widgetList<CustomPaint>(find.byType(CustomPaint))
     .map((w) => w.painter)
-    .whereType<Ring>();
+    .whereType<HomeBarPainter>();
 
 void main() {
-  testWidgets('rings read sleep, recovery, strain, left to right', (t) async {
+  testWidgets('bars read recovery, sleep, strain, top to bottom', (t) async {
     _tall(t);
     await t.pumpWidget(_host(const RingTrio(d: _day)));
     await t.pumpAndSettle();
-    final sleep = t.getCenter(find.text('SLEEP')).dx;
-    final recovery = t.getCenter(find.text('RECOVERY')).dx;
-    final strain = t.getCenter(find.text('STRAIN')).dx;
-    expect(sleep, lessThan(recovery));
-    expect(recovery, lessThan(strain));
+    final recovery = t.getCenter(find.text('Recovery')).dy;
+    final sleep = t.getCenter(find.text('Sleep')).dy;
+    final strain = t.getCenter(find.text('Strain')).dy;
+    expect(recovery, lessThan(sleep));
+    expect(sleep, lessThan(strain));
   });
 
-  testWidgets('the reading is drawn inside its ring, once', (t) async {
+  testWidgets('the headline number appears once; bars carry the others',
+      (t) async {
     _tall(t);
     await t.pumpWidget(_host(const RingTrio(d: _day)));
     await t.pumpAndSettle();
@@ -65,11 +66,11 @@ void main() {
     expect(find.text('8.4'), findsOneWidget);
   });
 
-  testWidgets('the strain ring carries the day\'s target zone', (t) async {
+  testWidgets('the strain bar carries the day\'s target zone', (t) async {
     _tall(t);
     await t.pumpWidget(_host(const RingTrio(d: _day)));
     await t.pumpAndSettle();
-    final banded = _rings(t).where((r) => r.bandFrom != null).toList();
+    final banded = _bars(t).where((r) => r.bandFrom != null).toList();
     expect(banded, hasLength(1));
     expect(banded.single.bandFrom, closeTo(10 / 21, 1e-9));
     expect(banded.single.bandTo, closeTo(14 / 21, 1e-9));
@@ -81,26 +82,49 @@ void main() {
         d: HomeData(
             strain: Metric(value: 8.4, confidence: .8, tier: MetricTier.high)))));
     await t.pumpAndSettle();
-    expect(_rings(t).where((r) => r.bandFrom != null), isEmpty);
+    expect(_bars(t).where((r) => r.bandFrom != null), isEmpty);
   });
 
-  testWidgets('reduced motion paints the finished ring on the first frame',
+  testWidgets('reduced motion paints the finished bars on the first frame',
       (t) async {
     _tall(t);
     await t.pumpWidget(
         _host(const RingTrio(d: _day), reduceMotion: true));
     await t.pump();
-    expect(_rings(t).map((r) => r.t), everyElement(1.0));
+    expect(_bars(t).map((r) => r.v), contains(closeTo(.72, 1e-9)));
   });
 
-  testWidgets('with motion the ring sweeps in, then finishes', (t) async {
+  testWidgets('with motion the bars fill in, then finish', (t) async {
     _tall(t);
     await t.pumpWidget(_host(const RingTrio(d: _day)));
     await t.pump(const Duration(milliseconds: 100));
-    // Recovery 72 → the arc is still on its way to 0.72.
-    expect(_rings(t).map((r) => r.v), isNot(contains(closeTo(.72, 1e-9))));
+    expect(_bars(t).map((r) => r.v), isNot(contains(closeTo(.72, 1e-9))));
     await t.pumpAndSettle();
-    expect(_rings(t).map((r) => r.v), contains(closeTo(.72, 1e-9)));
+    expect(_bars(t).map((r) => r.v), contains(closeTo(.72, 1e-9)));
+  });
+
+  testWidgets('better than yesterday says by how much', (t) async {
+    _tall(t);
+    await t.pumpWidget(_host(const RingTrio(
+        d: HomeData(
+            readiness: Metric(value: 72, confidence: .8, tier: MetricTier.high),
+            recoveryState: 'final',
+            readinessYesterday: 63,
+            readinessWeekMax: 70))));
+    await t.pumpAndSettle();
+    expect(find.text('▲ 9 vs yesterday'), findsOneWidget);
+    expect(find.text('BEST THIS WEEK'), findsOneWidget);
+  });
+
+  testWidgets('no delta on a provisional number', (t) async {
+    _tall(t);
+    await t.pumpWidget(_host(const RingTrio(
+        d: HomeData(
+            readiness: Metric(value: 72, confidence: .8, tier: MetricTier.high),
+            recoveryState: 'provisional',
+            readinessYesterday: 63))));
+    await t.pumpAndSettle();
+    expect(find.textContaining('vs yesterday'), findsNothing);
   });
 
   testWidgets('vitals: each reading against its usual, resting HR once',
@@ -268,7 +292,7 @@ void main() {
     await t.pumpAndSettle();
     await t.pumpWidget(trio(80));
     await t.pump(const Duration(milliseconds: 50));
-    final mid = _rings(t).map((r) => r.v).firstWhere((v) => v > 0);
+    final mid = _bars(t).map((r) => r.v).firstWhere((v) => v > 0);
     expect(mid, greaterThan(.39));
     expect(mid, lessThan(.8));
     await t.pumpAndSettle();

@@ -8142,5 +8142,59 @@
   },
   "homeSyncingShort": "Синхронизация…",
   "homeUpdatingShort": "Обновление…",
-  "homeConnectingShort": "Подключение…"
+  "homeConnectingShort": "Подключение…",
+  "homeVsYesterdayUp": "▲ {n} к вчера",
+  "@homeVsYesterdayUp": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "homeVsYesterdayDown": "▼ {n} к вчера",
+  "@homeVsYesterdayDown": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "homeBestThisWeek": "Лучший за неделю",
+  "homeCoachTitle": "Коуч · сегодня",
+  "homeCoachPending": "Утренний разбор появится, когда ночь будет окончательно обработана.",
+  "homeCoachConnect": "Подключите модель, чтобы каждое утро получать короткий разбор дня.",
+  "homeCoachChipTraining": "Тренировки",
+  "homeDayStripTitle": "Ваш день по часам",
+  "homeTrainingLast": "Последняя тренировка",
+  "homeTrainingLastHevy": "Последняя тренировка · Hevy",
+  "homeTrainingWeek": "Рабочие подходы за неделю",
+  "homeTrainingSets": "{n} подх.",
+  "@homeTrainingSets": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "homeTrainingPr": "Рекорд",
+  "homeTrainingNext": "Следующее: {group}, не тренировали {days} дн.",
+  "@homeTrainingNext": {
+    "placeholders": {
+      "group": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "homeTrainingGreen": "Восстановление позволяет.",
+  "homeTrainingYellow": "Сегодня лучше умеренная интенсивность.",
+  "homeTrainingRed": "Сегодня лучше что-то лёгкое или отдых.",
+  "muscleChest": "Грудь",
+  "muscleBack": "Спина",
+  "muscleLegs": "Ноги",
+  "muscleShoulders": "Плечи",
+  "muscleArms": "Руки",
+  "muscleCore": "Кор"
 }

@@ -16742,5 +16742,120 @@
   "homeConnectingShort": "Connecting…",
   "@homeConnectingShort": {
     "description": "Home header status line while work is in flight, beside a small spinner."
+  },
+  "homeVsYesterdayUp": "▲ {n} vs yesterday",
+  "@homeVsYesterdayUp": {
+    "description": "Home B+ layout (headline, coach card, day strip, training block).",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "homeVsYesterdayDown": "▼ {n} vs yesterday",
+  "@homeVsYesterdayDown": {
+    "description": "Home B+ layout (headline, coach card, day strip, training block).",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "homeBestThisWeek": "Best this week",
+  "@homeBestThisWeek": {
+    "description": "Home B+ layout (headline, coach card, day strip, training block)."
+  },
+  "homeCoachTitle": "Coach · today",
+  "@homeCoachTitle": {
+    "description": "Home B+ layout (headline, coach card, day strip, training block)."
+  },
+  "homeCoachPending": "Your morning read is written once your night is final.",
+  "@homeCoachPending": {
+    "description": "Home B+ layout (headline, coach card, day strip, training block)."
+  },
+  "homeCoachConnect": "Connect a model to get a short read of your day every morning.",
+  "@homeCoachConnect": {
+    "description": "Home B+ layout (headline, coach card, day strip, training block)."
+  },
+  "homeCoachChipTraining": "Training log",
+  "@homeCoachChipTraining": {
+    "description": "Home B+ layout (headline, coach card, day strip, training block)."
+  },
+  "homeDayStripTitle": "Your day, hour by hour",
+  "@homeDayStripTitle": {
+    "description": "Home B+ layout (headline, coach card, day strip, training block)."
+  },
+  "homeTrainingLast": "Last workout",
+  "@homeTrainingLast": {
+    "description": "Home B+ layout (headline, coach card, day strip, training block)."
+  },
+  "homeTrainingLastHevy": "Last workout · Hevy",
+  "@homeTrainingLastHevy": {
+    "description": "Home B+ layout (headline, coach card, day strip, training block)."
+  },
+  "homeTrainingWeek": "Working sets this week",
+  "@homeTrainingWeek": {
+    "description": "Home B+ layout (headline, coach card, day strip, training block)."
+  },
+  "homeTrainingSets": "{n} sets",
+  "@homeTrainingSets": {
+    "description": "Home B+ layout (headline, coach card, day strip, training block).",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "homeTrainingPr": "PR",
+  "@homeTrainingPr": {
+    "description": "Home B+ layout (headline, coach card, day strip, training block)."
+  },
+  "homeTrainingNext": "Next up: {group}, {days} days since you last trained it.",
+  "@homeTrainingNext": {
+    "description": "Home B+ layout (headline, coach card, day strip, training block).",
+    "placeholders": {
+      "group": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "homeTrainingGreen": "Your recovery is up for it.",
+  "@homeTrainingGreen": {
+    "description": "Home B+ layout (headline, coach card, day strip, training block)."
+  },
+  "homeTrainingYellow": "Keep the intensity moderate today.",
+  "@homeTrainingYellow": {
+    "description": "Home B+ layout (headline, coach card, day strip, training block)."
+  },
+  "homeTrainingRed": "Today, something light or rest is the better call.",
+  "@homeTrainingRed": {
+    "description": "Home B+ layout (headline, coach card, day strip, training block)."
+  },
+  "muscleChest": "Chest",
+  "@muscleChest": {
+    "description": "Home B+ layout (headline, coach card, day strip, training block)."
+  },
+  "muscleBack": "Back",
+  "@muscleBack": {
+    "description": "Home B+ layout (headline, coach card, day strip, training block)."
+  },
+  "muscleLegs": "Legs",
+  "@muscleLegs": {
+    "description": "Home B+ layout (headline, coach card, day strip, training block)."
+  },
+  "muscleShoulders": "Shoulders",
+  "@muscleShoulders": {
+    "description": "Home B+ layout (headline, coach card, day strip, training block)."
+  },
+  "muscleArms": "Arms",
+  "@muscleArms": {
+    "description": "Home B+ layout (headline, coach card, day strip, training block)."
+  },
+  "muscleCore": "Core",
+  "@muscleCore": {
+    "description": "Home B+ layout (headline, coach card, day strip, training block)."
   }
 }

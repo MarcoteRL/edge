@@ -97,6 +97,29 @@ List<Map<String, Object?>> hevySetsOf(Map<String, dynamic> w, int atTs) {
   return out;
 }
 
+/// `exercise title → exercise_template_id` for one workout, so the muscles of
+/// each lift can be looked up once per template.
+Map<String, String> hevyTemplatesOf(Map<String, dynamic> w) => {
+      for (final ex in (w['exercises'] as List?) ?? const [])
+        if (ex is Map &&
+            '${ex['title'] ?? ''}'.trim().isNotEmpty &&
+            ex['exercise_template_id'] != null)
+          '${ex['title']}'.trim(): '${ex['exercise_template_id']}',
+    };
+
+/// The muscles of a Hevy exercise template, as `exercise_def` stores them.
+Map<String, List<String>> hevyMusclesOf(Map<String, dynamic> template) => {
+      'primary': [
+        if ('${template['primary_muscle_group'] ?? ''}'.isNotEmpty)
+          '${template['primary_muscle_group']}',
+      ],
+      'secondary': [
+        for (final m
+            in (template['secondary_muscle_groups'] as List?) ?? const [])
+          '$m',
+      ],
+    };
+
 /// The finished session a Hevy window should be attached to: the one it
 /// overlaps most, provided they overlap by at least half of the SHORTER of
 /// the two (a band-detected fragment of the gym session, or the session the
@@ -153,6 +176,18 @@ class HevyApi {
       ],
       pageCount: (j['page_count'] as num?)?.toInt() ?? page,
     );
+  }
+
+  /// One exercise template (name, primary and secondary muscle groups), or
+  /// null when Hevy has no such template.
+  Future<Map<String, dynamic>?> exerciseTemplate(String id) async {
+    final resp = await _c
+        .get(Uri.parse('$base/exercise_templates/${Uri.encodeComponent(id)}'),
+            headers: {'api-key': apiKey, 'accept': 'application/json'})
+        .timeout(const Duration(seconds: 30));
+    if (resp.statusCode != 200) return null;
+    final j = jsonDecode(utf8.decode(resp.bodyBytes));
+    return j is Map ? j.cast<String, dynamic>() : null;
   }
 
   void close() => _c.close();
@@ -236,6 +271,7 @@ class HevySync {
         .millisecondsSinceEpoch ~/
         1000;
     var created = 0, attached = 0, updated = 0, skipped = 0, sets = 0;
+    final templates = <String, String>{};
     try {
       pages:
       for (var page = 1; page <= maxPages; page++) {
@@ -250,6 +286,7 @@ class HevySync {
           // Newest first: the first one older than the cutoff ends the walk.
           if (win.start < cutoff) break pages;
           final rows = hevySetsOf(w, win.start);
+          templates.addAll(hevyTemplatesOf(w));
           final outcome = await _file(repo, win.start, win.end, rows);
           switch (outcome) {
             case 'created':
@@ -264,6 +301,24 @@ class HevySync {
           if (outcome != 'skipped') sets += rows.length;
         }
         if (page >= r.pageCount) break;
+      }
+      // The muscles of every lift not described yet, so Home can count the
+      // week's sets per muscle group. Bounded per sync; the rest next time.
+      try {
+        final known = await LocalDb.exerciseDefs(
+            templates.keys.map((t) => '$kHevyExercisePrefix$t'));
+        var fetched = 0;
+        for (final e in templates.entries) {
+          final key = '$kHevyExercisePrefix${e.key}';
+          if (known.containsKey(key) || fetched >= 60) continue;
+          fetched++;
+          final tpl = await api.exerciseTemplate(e.value);
+          if (tpl == null) continue;
+          await LocalDb.putExerciseDef(key, e.key, hevyMusclesOf(tpl),
+              equipment: '${tpl['equipment'] ?? ''}');
+        }
+      } catch (_) {
+        // Muscles are a nicety; the workouts above are already filed.
       }
       await HevyStore.markSynced(t);
       return (

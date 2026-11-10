@@ -19,6 +19,7 @@
 
 import '../coach/coach_config.dart';
 import '../coach/coach_engine.dart';
+import '../data/strength_summary.dart';
 import '../data/day_label.dart';
 import '../data/local_repository.dart';
 import '../models/metric.dart' show whyFromNote;
@@ -87,6 +88,9 @@ const String kWithheldKey = 'withheld';
 /// this map, so what the model saw and what the user sees are the same thing.
 /// [wallNow] is the real clock for the sweep's partial-day check, separate
 /// from [now] (the day being read) so a caller can pin both.
+String _trimKg(double kg) =>
+    kg == kg.roundToDouble() ? kg.toStringAsFixed(0) : kg.toStringAsFixed(1);
+
 Future<Map<String, dynamic>> collectBriefingInputs(
   LocalRepository repo,
   BriefingPeriod period, {
@@ -170,6 +174,40 @@ Future<Map<String, dynamic>> collectBriefingInputs(
         withheld.add('wake_time');
       }
     }
+    // Training, when there is any (the in-app strength log and Hevy): the last
+    // session's top sets, the week's working sets per muscle group, and how
+    // long since each group was trained. Absent = nothing lifted in 28 days,
+    // which is not a refused metric, so it is simply left out.
+    try {
+      final st = await loadStrengthSummary(now: now);
+      final last = st?.last;
+      if (last != null) {
+        final at = DateTime.fromMillisecondsSinceEpoch(last.startTs * 1000);
+        final ago = (now ?? DateTime.now()).difference(at).inHours ~/ 24;
+        String lift(TopLift l) {
+          final top = l.loadKg != null && l.loadKg! > 0
+              ? 'top ${_trimKg(l.loadKg!)} kg x ${l.reps ?? '?'}'
+              : (l.reps != null ? 'top ${l.reps} reps' : 'logged');
+          return '${l.label} ${l.sets} sets, $top${l.pr ? ' (new best)' : ''}';
+        }
+        out['last_strength_workout'] = [
+          ago == 0 ? 'today' : '$ago day${ago == 1 ? '' : 's'} ago',
+          if (last.durationMin != null) '${last.durationMin} min',
+          if (last.strain != null) 'strain ${last.strain!.toStringAsFixed(1)}',
+          ...last.lifts.take(8).map(lift),
+        ].join('; ');
+      }
+      if (st != null && st.weekSets.isNotEmpty) {
+        out['working_sets_last_7_days'] = [
+          for (final e in st.weekSets.entries) '${e.key.name} ${e.value}'
+        ].join(', ');
+      }
+      if (st != null && st.daysSince.isNotEmpty) {
+        out['days_since_trained'] = [
+          for (final e in st.daysSince.entries) '${e.key.name} ${e.value}'
+        ].join(', ');
+      }
+    } catch (_) {/* no strength log readable → the briefing runs without it */}
     if (withheld.isNotEmpty) out[kWithheldKey] = withheld;
   } else {
     // The evening pass is the nightly SWEEP, not a recap. It used to hand over

@@ -315,6 +315,15 @@ class F {
       fontWeight: FontWeight.w700,
       letterSpacing: -1.8,
       fontFeatures: _tab);
+  /// Home's headline number: the one figure the morning is about.
+  static const n72 = TextStyle(
+      fontFamily: _f,
+      fontFamilyFallback: _fb,
+      fontSize: 72,
+      height: .95,
+      fontWeight: FontWeight.w800,
+      letterSpacing: -3,
+      fontFeatures: _tab);
   static const n34 = TextStyle(
       fontFamily: _f,
       fontFamilyFallback: _fb,
