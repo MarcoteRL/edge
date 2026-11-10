@@ -16730,5 +16730,17 @@
         "type": "String"
       }
     }
+  },
+  "homeSyncingShort": "Syncing…",
+  "@homeSyncingShort": {
+    "description": "Home header status line while work is in flight, beside a small spinner."
+  },
+  "homeUpdatingShort": "Updating…",
+  "@homeUpdatingShort": {
+    "description": "Home header status line while work is in flight, beside a small spinner."
+  },
+  "homeConnectingShort": "Connecting…",
+  "@homeConnectingShort": {
+    "description": "Home header status line while work is in flight, beside a small spinner."
   }
 }

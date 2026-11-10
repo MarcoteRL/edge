@@ -16393,5 +16393,8 @@
   "hevyDisconnect": "ยกเลิกการเชื่อมต่อ",
   "hevyConnected": "เชื่อมต่อแล้ว · ซิงค์ล่าสุด {when}",
   "hevyResult": "ใหม่: {created} · จับคู่กับเซสชันสายรัด: {attached} · อัปเดต: {updated} · {sets} เซ็ต",
-  "hevyError": "ซิงค์ไม่สำเร็จ: {message}"
+  "hevyError": "ซิงค์ไม่สำเร็จ: {message}",
+  "homeSyncingShort": "กำลังซิงค์…",
+  "homeUpdatingShort": "กำลังอัปเดต…",
+  "homeConnectingShort": "กำลังเชื่อมต่อ…"
 }

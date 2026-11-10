@@ -3581,5 +3581,8 @@
   "hevyDisconnect": "Desconectar",
   "hevyConnected": "Conectado · última sincronización {when}",
   "hevyResult": "Nuevos: {created} · Unidos a sesiones de la banda: {attached} · Actualizados: {updated} · {sets} series",
-  "hevyError": "No se pudo sincronizar: {message}"
+  "hevyError": "No se pudo sincronizar: {message}",
+  "homeSyncingShort": "Sincronizando…",
+  "homeUpdatingShort": "Actualizando…",
+  "homeConnectingShort": "Conectando…"
 }

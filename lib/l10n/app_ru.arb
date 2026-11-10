@@ -8139,5 +8139,8 @@
         "type": "String"
       }
     }
-  }
+  },
+  "homeSyncingShort": "Синхронизация…",
+  "homeUpdatingShort": "Обновление…",
+  "homeConnectingShort": "Подключение…"
 }

@@ -97,9 +97,10 @@ void main() {
     _tall(t);
     await t.pumpWidget(_host(const RingTrio(d: _day)));
     await t.pump(const Duration(milliseconds: 100));
-    expect(_rings(t).any((r) => r.t < 1), isTrue);
+    // Recovery 72 → the arc is still on its way to 0.72.
+    expect(_rings(t).map((r) => r.v), isNot(contains(closeTo(.72, 1e-9))));
     await t.pumpAndSettle();
-    expect(_rings(t).map((r) => r.t), everyElement(1.0));
+    expect(_rings(t).map((r) => r.v), contains(closeTo(.72, 1e-9)));
   });
 
   testWidgets('vitals: each reading against its usual, resting HR once',
@@ -254,6 +255,25 @@ void main() {
         d: HomeData(readiness: Metric(note: 'need_baseline:have=2,need=14')))));
     await t.pumpAndSettle();
     expect(find.textContaining('Calibrating ·'), findsNothing);
+  });
+
+  testWidgets('a new value glides from the old one, not from empty',
+      (t) async {
+    _tall(t);
+    Widget trio(num rv) => _host(RingTrio(
+        d: HomeData(
+            readiness:
+                Metric(value: rv, confidence: .8, tier: MetricTier.high))));
+    await t.pumpWidget(trio(40));
+    await t.pumpAndSettle();
+    await t.pumpWidget(trio(80));
+    await t.pump(const Duration(milliseconds: 50));
+    final mid = _rings(t).map((r) => r.v).firstWhere((v) => v > 0);
+    expect(mid, greaterThan(.39));
+    expect(mid, lessThan(.8));
+    await t.pumpAndSettle();
+    expect(find.text('80'), findsOneWidget);
+    expect(find.text('40'), findsNothing);
   });
 }
 

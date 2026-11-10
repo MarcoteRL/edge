@@ -3540,5 +3540,8 @@
   "hevyDisconnect": "Trennen",
   "hevyConnected": "Verbunden · letzte Synchronisierung {when}",
   "hevyResult": "Neu: {created} · Band-Sitzungen zugeordnet: {attached} · Aktualisiert: {updated} · {sets} Sätze",
-  "hevyError": "Synchronisierung fehlgeschlagen: {message}"
+  "hevyError": "Synchronisierung fehlgeschlagen: {message}",
+  "homeSyncingShort": "Synchronisiert…",
+  "homeUpdatingShort": "Aktualisiert…",
+  "homeConnectingShort": "Verbindet…"
 }

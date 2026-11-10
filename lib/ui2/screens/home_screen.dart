@@ -1217,11 +1217,15 @@ class _Dial extends StatelessWidget {
     final inside = valueInside && r.measured;
     // The arc draws itself in from empty once, on first paint. Reduced motion
     // gets the finished ring straight away (motion() collapses the duration).
+    // The arc GLIDES to its value: from empty on first paint, and from the
+    // old value to the new one when a sync lands, instead of jumping.
+    // Reduced motion gets the value straight away.
+    final target = r.frac ?? 0;
     return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: 1),
+      tween: Tween(begin: 0, end: target),
       duration: motion(c, Motion.sweep),
       curve: Curves.easeOutCubic,
-      builder: (c, t, _) => Stack(alignment: Alignment.center, children: [
+      builder: (c, v, _) => Stack(alignment: Alignment.center, children: [
         CustomPaint(
           size: Size.infinite,
           // Calibrating draws as discrete dashes filling in night by night;
@@ -1232,9 +1236,8 @@ class _Dial extends StatelessWidget {
               // "6 of 14" draws as 14 divisions with 6 filled.
               ? DashedRing(r.frac ?? 0, r.arc(p), p.track,
                   stroke: stroke, segments: r.need ?? 24)
-              : Ring(r.frac ?? 0, r.arc(p), p.track,
+              : Ring(Motion.enabled(c) ? v : target, r.arc(p), p.track,
                   stroke: stroke,
-                  t: animate(c, t),
                   solid: r.measured,
                   bandFrom: r.bandFrom,
                   bandTo: r.bandTo),
@@ -1249,10 +1252,14 @@ class _Dial extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.baseline,
                 textBaseline: TextBaseline.alphabetic,
                 children: [
-                  Text(
-                    presentationText(AppLocalizations.of(c), r.value),
-                    style: (hero ? F.n34 : F.n24)
-                        .copyWith(color: r.provisional ? p.ink3 : p.ink),
+                  AnimatedSwitcher(
+                    duration: motion(c, Motion.slow),
+                    child: Text(
+                      presentationText(AppLocalizations.of(c), r.value),
+                      key: ValueKey(r.value),
+                      style: (hero ? F.n34 : F.n24)
+                          .copyWith(color: r.provisional ? p.ink3 : p.ink),
+                    ),
                   ),
                   if (r.kind == HomeRingKind.recovery)
                     Text('%', style: F.cap.copyWith(color: p.ink3)),
@@ -2322,6 +2329,47 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
     return null;
   }
 
+  /// The header's status line: "Synced through 8:12" at rest, and while
+  /// something is in flight a small spinner with one word — syncing, updating,
+  /// connecting — cross-faded in its place. The quiet signal a screen full of
+  /// numbers needs; the full card is only for a screen with none.
+  Widget _syncLine(BuildContext c, String? dayId, AppLocalizations? l) {
+    final syncing = syncingNowOf(c);
+    final deriving = derivingOf(c);
+    if ((syncing || deriving) && _syncTapped) {
+      _syncTapped = false;
+      _syncTapTimer?.cancel();
+    }
+    final busy = syncing
+        ? (l?.homeSyncingShort ?? 'Syncing…')
+        : deriving
+            ? (l?.homeUpdatingShort ?? 'Updating…')
+            : _syncTapped
+                ? (l?.homeConnectingShort ?? 'Connecting…')
+                : null;
+    final p = P.of(c);
+    return AnimatedSwitcher(
+      duration: motion(c, Motion.slow),
+      child: busy == null
+          ? KeyedSubtree(
+              key: const ValueKey('synced'),
+              child: syncedThroughLine(c, dayId, l))
+          : Row(
+              key: ValueKey(busy),
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox.square(
+                  dimension: 10,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 1.5, color: p.ink3),
+                ),
+                const SizedBox(width: S.x2),
+                Text(busy, style: F.cap.copyWith(color: p.ink3)),
+              ],
+            ),
+    );
+  }
+
   Widget _bareStatusCard(BuildContext c, HomeData d, AppLocalizations? l,
       {required bool pastDay}) {
     // A PAST day with nothing on it is a settled fact, not a sync problem —
@@ -2538,7 +2586,7 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
                 runSpacing: 2,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  syncedThroughLine(c, d.dayId, l),
+                  _syncLine(c, d.dayId, l),
                   ?batteryLine(c),
                 ],
               ),
@@ -2564,14 +2612,11 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
             child: Text(l?.homeBackToToday ?? 'Back to today'),
           ),
         ),
-      // A sync or a derive in flight on an ordinary morning. It used to show
-      // only on a bare day, so yesterday's rings sat on screen during a sync
-      // with nothing but a grey "Synced through" line to say anything moved.
-      if (!bare && isToday)
-        if (_phaseStatusCard(c, l) case final phase?) ...[
-          phase,
-          const SizedBox(height: S.x3),
-        ],
+      // A sync or a derive over a screen that already has numbers is said in
+      // the header line (see [_syncLine]), not by a card pushed over them:
+      // the numbers on screen are the last good ones, and they update in
+      // place when the new ones land. The card is for a screen with nothing
+      // to show yet (the bare path).
       // A sideloaded build's signature is about to lapse (iOS, free Apple ID).
       // Nothing on an App Store / TestFlight build, nor when handed data.
       if (isToday && widget.data == null) const _SideloadExpiryCard(),
