@@ -10,7 +10,9 @@ import 'package:openstrap_edge/ui2/screens/journal_compose.dart';
 import 'package:openstrap_edge/ui2/ui2.dart';
 
 Future<void> _mount(WidgetTester tester, CoachConfig config) async {
-  tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+  // Tall enough that the API picker below the presets (Gemini made it six)
+  // is built by the lazy list at mount.
+  tester.view.physicalSize = const Size(390 * 3, 1100 * 3);
   tester.view.devicePixelRatio = 3;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(

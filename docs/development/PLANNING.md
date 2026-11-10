@@ -54,6 +54,9 @@ unit test where the logic is pure. Device check on the sideloaded build.
 | FP-01 | Sideload expiry warning (card + notification) | ENH | P2 | S | done (runs 42686340140, 42686373738); device check pending |
 | FP-HS | Estimated physiological age (fork module) | ENH | P2 | M | done (run 42688204660) |
 | UX-01 | First-run Home: honest derive copy, no developer note on empty Recovery, day-by-day derive progress | BUG (UX) | P1 | S | done (runs 42683191519, 42684463978) |
+| FP-CAL | Calibration estimates: greyed Recovery from night 1 / Strain from day 1 while the real ones need 14 nights / 3 days (read-time, never stored) | ENH (owner request) | P1 | M | done; device check pending |
+| FP-GEM | Coach: Gemini preset (gemini-3.8-flash → gemini-3.5-flash-lite fallback), fallback model on 404/429/5xx, Gemini 3+ sampling stripped | ENH | P2 | S | done |
+| FP-HEVY | Hevy import: sets into strength_set, attached to the overlapping band session or logged as a band-scored weight-training session; v_strength_sets for the coach | ENH | P2 | M | done; needs a Hevy Pro key to verify |
 | UX-04 | Morning check: last night visible 15 min after waking (provisional), "I'm awake" button closes and scores the night at once | ENH (UX) | P1 | S | done (run 42779064344: analyze + 70 files, 617 passed); device check pending |
 | BUG-T01 | Evening stillness at the data edge published as today's night ("2h 38m from 20:57" while awake); `tonightStillGoing` defers it to the day it ends | BUG | P1 | S | done (runs 42717737790: +1195 before the 45-min cap, 42723979505: remainder); device check pending |
 | UX-02 | Home redesign, part 1: day-order hero rings (reading inside, strain target band, sweep-in), vitals row vs 28-day usual, staggered entrance, compact header, haptics | ENH (UX) | P1 | M | done (runs 42708664184: 574 tests; 42709538906: home_redesign_test); device check pending |

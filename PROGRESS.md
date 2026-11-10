@@ -250,3 +250,32 @@ numbers" (es "Calculando los números de anoche") and the Recovery ring showed
 - Evidence: test-files 42779064344 — analyze clean, 70 files, +617 ~2.
   New cases in `overnight_settled_test` (4) and `recovery_states_test` (2).
   Unit-tested, not hardware-validated.
+
+## 2026-11-10 — FP-CAL, FP-GEM, FP-HEVY
+
+- Calibration (owner decision, deliberately softer than AGENTS §3.3 and
+  labelled as such everywhere): `compute/calibration_estimate.dart`. Recovery
+  estimate = the composite's own inputs/signs/weights against a centre and
+  spread that blend a generic adult reference (worth 3 nights) with the user's
+  nights; oriented z capped at ±2; logistic. Strain estimate = the real
+  net-TRIMP scorer priced at the population quiet level, over the stored
+  1-min HR curve minus the sleep window. Computed in `getToday` only when the
+  real metric is absent with `need_baseline:`; shown greyed with
+  "Calibrating · n of 14" / "Calibrating". Not in metric_series, day_result,
+  pins, notifications or charts; no pipeline change, so no kAlgoVersion bump
+  and the WHOOP freeze goldens are untouched. Note: the real Recovery needs 14
+  nights per input (readinessCompositeMinBaseline), not 4.
+- Gemini: `kGeminiBaseUrl` (OpenAI-compatible), default `gemini-3.8-flash`
+  (GA 2026-09-02), fallback `gemini-3.5-flash-lite`. `CoachConfig.fallbackModel`
+  (prefs), `postChat` retries once on the fallback for 404/429/5xx only;
+  `geminiRejectsSampling` strips temperature/top_p/top_k for gemini ≥ 3.
+- Hevy: `import/hevy_import.dart` (GET /v1/workouts, `api-key` header, Hevy
+  Pro). Key in the keychain. First sync 90 days, then from last sync − 3 days;
+  newest-first walk stops at the cutoff. Re-sync replaces a workout's sets
+  (`LocalDb.replaceStrengthSets`), never duplicates; a session with
+  hand-logged sets is left alone. Auto-sync from cadence checks every 4 h.
+  New coach view `v_strength_sets` (allow-listed; reads strength_set +
+  sessions, private sessions excluded). Settings → Your data → Bring data in
+  → Hevy.
+- Evidence: see the test-files run recorded in PLANNING. Unit-tested, not
+  hardware-validated; Hevy not exercised against the live API (no key here).
