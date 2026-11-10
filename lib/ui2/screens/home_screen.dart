@@ -1766,6 +1766,26 @@ class _DayStripState extends State<_DayStrip> {
                 (t: (e['t'] as num).toInt(), v: (e['v'] as num).toDouble()),
           ];
           final start = (m?['day_start'] as num?)?.toInt();
+          final p = P.of(c);
+          final l = AppLocalizations.of(c);
+          // While it loads the card keeps its place, so nothing below it
+          // jumps when the curve arrives.
+          if (snap.connectionState != ConnectionState.done) {
+            return Surface(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(
+                    (l?.homeDayStripTitle ?? 'Your day, hour by hour')
+                        .toUpperCase(),
+                    style: F.over.copyWith(color: p.ink3)),
+                const SizedBox(height: S.x3),
+                Container(
+                    height: 96,
+                    decoration:
+                        BoxDecoration(color: p.track, borderRadius: R.rSm)),
+                const SizedBox(height: S.x6),
+              ]),
+            );
+          }
           if (hr.length < 2 || start == null) return const SizedBox.shrink();
           final d0 = DateTime.fromMillisecondsSinceEpoch(start * 1000);
           final end = DateTime(d0.year, d0.month, d0.day + 1)
@@ -1781,8 +1801,6 @@ class _DayStripState extends State<_DayStrip> {
             ...spans(m?['naps'], 'onset_ts', 'wake_ts'),
           ];
           final sessions = spans(m?['sessions'], 'start_ts', 'end_ts');
-          final p = P.of(c);
-          final l = AppLocalizations.of(c);
           return Surface(
             onTap: widget.onOpen,
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

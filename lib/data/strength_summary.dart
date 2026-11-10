@@ -5,6 +5,7 @@
 // rest). Nothing is estimated: a lift with no known muscles counts toward no
 // group, and a group nobody trained is simply not listed.
 import '../ui2/activity/catalogue.dart' show exerciseByKey;
+import 'day_label.dart' show calendarDaysBetween;
 import 'db.dart';
 
 /// The six groups Home speaks in. Every muscle name either source uses maps
@@ -187,9 +188,12 @@ Future<StrengthSummary?> loadStrengthSummary({DateTime? now}) async {
   return (
     last: last,
     weekSets: weekSets,
+    // Calendar days, local: trained yesterday evening is 1 day this morning,
+    // however few hours ago that was.
     daysSince: {
       for (final e in lastTrained.entries)
-        e.key: ((nowSec - e.value) / 86400).floor(),
+        e.key: calendarDaysBetween(
+            DateTime.fromMillisecondsSinceEpoch(e.value * 1000), t),
     },
   );
 }
