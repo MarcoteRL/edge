@@ -315,3 +315,16 @@ numbers" (es "Calculando los números de anoche") and the Recovery ring showed
   42830207591 (app_state_regressions passes alone: timing-flaky, untouched
   code), 42830765178 (the 3 real ones fixed: calendar days; day-switcher test
   now ensureVisible before tap). Unit-tested, not hardware-validated.
+
+## 2026-11-10 — BUG-L01: coach in English; last workout without its day
+
+- The coach chat, briefings and journal never named a reply language, so a
+  Spanish app got English. `CoachEngine.withReplyLanguage` (applied in
+  `_postChatOnce`, the one provider call) states the app language
+  (`LocaleController.displayLanguageCode`) in the system message, keeping
+  parsed formats (separators, JSON keys, tool names) unchanged; idempotent
+  across the fallback retry. Tests: `test/coach_language_test.dart` (5).
+- Home training block: the last session's time now says its day (Today /
+  Yesterday / weekday / date).
+- Evidence: test-files 42834007272 (coach/briefing/journal + new, +439),
+  42834756701 (home tests, +67). Unit-tested, not hardware-validated.
