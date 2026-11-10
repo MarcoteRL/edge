@@ -277,5 +277,7 @@ numbers" (es "Calculando los números de anoche") and the Recovery ring showed
   New coach view `v_strength_sets` (allow-listed; reads strength_set +
   sessions, private sessions excluded). Settings → Your data → Bring data in
   → Hevy.
-- Evidence: see the test-files run recorded in PLANNING. Unit-tested, not
+- Evidence: test-files 42813853531 (analyze clean, 192 files, +2234 ~5 -4;
+  the 4 were coach_setup_api_test's lazy-list harness, fixed by a taller test
+  view) and 42816248437 (all coach tests + tokens, +400). Unit-tested, not
   hardware-validated; Hevy not exercised against the live API (no key here).
