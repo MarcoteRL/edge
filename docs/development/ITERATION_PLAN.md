@@ -1,7 +1,8 @@
 # Plan de iteraciones 2–6
 
 > Fecha: 2026-11-12 · base `main` @ `cb3bbbeb` · `kAlgoVersion 121` ·
-> `schemaVersion 58`. Estado: **pendiente de aprobación del propietario**.
+> `schemaVersion 58`. Estado: **aprobado por el propietario el 2026‑11‑12**
+> (Q1: opción A con condiciones, D‑15; Q2: clave propia, D‑14; Q3: sí).
 > Se apoya en AUDIT_VERIFICATION.md (qué se comprobó) y en
 > IMPROVEMENT_BACKLOG.md (especificación de cada ID). Etiquetas:
 > **[Comprobado]** · **[Hipótesis]** · **[Recomendación]** · **[Decidido]**.
@@ -99,7 +100,8 @@ decodificación, no en un segundo decodificador), 9, 10, 12. AGENTS §4.2
 | 2 Decodificación fiel | `readRange` devuelve exactamente las filas originales de `decoded_onehz` y `decoded_rr` (incluido `beat_index`) |
 | 3 Solo lectura | tras re‑derivar, `COUNT(*)` de `decoded_onehz`/`decoded_rr` no cambia; día con filas vivas **y** archivadas: gana el vivo y no se duplica ningún segundo |
 | 4 Inmutabilidad e idempotencia | no se toca ninguna fila de versión anterior ni una existente de `kAlgoVersion`; dos ejecuciones ⇒ mismas filas en `day_result`, `metric_series`, `baselines`; orden antiguo→reciente; re‑derivar el pasado con la misma versión no cambia el readiness de hoy |
-| 5 Fallos honestos | cubo ausente / blob corrupto ⇒ versión anterior intacta, fallo contado, sin bucle |
+| 5 Fallos honestos (**modificado, Q2**) | cubo ausente / blob corrupto ⇒ versión anterior intacta, fallo contado en `archive_rederive_failures`, sin bucle; **un fallo de lectura nunca incrementa `substrate_archive_failures`** |
+| Baselines (**añadido**) | tras re‑derivar con versión nueva, los baselines de hoy son los que daría una derivación completa desde cero con esos datos |
 | 6 Ejecución segura | reanudación desde el cursor tras interrumpir; cede cuando el *gate* está tomado; flag liberado en la ruta de error |
 
 Más los existentes que deben seguir en verde: `substrate_archive_db_test`,
@@ -112,6 +114,15 @@ Más los existentes que deben seguir en verde: `substrate_archive_db_test`,
 **Evidencia de cierre:** ids de run en PROGRESS.md; informe del revisor
 independiente en IMPLEMENTATION_LOG.md; DATA_MODEL.md y ALGORITHMS.md §7
 actualizados; tiempos y memoria marcados [Hipótesis] hasta tu medición.
+
+**Efecto esperado sobre hoy (añadido por el propietario).** Re‑derivar días
+antiguos a la versión actual cambia su `metric_series` y, con ella, los
+baselines: el readiness y las bandas de hoy pueden moverse **una vez**. Es
+correcto, pero se mide. El informe de cierre dice cuántos días se
+re‑derivaron, cuántos se quedaron en su versión y por qué, y cuánto cambió el
+readiness de hoy y de los últimos 7 días (agregado, sin valores con fecha). La
+pasada lo deja escrito en `compute_freshness` (`archive_rederive_report`) y en
+el log local.
 
 **Riesgo principal [Hipótesis].** Los cubos son por día UTC y la ventana de un
 día local abarca hasta tres; con archivo empezado tarde, los primeros días

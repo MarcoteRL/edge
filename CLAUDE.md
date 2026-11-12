@@ -44,8 +44,10 @@ Record the run id as evidence in `PROGRESS.md`.
   (Flutter 3.41.6 exactly). `--concurrency=1` is required: tests share sqflite
   files.
 - CI on your repo: `test.yml` is **disabled** (private repo, ~90 min/run of
-  quota): tests run locally on the owner's PC. `ios-sideload.yml` builds the
-  unsigned IPA. Re-enable `test` with
+  quota). Tests run through `test-files.yml` as CI_RUNBOOK.md says: the
+  affected files per task, the full suite once before a merge (split in two
+  runs, the job stops at 90 min). The owner may also run them on his PC.
+  `ios-sideload.yml` builds the unsigned IPA on every push to `main`. Re-enable `test` with
   `gh api -X PUT repos/MarcoteRL/edge/actions/workflows/test.yml/enable`. An iOS build cannot run on
   Windows. Say so instead of claiming it ran.
 - Never claim hardware validation without a real band. Write "unit-tested,
@@ -70,5 +72,8 @@ a command output, CI run, or test name.
 
 ## Git
 
-No commits, pushes, resets, or force-pushes unless asked. Remotes:
+Inside the owner's iteration workflow (`docs/development/ITERATION_PLAN.md`):
+one branch per task, small commits, push the branch, and merge to `main` once
+the full suite is green. Outside that workflow, ask first. **Never reset or
+force-push**, and never change GitHub settings without asking. Remotes:
 `upstream` = OpenStrap/edge. `origin` = your own repo, once you create it.
