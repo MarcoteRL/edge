@@ -34,6 +34,7 @@ import 'home_screen.dart';
 import 'investigate.dart';
 import 'metric_detail.dart';
 import 'wellness_screen.dart';
+import 'home_guidance.dart' show dataFreshnessLine;
 
 /// A read this screen can live without. The wear block and the nap block are
 /// ADDITIONS to the repository interface, so an implementation written before
@@ -666,6 +667,7 @@ class _HealthScreenState extends State<HealthScreen> with RevisionReload {
     return ListView(padding: pad, children: [
       ScreenTitle(l?.healthTitle ?? 'Health',
           trailing: const ProfileAvatar(accent: C.domHealth)),
+      dataFreshnessLine(c),
       SubTabs(_tabsOf(l), _tab, _select, color: C.blue),
       const SizedBox(height: S.x5),
       if (_loading && _d == null)

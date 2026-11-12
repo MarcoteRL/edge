@@ -56,6 +56,14 @@ Any failure outside this list after a change is a regression.
 
 ## Log
 
+### 2026-11-12 — Iteration 4 (Home guidance) written, **NOT analyzed and NOT run** — branch `iter4/home-guidance`
+- Owner's instruction: write the code first, he tests on his PC (Actions budget). **Nothing in this entry has passed an analyzer or a test.** Expect compile or lint errors on the first local run; they are mine to fix.
+- P-01 `DecisionLine`, P-03 `HomeEvolution`/`EvolutionCard` (via `TrendService`), P-08 `dataFreshnessLine` in Health/Workout/Sleep, `HowComputedScreen`, the grey-estimate note in `firstWeekCard` (P-04), the week's muscular load in Home's training block (P-07, partial), 37 new strings in the 8 ARBs. New file `lib/ui2/screens/home_guidance.dart`; new test `test/home_guidance_test.dart`. Decisions D-18, D-19. What was NOT done and why: UI_UX_AUDIT.md §9.
+- To validate locally (Flutter 3.41.6), on `iter4/home-guidance`, which contains the two unmerged branches below it:
+  1. `flutter pub get && flutter analyze`
+  2. `flutter test --concurrency=1 test/home_guidance_test.dart test/fork_trends_test.dart test/archive_rederive_test.dart test/ui2_tokens_test.dart test/ui2_component_sweep_test.dart test/ui2_contrast_test.dart test/spanish_l10n_test.dart test/russian_localization_test.dart test/thai_l10n_test.dart test/home_redesign_test.dart`
+  3. `flutter test --concurrency=1` (full suite, ~90 min) before any merge to `main`.
+
 ### 2026-11-12 — DATA-02 follow-up (off the UI isolate, no suggestions) and iteration 3 first half — **on branches, not in `main`**
 - **CI budget:** the owner's account is at ~90 % of its 2,000 Actions minutes (resets 2026-12-01). From here: targeted runs only, no full suite, and **no push of code to `main`** (it would build an IPA, ~130 billed minutes). Nothing below is merged.
 - **Branch `iter2/rederive-off-ui`** (on top of `main`): an archived day's substrate is now built in a worker isolate — the database isolate only fetches each bucket's bytes; decode, merge, row maps and accumulation run in `rehydratedSubstrateOf`, through `pageDecodedRange`, the page loop extracted verbatim from `_loadSubstrateRange` and shared with the live load. A day re-derived from the archive no longer reconciles activity suggestions (pinned in `archive_rederive_test`). Evidence: run **43273419312** — analyze clean; archive, WHOOP freeze goldens (no diff: the shared loop is byte-identical), multi-device, result-protection, tonight-pending, activity-review and archive-db tests, +134 ~2, all passed. CI cost of an archived day: ~9.4 s read+prepare, ~20 s total (was ~10 s / ~25 s). **Not run: the full suite, and the `tz=Europe/Madrid` cases on this branch.**

@@ -288,6 +288,21 @@ Map<String, Widget> componentCases() => {
             'is up three — the same pattern as the day before your last cold.',
         'See what changed',
       ),
+      'decision_line': const DecisionLine(
+        readiness: 34,
+        drivers: [
+          {'label': 'resp', 'contribution': 0.2},
+          {'label': 'hrv', 'contribution': -1.1},
+          {'label': 'rhr', 'contribution': -0.6},
+        ],
+      ),
+      'decision_line_calibrating':
+          const DecisionLine(readiness: null, calibrating: true),
+      'evolution': const EvolutionCard([
+        (label: 'HRV', relevant: true, delta: '−12 %'),
+        (label: 'Resting heart rate', relevant: false, delta: ''),
+        (label: 'Sleep', relevant: null, delta: ''),
+      ]),
       'goal_trajectory': const GoalTrajectory(
           'Weight', '78.4 kg', '75 kg', '0.3 kg per week', .62, C.teal),
       'observation': const Observation(

@@ -16857,5 +16857,196 @@
   "muscleCore": "Core",
   "@muscleCore": {
     "description": "Home B+ layout (headline, coach card, day strip, training block)."
+  },
+  "homeDecisionGood": "A good day for intensity",
+  "@homeDecisionGood": {
+    "description": "Home: deterministic training call when recovery is in the top band."
+  },
+  "homeDecisionSteady": "A normal day: train as planned",
+  "@homeDecisionSteady": {
+    "description": "Home: training call, middle band."
+  },
+  "homeDecisionEasy": "Keep it light today",
+  "@homeDecisionEasy": {
+    "description": "Home: training call, low band."
+  },
+  "homeDecisionRest": "A day to recover",
+  "@homeDecisionRest": {
+    "description": "Home: training call, lowest band."
+  },
+  "homeDecisionCalibrating": "No training call yet: recovery is still calibrating",
+  "@homeDecisionCalibrating": {
+    "description": "Home: shown instead of a training call while recovery only has a greyed estimate."
+  },
+  "homeDecisionHelping": "Helping: {list}",
+  "@homeDecisionHelping": {
+    "description": "Home: recovery inputs that pushed the score up, comma-separated.",
+    "placeholders": {
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "homeDecisionHolding": "Holding it back: {list}",
+  "@homeDecisionHolding": {
+    "description": "Home: recovery inputs that held the score back, comma-separated.",
+    "placeholders": {
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "homeEvolutionTitle": "How you're evolving",
+  "@homeEvolutionTitle": {
+    "description": "Home section: trends over weeks."
+  },
+  "homeEvolutionSub": "Last 7 days against the 4 weeks before",
+  "@homeEvolutionSub": {
+    "description": "Home evolution card: what is being compared."
+  },
+  "homeEvolutionStable": "Stable",
+  "@homeEvolutionStable": {
+    "description": "Home evolution: no change beyond the noise."
+  },
+  "homeEvolutionChanged": "{delta} vs your usual",
+  "@homeEvolutionChanged": {
+    "description": "Home evolution: a change beyond the noise; delta is a signed value with its unit.",
+    "placeholders": {
+      "delta": {
+        "type": "String"
+      }
+    }
+  },
+  "homeEvolutionNeedsDays": "Not enough days yet",
+  "@homeEvolutionNeedsDays": {
+    "description": "Home evolution: too few days for a verdict."
+  },
+  "homeFirstWeekEstimates": "Grey numbers are estimates that start from a general adult reference. They become yours as nights add up.",
+  "@homeFirstWeekEstimates": {
+    "description": "First-weeks card: explains the greyed calibration estimates."
+  },
+  "howComputedTitle": "How these numbers are computed",
+  "@howComputedTitle": {
+    "description": "Title of the page explaining how headline numbers are computed."
+  },
+  "howComputedSub": "Measured, derived or estimated",
+  "@howComputedSub": {
+    "description": "Subtitle of the door to that page."
+  },
+  "howComputedMeasured": "Measured",
+  "@howComputedMeasured": {
+    "description": "Kind of number: measured directly."
+  },
+  "howComputedDerived": "Derived",
+  "@howComputedDerived": {
+    "description": "Kind of number: derived from measurements."
+  },
+  "howComputedInputs": "What goes in",
+  "@howComputedInputs": {
+    "description": "Heading: inputs of a metric."
+  },
+  "howComputedMissing": "Window and missing data",
+  "@howComputedMissing": {
+    "description": "Heading: window and missing-data behaviour."
+  },
+  "howComputedLimits": "Limits",
+  "@howComputedLimits": {
+    "description": "Heading: limitations."
+  },
+  "howComputedVersion": "Algorithm version {v}",
+  "@howComputedVersion": {
+    "description": "Footer: running algorithm version.",
+    "placeholders": {
+      "v": {
+        "type": "int"
+      }
+    }
+  },
+  "howRecoveryWhat": "Last night's HRV, resting heart rate and breathing rate, each compared with your own usual. HRV and resting heart rate count together for most of the score. Sleep length is shown beside it, not mixed in.",
+  "@howRecoveryWhat": {
+    "description": "How Recovery is computed: inputs."
+  },
+  "howRecoveryData": "Your usual is the median of up to 28 earlier nights; a night never counts toward its own baseline. It needs 14 nights. A missing input is left out, never filled in. Until then a grey estimate that starts from a general adult reference is shown instead.",
+  "@howRecoveryData": {
+    "description": "How Recovery is computed: window and missing data."
+  },
+  "howRecoveryLimits": "Wrist heart-rate variability is not an ECG. The score says how last night compares with your normal; it is not a medical reading.",
+  "@howRecoveryLimits": {
+    "description": "How Recovery is computed: limits."
+  },
+  "howStrainWhat": "Heart rate through your waking day, as a share of your range between resting and maximum heart rate, counted above your own quiet level.",
+  "@howStrainWhat": {
+    "description": "How Strain is computed: inputs."
+  },
+  "howStrainData": "One day at a time. It needs 3 earlier days to learn your quiet level; before that the grey number uses a general one. Time without the band adds nothing.",
+  "@howStrainData": {
+    "description": "How Strain is computed: window and missing data."
+  },
+  "howStrainLimits": "It only sees cardiovascular effort, so lifting weights scores low. Maximum heart rate comes from your age unless a higher one has been observed.",
+  "@howStrainLimits": {
+    "description": "How Strain is computed: limits."
+  },
+  "howSleepWhat": "When you fell asleep and woke comes from wrist movement, checked against heart rate. Stages are estimated from heart rate and movement.",
+  "@howSleepWhat": {
+    "description": "How Sleep is computed: inputs."
+  },
+  "howSleepData": "One night. You can correct the times, and your correction always wins.",
+  "@howSleepData": {
+    "description": "How Sleep is computed: window and missing data."
+  },
+  "howSleepLimits": "Stages from the wrist are rough, so they are shown as a range. Lying still while awake can count as sleep.",
+  "@howSleepLimits": {
+    "description": "How Sleep is computed: limits."
+  },
+  "howHrvWhat": "HRV is RMSSD over 5-minute windows of your sleep, averaged. Resting heart rate is your lowest 30-minute average while asleep.",
+  "@howHrvWhat": {
+    "description": "How HRV and resting heart rate are computed: inputs."
+  },
+  "howHrvData": "Both need a detected night with enough clean beats; without one they stay empty.",
+  "@howHrvData": {
+    "description": "How HRV and resting heart rate are computed: missing data."
+  },
+  "howHrvLimits": "Measured optically at the wrist, so movement and a loose band add noise.",
+  "@howHrvLimits": {
+    "description": "How HRV and resting heart rate are computed: limits."
+  },
+  "homeTrainingWeekLoad": "Lifted this week: {kg} kg",
+  "@homeTrainingWeekLoad": {
+    "description": "Home training block: total volume load lifted in the last 7 days, kg already formatted.",
+    "placeholders": {
+      "kg": {
+        "type": "String"
+      }
+    }
+  },
+  "homeTrainingNoLoadSets": "Sets with no load recorded: {n}",
+  "@homeTrainingNoLoadSets": {
+    "description": "Home training block: working sets of the week with no load recorded.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "homeTrainingSrpe": "Session load (effort × minutes): {au}",
+  "@homeTrainingSrpe": {
+    "description": "Home training block: session-RPE load of the week (rating times minutes), arbitrary units.",
+    "placeholders": {
+      "au": {
+        "type": "String"
+      }
+    }
+  },
+  "homeTrainingSrpeFloor": "Session load: at least {au} (sessions not rated: {n})",
+  "@homeTrainingSrpeFloor": {
+    "description": "Home training block: session-RPE load when some sessions are not rated; a floor.",
+    "placeholders": {
+      "au": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
   }
 }

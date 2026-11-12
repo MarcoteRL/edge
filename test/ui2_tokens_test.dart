@@ -198,6 +198,10 @@ const _notComponents = {
   // Fork screen: reads the database on open (healthspan_screen.dart).
   'HealthspanScreen',
   'HevyScreen',
+  // Fork: HomeEvolution reads the stored series on open (TrendService) and
+  // its pure half, EvolutionCard, IS in the gallery; HowComputedScreen is a
+  // Scaffold route of static text.
+  'HomeEvolution', 'HowComputedScreen',
   // WHOOP MG ECG routes: the Heart Screener entry reads the database and
   // pushes; the capture screen owns a live BLE reading (a gallery case would
   // start one); the detail screen reads and deletes a reading and routes to

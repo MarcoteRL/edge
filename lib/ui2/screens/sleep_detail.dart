@@ -37,6 +37,7 @@ import 'investigate.dart';
 import 'metric_detail.dart';
 import 'naps.dart';
 import 'rough_night.dart';
+import 'home_guidance.dart' show dataFreshnessLine;
 
 /// Nights of history before a personal normal is claimed at all. Below this the
 /// quartiles of three or four nights are noise wearing a band's clothing.
@@ -482,6 +483,7 @@ class _SleepDetailState extends State<SleepDetail> with RevisionReload {
         children: [
           ScreenTitle(title,
               trailing: const ProfileAvatar(accent: C.domSleep)),
+          dataFreshnessLine(c),
           if (sub.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(left: S.x1, bottom: S.x2),

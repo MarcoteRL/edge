@@ -7,26 +7,43 @@
 
 ## Estado actual
 
-- **`main`:** iteración 2 (`f7380fb`). **Sin fusionar**, por presupuesto de
-  Actions (≈ 90 % gastado; se renueva el 2026‑12‑01):
-  - `iter2/rederive-off-ui`: DATA‑02 fuera del hilo principal + sin
-    sugerencias de actividad. Run 43273419312 en verde. Falta la suite
-    completa y los casos `tz=Europe/Madrid`.
-  - `iter3/fork-trends` (encima de la anterior): módulos del fork de la
-    iteración 3 + scripts + docs. Run 43305607581 en verde.
-- **Para fusionar hace falta:** suite completa (≈ 90 min de Linux, o gratis
-  en el PC del propietario con `flutter test --concurrency=1`) y decidir si
-  se gasta un IPA (≈ 130 min facturados). Un push de código a `main` lanza el
-  IPA solo: **no empujar a `main` sin decidirlo**.
-- **Pendiente de la iteración 3:** nada de cálculo. Los módulos no están
-  cableados a ninguna pantalla; eso es la iteración 4 (P‑02, P‑03, P‑07).
-  ALG‑R1 y ALG‑S1 esperan datos (≥ 10 noches con readiness / 10 pulsaciones).
-- **Abierto con el propietario:** dice que "los días anteriores salen sin
-  esfuerzo" tras actualizar. Las dos exportaciones muestran el mismo estado de
-  strain antes y después (ningún día con strain guardado; ver
-  DATA_ANALYSIS.md §8). [Hipótesis] es el comportamiento previo: la
-  estimación gris solo se calcula para hoy (`getToday`), así que un día deja
-  de mostrarla al pasar a ser "ayer". Falta saber pantalla y día exactos.
+- **`main`:** iteración 2 (`f7380fb`). Tres ramas apiladas **sin fusionar**:
+  1. `iter2/rederive-off-ui` — run 43273419312 en verde (parcial).
+  2. `iter3/fork-trends` — run 43305607581 en verde (parcial).
+  3. `iter4/home-guidance` — **escrita a ciegas: ni analizador ni tests**.
+     El propietario la prueba en su PC (comandos en PROGRESS.md).
+- **Siguiente:** corregir lo que salga en la prueba local; después suite
+  completa local y fusión. No empujar código a `main` sin decidir el IPA
+  (≈ 130 min facturados; presupuesto de Actions casi agotado hasta el
+  2026‑12‑01).
+- **Iteración 5, go/no‑go (2026‑11‑12):**
+
+  | Funcionalidad | Condición | Veredicto |
+  |---|---|---|
+  | Laboratorio de periodos | ALG‑T1 en `main` | **No‑go hoy**: ALG‑T1 está en rama, no en `main`. Go en cuanto se fusione |
+  | N‑of‑1 | diario en uso | **No‑go**: `journal`, `journal_metric` y `journal_field_def` tienen 0 filas en la exportación del 2026‑11‑12 |
+  | Registro de recomendaciones | P‑01 en `main` | **No‑go hoy** (P‑01 en rama) y además requiere tabla nueva: **preguntar al propietario** antes de la migración |
+  | Informe semanal | P‑02 y P‑08 en `main` | **No‑go hoy** (P‑08 en rama) |
+  | Validación frente a WHOOP | exportación oficial | **No‑go**: no hay ZIP |
+
+  Con todo en ramas, la iteración 5 queda en este documento de go/no‑go, que
+  el plan admite como resultado válido, hasta que haya fusión.
+- **Abierto con el propietario:** "días anteriores sin esfuerzo" (ver
+  DATA_ANALYSIS.md §8): falta pantalla y día.
+
+## 2026-11-12 — Iteración 4 (Home): escrita, sin validar
+
+- **Qué:** PROGRESS.md (misma fecha) y UI_UX_AUDIT.md §9.
+- **Por qué así:** al leer el código, P‑02, P‑04 y los rangos de P‑05 ya
+  existían en buena parte; se añadió lo que faltaba en vez de duplicarlo.
+- **Riesgos conocidos de escribir sin analizador:** avisos *info* de lints;
+  la fila nueva al final de Home y la línea de frescura pueden empujar
+  elementos fuera de la vista en tests existentes de pantallas largas
+  (agrandar la vista del test, no borrarlo); `LucideIcons`/claves l10n mal
+  escritas no compilarían.
+- **Limitaciones:** la página "Cómo se calcula" es texto estático; el peso
+  levantado va solo en kg; `HomeEvolution` no tiene test de widget propio
+  (lee la base; su mitad pura `EvolutionCard` sí).
 
 ## 2026-11-12 — DATA‑02 fuera del hilo principal; iteración 3 (cálculo)
 
