@@ -133,6 +133,21 @@ Future<String> _rolling() async {
       "WHERE key IN ('rolling', 'rolling_artifact') ORDER BY key"));
 }
 
+/// Equality of two long strings without printing them: where they first
+/// differ, and a little of each side.
+void _same(String? got, String? want, String what) {
+  if (got == want) return;
+  var i = 0;
+  final a = got ?? '', b = want ?? '';
+  while (i < a.length && i < b.length && a[i] == b[i]) {
+    i++;
+  }
+  String around(String s) =>
+      s.substring(i > 60 ? i - 60 : 0, i + 80 < s.length ? i + 80 : s.length);
+  fail('$what differs at $i of ${a.length}/${b.length}:\n'
+      '  got:  …${around(a)}…\n  want: …${around(b)}…');
+}
+
 Future<int> _count(String sql, [List<Object?> args = const []]) async =>
     ((await (await LocalDb.instance).rawQuery(sql, args)).first.values.first
             as num?)
@@ -232,13 +247,13 @@ Future<void> _roundTrip(String name, DateTime base,
   // 1. Byte-identical to the live derive.
   for (var i = 0; i < targets.length; i++) {
     final (payload, series) = await _stored(targets[i], kAlgoVersion);
-    expect(payload, live[i].$1, reason: '${targets[i]} payload_json');
-    expect(series, live[i].$2, reason: '${targets[i]} metric_series');
+    _same(payload, live[i].$1, '${targets[i]} payload_json');
+    _same(series, live[i].$2, '${targets[i]} metric_series');
   }
   // 4. The older rows were not touched; the baselines are the live ones.
   expect([for (final d in targets) (await _stored(d, _old)).$1],
       old.map((r) => r.$1));
-  expect(await _rolling(), liveRolling);
+  _same(await _rolling(), liveRolling, 'rolling baselines');
   // 3. Nothing went back into the live tables, nothing left the archive.
   expect(await _count('SELECT COUNT(*) FROM decoded_onehz WHERE rec_ts < ?', [cut]), 0);
   expect(await _count('SELECT COUNT(*) FROM decoded_rr WHERE rec_ts < ?', [cut]), 0);
@@ -259,11 +274,17 @@ Future<void> _roundTrip(String name, DateTime base,
 
   // 4. A second pass (and a third, forced to look again) writes nothing.
   final db = await LocalDb.instance;
+  // Only the days the prune has passed: a live, unfinalized day is derived
+  // again on every pass by design.
+  final firstLive = dayLabelOf(at(3));
   Future<String> everything() async => jsonEncode([
-        await db.rawQuery('SELECT day_id, algo_version, payload_json, '
-            'finalized, partial FROM day_result ORDER BY day_id, algo_version'),
-        await db.rawQuery('SELECT * FROM metric_series ORDER BY date, key'),
-        await _rolling(),
+        await db.rawQuery(
+            'SELECT day_id, algo_version, payload_json, finalized, partial '
+            'FROM day_result WHERE day_id < ? ORDER BY day_id, algo_version',
+            [firstLive]),
+        await db.rawQuery(
+            'SELECT * FROM metric_series WHERE date < ? ORDER BY date, key',
+            [firstLive]),
       ]);
   final before = await everything();
   seen.clear();
@@ -272,7 +293,7 @@ Future<void> _roundTrip(String name, DateTime base,
       where: 'key = ?', whereArgs: [DerivationEngine.archiveRederiveKey]);
   await DerivationEngine().run(_profile, heavy: true);
   expect(seen, isEmpty, reason: 'a complete current row is never derived over');
-  expect(await everything(), before);
+  _same(await everything(), before, 'stored rows of the archived days');
 
   if (!failures) return;
 

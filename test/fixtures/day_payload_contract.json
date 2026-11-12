@@ -1,0 +1,802 @@
+{
+ "algo_version": 121,
+ "max_depth": 4,
+ "paths": {
+  "absent_notes": [
+   "map"
+  ],
+  "absent_notes.strain": [
+   "string"
+  ],
+  "activity": [
+   "map"
+  ],
+  "activity.confidence": [
+   "number"
+  ],
+  "activity.inputs_used": [
+   "list"
+  ],
+  "activity.note": [
+   "string"
+  ],
+  "activity.tier": [
+   "string"
+  ],
+  "activity.value": [
+   "number"
+  ],
+  "activity_curve": [
+   "list"
+  ],
+  "advanced_sleep": [
+   "map"
+  ],
+  "advanced_sleep.present": [
+   "bool"
+  ],
+  "baselines": [
+   "map"
+  ],
+  "baselines.hrv": [
+   "map"
+  ],
+  "baselines.hrv.baseline": [
+   "number"
+  ],
+  "baselines.hrv.delta": [
+   "number"
+  ],
+  "baselines.hrv.ratio": [
+   "number"
+  ],
+  "baselines.hrv.status": [
+   "string"
+  ],
+  "baselines.hrv.value": [
+   "number"
+  ],
+  "baselines.hrv.z": [
+   "number"
+  ],
+  "baselines.resp": [
+   "map"
+  ],
+  "baselines.resp.baseline": [
+   "number"
+  ],
+  "baselines.resp.delta": [
+   "number"
+  ],
+  "baselines.resp.ratio": [
+   "number"
+  ],
+  "baselines.resp.status": [
+   "string"
+  ],
+  "baselines.resp.value": [
+   "number"
+  ],
+  "baselines.resp.z": [
+   "number"
+  ],
+  "baselines.resting_hr": [
+   "map"
+  ],
+  "baselines.resting_hr.baseline": [
+   "number"
+  ],
+  "baselines.resting_hr.delta": [
+   "number"
+  ],
+  "baselines.resting_hr.ratio": [
+   "number"
+  ],
+  "baselines.resting_hr.status": [
+   "string"
+  ],
+  "baselines.resting_hr.value": [
+   "number"
+  ],
+  "baselines.resting_hr.z": [
+   "number"
+  ],
+  "baselines.skin_temp": [
+   "map"
+  ],
+  "baselines.skin_temp.baseline": [
+   "number"
+  ],
+  "baselines.skin_temp.delta": [
+   "number"
+  ],
+  "baselines.skin_temp.ratio": [
+   "number"
+  ],
+  "baselines.skin_temp.status": [
+   "string"
+  ],
+  "baselines.skin_temp.value": [
+   "number"
+  ],
+  "baselines.skin_temp.z": [
+   "number"
+  ],
+  "calories": [
+   "number"
+  ],
+  "calories_total": [
+   "map"
+  ],
+  "calories_total.confidence": [
+   "number"
+  ],
+  "calories_total.inputs_used": [
+   "list"
+  ],
+  "calories_total.note": [
+   "string"
+  ],
+  "calories_total.tier": [
+   "string"
+  ],
+  "calories_total.value": [
+   "number"
+  ],
+  "clinical": [
+   "map"
+  ],
+  "clinical.brv": [
+   "map"
+  ],
+  "clinical.brv.confidence": [
+   "number"
+  ],
+  "clinical.brv.inputs_used": [
+   "list"
+  ],
+  "clinical.brv.note": [
+   "string"
+  ],
+  "clinical.brv.tier": [
+   "string"
+  ],
+  "clinical.brv.value": [
+   "map"
+  ],
+  "clinical.brv.value.cv": [
+   "number"
+  ],
+  "clinical.cv": [
+   "number"
+  ],
+  "clinical.hrv_freq": [
+   "map"
+  ],
+  "clinical.hrv_freq.confidence": [
+   "number"
+  ],
+  "clinical.hrv_freq.inputs_used": [
+   "list"
+  ],
+  "clinical.hrv_freq.note": [
+   "string"
+  ],
+  "clinical.hrv_freq.tier": [
+   "string"
+  ],
+  "clinical.hrv_freq.value": [
+   "map"
+  ],
+  "clinical.hrv_freq.value.lf_hf": [
+   "number"
+  ],
+  "clinical.hrv_freq.value.total": [
+   "number"
+  ],
+  "clinical.hrv_time": [
+   "map"
+  ],
+  "clinical.hrv_time.confidence": [
+   "number"
+  ],
+  "clinical.hrv_time.inputs_used": [
+   "list"
+  ],
+  "clinical.hrv_time.note": [
+   "string"
+  ],
+  "clinical.hrv_time.tier": [
+   "string"
+  ],
+  "clinical.hrv_time.value": [
+   "map"
+  ],
+  "clinical.hrv_time.value.n_beats": [
+   "number"
+  ],
+  "clinical.irregular": [
+   "map"
+  ],
+  "clinical.irregular.confidence": [
+   "number"
+  ],
+  "clinical.irregular.note": [
+   "string"
+  ],
+  "clinical.irregular_24h": [
+   "map"
+  ],
+  "clinical.irregular_24h.confidence": [
+   "number"
+  ],
+  "clinical.irregular_24h.inputs_used": [
+   "list"
+  ],
+  "clinical.irregular_24h.note": [
+   "string"
+  ],
+  "clinical.irregular_24h.tier": [
+   "string"
+  ],
+  "clinical.irregular_24h.value": [
+   "map"
+  ],
+  "clinical.irregular_24h.value.n_beats": [
+   "number"
+  ],
+  "clinical.prsa_ac": [
+   "map"
+  ],
+  "clinical.prsa_ac.confidence": [
+   "number"
+  ],
+  "clinical.prsa_ac.inputs_used": [
+   "list"
+  ],
+  "clinical.prsa_ac.note": [
+   "string"
+  ],
+  "clinical.prsa_ac.tier": [
+   "string"
+  ],
+  "clinical.prsa_ac.value": [
+   "map"
+  ],
+  "clinical.prsa_ac.value.kind": [
+   "string"
+  ],
+  "clinical.prsa_dc": [
+   "map"
+  ],
+  "clinical.prsa_dc.confidence": [
+   "number"
+  ],
+  "clinical.prsa_dc.inputs_used": [
+   "list"
+  ],
+  "clinical.prsa_dc.note": [
+   "string"
+  ],
+  "clinical.prsa_dc.tier": [
+   "string"
+  ],
+  "clinical.prsa_dc.value": [
+   "map"
+  ],
+  "clinical.prsa_dc.value.kind": [
+   "string"
+  ],
+  "clinical.resting_hr": [
+   "map"
+  ],
+  "clinical.resting_hr.confidence": [
+   "number"
+  ],
+  "clinical.resting_hr.inputs_used": [
+   "list"
+  ],
+  "clinical.resting_hr.note": [
+   "string"
+  ],
+  "clinical.resting_hr.tier": [
+   "string"
+  ],
+  "clinical.resting_hr.value": [
+   "map"
+  ],
+  "clinical.rmssd_sleep_session": [
+   "map"
+  ],
+  "clinical.rmssd_sleep_session.confidence": [
+   "number"
+  ],
+  "clinical.rmssd_sleep_session.inputs_used": [
+   "list"
+  ],
+  "clinical.rmssd_sleep_session.note": [
+   "string"
+  ],
+  "clinical.rmssd_sleep_session.tier": [
+   "string"
+  ],
+  "clinical.rmssd_sleep_session.value": [
+   "number"
+  ],
+  "clinical.strain": [
+   "map"
+  ],
+  "clinical.strain.confidence": [
+   "number"
+  ],
+  "clinical.strain.inputs_used": [
+   "list"
+  ],
+  "clinical.strain.note": [
+   "string"
+  ],
+  "clinical.strain.tier": [
+   "string"
+  ],
+  "clinical.strain.value": [
+   "string"
+  ],
+  "clinical.trimp": [
+   "map"
+  ],
+  "clinical.trimp.confidence": [
+   "number"
+  ],
+  "clinical.trimp.inputs_used": [
+   "list"
+  ],
+  "clinical.trimp.note": [
+   "string"
+  ],
+  "clinical.trimp.tier": [
+   "string"
+  ],
+  "clinical.trimp.value": [
+   "number"
+  ],
+  "coverage": [
+   "map"
+  ],
+  "coverage.hr_samples": [
+   "number"
+  ],
+  "date": [
+   "string"
+  ],
+  "daytime_hrv": [
+   "map"
+  ],
+  "daytime_hrv.timeline": [
+   "list"
+  ],
+  "device_family": [
+   "string"
+  ],
+  "flags": [
+   "list"
+  ],
+  "hr_ceiling": [
+   "map"
+  ],
+  "hr_ceiling.confidence": [
+   "number"
+  ],
+  "hr_ceiling.inputs_used": [
+   "list"
+  ],
+  "hr_ceiling.note": [
+   "string"
+  ],
+  "hr_ceiling.session_type": [
+   "absent",
+   "string"
+  ],
+  "hr_ceiling.tier": [
+   "string"
+  ],
+  "hr_ceiling.value": [
+   "map",
+   "string"
+  ],
+  "hr_ceiling.value.bpm": [
+   "absent",
+   "number"
+  ],
+  "hr_ceiling.value.held_seconds": [
+   "absent",
+   "number"
+  ],
+  "hr_stats": [
+   "map"
+  ],
+  "hr_stats.avg": [
+   "number"
+  ],
+  "hr_stats.max": [
+   "number"
+  ],
+  "hr_stats.min": [
+   "number"
+  ],
+  "hrv_night_shape": [
+   "map"
+  ],
+  "hrv_night_shape.confidence": [
+   "number"
+  ],
+  "hrv_night_shape.inputs_used": [
+   "list"
+  ],
+  "hrv_night_shape.note": [
+   "string"
+  ],
+  "hrv_night_shape.tier": [
+   "string"
+  ],
+  "hrv_night_shape.value": [
+   "map"
+  ],
+  "max_hr_used": [
+   "number"
+  ],
+  "naps": [
+   "map"
+  ],
+  "naps.confidence": [
+   "number"
+  ],
+  "naps.count": [
+   "number"
+  ],
+  "naps.inputs_used": [
+   "list"
+  ],
+  "naps.note": [
+   "string"
+  ],
+  "naps.tier": [
+   "string"
+  ],
+  "naps.value": [
+   "list"
+  ],
+  "restlessness": [
+   "map"
+  ],
+  "restlessness_map": [
+   "list"
+  ],
+  "scalars": [
+   "map"
+  ],
+  "scalars.brv_cv": [
+   "number"
+  ],
+  "scalars.calories": [
+   "number"
+  ],
+  "scalars.calories_total": [
+   "number"
+  ],
+  "scalars.deep_min": [
+   "number"
+  ],
+  "scalars.dip_pct": [
+   "number"
+  ],
+  "scalars.efficiency": [
+   "number"
+  ],
+  "scalars.hrr_bpm": [
+   "number"
+  ],
+  "scalars.lf_hf": [
+   "number"
+  ],
+  "scalars.light_min": [
+   "number"
+  ],
+  "scalars.ln_rmssd": [
+   "number"
+  ],
+  "scalars.max_hr_used": [
+   "number"
+  ],
+  "scalars.nap_min": [
+   "number"
+  ],
+  "scalars.prsa_dc": [
+   "number"
+  ],
+  "scalars.readiness": [
+   "number"
+  ],
+  "scalars.rem_min": [
+   "number"
+  ],
+  "scalars.resp_rate": [
+   "number"
+  ],
+  "scalars.rhr": [
+   "number"
+  ],
+  "scalars.rmssd": [
+   "number"
+  ],
+  "scalars.sdnn": [
+   "number"
+  ],
+  "scalars.skin_temp_adc": [
+   "number"
+  ],
+  "scalars.skin_temp_dev_c": [
+   "absent",
+   "number"
+  ],
+  "scalars.skin_temp_z": [
+   "number"
+  ],
+  "scalars.sleeping_hr_nadir": [
+   "number"
+  ],
+  "scalars.sleeping_hr_nadir_ts": [
+   "number"
+  ],
+  "scalars.spo2": [
+   "null"
+  ],
+  "scalars.steps": [
+   "absent",
+   "number"
+  ],
+  "scalars.strain": [
+   "null"
+  ],
+  "scalars.stress": [
+   "number"
+  ],
+  "scalars.trimp": [
+   "number"
+  ],
+  "scalars.tst_min": [
+   "number"
+  ],
+  "scalars.waking_hr": [
+   "number"
+  ],
+  "scalars.worn_min": [
+   "number"
+  ],
+  "series": [
+   "map"
+  ],
+  "series.hr_curve": [
+   "list"
+  ],
+  "series.hrv_day": [
+   "list"
+  ],
+  "series.hrv_timeline": [
+   "list"
+  ],
+  "series.hypnogram": [
+   "list"
+  ],
+  "series.resp_day": [
+   "list"
+  ],
+  "series.skin_temp_day": [
+   "list"
+  ],
+  "series.strain_curve": [
+   "list"
+  ],
+  "series.zone_timeline": [
+   "list"
+  ],
+  "sleep": [
+   "map"
+  ],
+  "sleep.absence_reason": [
+   "null"
+  ],
+  "sleep.accounting": [
+   "map"
+  ],
+  "sleep.accounting.confidence": [
+   "number"
+  ],
+  "sleep.accounting.inputs_used": [
+   "list"
+  ],
+  "sleep.accounting.tier": [
+   "string"
+  ],
+  "sleep.accounting.value": [
+   "map"
+  ],
+  "sleep.accounting.value.deep_sec": [
+   "number"
+  ],
+  "sleep.accounting.value.efficiency_pct": [
+   "number"
+  ],
+  "sleep.accounting.value.light_sec": [
+   "number"
+  ],
+  "sleep.accounting.value.nrem_sec": [
+   "number"
+  ],
+  "sleep.accounting.value.rem_sec": [
+   "number"
+  ],
+  "sleep.accounting.value.tst_sec": [
+   "number"
+  ],
+  "sleep.accounting.value.waso_sec": [
+   "number"
+  ],
+  "sleep.cycle_count": [
+   "number"
+  ],
+  "sleep.cycle_series": [
+   "list"
+  ],
+  "sleep.cycles": [
+   "list"
+  ],
+  "sleep.cycles_mean_min": [
+   "number"
+  ],
+  "sleep_charging": [
+   "map"
+  ],
+  "sleep_charging.present": [
+   "bool"
+  ],
+  "sleep_periods": [
+   "map"
+  ],
+  "sleep_periods.periods": [
+   "list"
+  ],
+  "sleep_periods.total_asleep_min": [
+   "number"
+  ],
+  "sleep_source": [
+   "string"
+  ],
+  "spo2": [
+   "map"
+  ],
+  "spo2.confidence": [
+   "number"
+  ],
+  "spo2.inputs_used": [
+   "list"
+  ],
+  "spo2.note": [
+   "string"
+  ],
+  "spo2.tier": [
+   "string"
+  ],
+  "spo2.value": [
+   "null"
+  ],
+  "steps": [
+   "map"
+  ],
+  "steps.confidence": [
+   "number"
+  ],
+  "steps.inputs_used": [
+   "list"
+  ],
+  "steps.note": [
+   "string"
+  ],
+  "steps.source": [
+   "null",
+   "string"
+  ],
+  "steps.spans": [
+   "absent",
+   "list"
+  ],
+  "steps.tier": [
+   "null",
+   "string"
+  ],
+  "steps.value": [
+   "null",
+   "number"
+  ],
+  "stress": [
+   "map"
+  ],
+  "stress.confidence": [
+   "number"
+  ],
+  "stress.inputs_used": [
+   "list"
+  ],
+  "stress.level": [
+   "string"
+  ],
+  "stress.lf_hf": [
+   "number"
+  ],
+  "stress.note": [
+   "string"
+  ],
+  "stress.rmssd": [
+   "number"
+  ],
+  "stress.score": [
+   "number"
+  ],
+  "stress.si": [
+   "number"
+  ],
+  "stress.tier": [
+   "string"
+  ],
+  "stress.value": [
+   "number"
+  ],
+  "wear": [
+   "map"
+  ],
+  "wear.coverage_pct": [
+   "number"
+  ],
+  "wear.first_on": [
+   "number"
+  ],
+  "wear.last_on": [
+   "number"
+  ],
+  "wear.longest_off_min": [
+   "number"
+  ],
+  "wear.segments": [
+   "list"
+  ],
+  "wear.worn_min": [
+   "number"
+  ],
+  "wrist_orientation": [
+   "map"
+  ],
+  "wrist_orientation.confidence": [
+   "string"
+  ],
+  "wrist_orientation.minutes": [
+   "map"
+  ],
+  "wrist_orientation.note": [
+   "string"
+  ],
+  "wrist_orientation.tier": [
+   "string"
+  ],
+  "zone_lower_bpm": [
+   "list"
+  ],
+  "zone_max_hr": [
+   "number"
+  ],
+  "zone_source": [
+   "string"
+  ],
+  "zones": [
+   "map"
+  ]
+ }
+}

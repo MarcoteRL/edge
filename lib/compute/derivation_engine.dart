@@ -7930,6 +7930,15 @@ class DerivationEngine {
   }) async {
     if (!(heavy || force) || background) return 0;
     try {
+      // Day windows are cut in the phone's CURRENT zone. While a zone change
+      // is unresolved every archived day would be re-derived over a shifted
+      // window, so nothing moves until the hold clears (as rescanRecent).
+      if (await _timezoneTravelSuspected()) return 0;
+      // ponytail: a wearable's day is loaded from live tables only
+      // (wearableSubstrate / wearableNight), not from the archive, so with an
+      // active wearable the pass stands down rather than tell the two apart.
+      // Route those loads through [_rehydrated] if a wearable user needs it.
+      if (await activeWearable() != null) return 0;
       var state = <String, dynamic>{};
       if ((await LocalDb.computeFreshness(archiveRederiveKey))?['payload_json']
           case final String j) {
@@ -7959,6 +7968,11 @@ class DerivationEngine {
           kept[day] = 'not_measured';
         } else if (earliest == null || _targetDayWindow(day).$1 < earliest) {
           kept[day] = 'before_archive';
+        } else if (!await LocalDb.substrateArchiveZoneMatches(
+            _targetDayWindow(day).$1, _targetDayWindow(day).$2)) {
+          // Archived in another zone (or an unknown one): this day's local
+          // window is not the one it was lived in.
+          kept[day] = 'tz_changed';
         } else if ((failures[day] ?? 0) >= archiveRederiveMaxFailures) {
           kept[day] = 'unreadable';
         } else if ((kept[day] == 'no_gain' || kept[day] == 'less_data') &&
@@ -7989,18 +8003,23 @@ class DerivationEngine {
           prepareMs = clock.elapsedMilliseconds;
           if (prepared != null && !await _archiveCoversStored(prepared)) {
             outcome = kept[day] = 'less_data';
-          } else if (prepared == null ||
-              !await _derivePreparedDay(
-                  prepared, profile, dataNowSec, history)) {
-            outcome = kept[day] = 'no_gain';
-          } else if ((await LocalDb.dayResultIds(kAlgoVersion)).contains(day)) {
-            outcome = 'rederived';
-            written.add(day);
-            done++;
           } else {
-            // Written, but partial: it stays listed and is tried again.
-            outcome = 'partial';
-            failures[day] = (failures[day] ?? 0) + 1;
+            if (prepared != null) {
+              await _derivePreparedDay(prepared, profile, dataNowSec, history);
+            }
+            // Judged by the stored row, not the returned bool: `false` there
+            // is a decline, a partial row, or a complete one held unfinalized.
+            if ((await LocalDb.dayResultIds(kAlgoVersion)).contains(day)) {
+              outcome = 'rederived';
+              written.add(day);
+              done++;
+            } else if (await LocalDb.hasDayResultAt(day, kAlgoVersion)) {
+              // Partial (or skipped): it stays listed and is tried again.
+              outcome = 'partial';
+              failures[day] = (failures[day] ?? 0) + 1;
+            } else {
+              outcome = kept[day] = 'no_gain';
+            }
           }
         } on ArchiveUnreadable catch (e) {
           outcome = 'unreadable ($e)';
@@ -8055,19 +8074,22 @@ class DerivationEngine {
   /// switched off for a while), and a hole is indistinguishable from a band
   /// left on the table — except that the stored day says how much it saw.
   ///
-  /// ponytail: minutes worn and seconds asleep, each within 10 %. Good for a
-  /// 1 Hz band; a sparse device's night can fall short and keep its version,
-  /// which is the safe side. Compare per-signal coverage if that ever bites.
+  /// ponytail: recorded minutes of the day and seconds of the sleep window,
+  /// each within 5 % of what the stored day reports (`worn_min`, `tst_min`).
+  /// A stored day that reports neither cannot be compared and keeps its
+  /// version. A hole inside the night smaller than its time awake still
+  /// passes: check each UTC day of the window against `device_coverage`
+  /// (never pruned) if a real archive ever shows one.
   Future<bool> _archiveCoversStored(PreparedDerivationDay day) async {
     final storedWorn = await LocalDb.metricValueOn(day.date, 'worn_min');
     final storedTst = await LocalDb.metricValueOn(day.date, 'tst_min');
     final sub = day.daySub;
-    final wornMin = <int>{
-      for (var i = 0; i < sub.tsSec.length; i++)
-        if (i < sub.hr.length && sub.hr[i] > 0) sub.tsSec[i] ~/ 60,
-    }.length;
-    return (storedWorn == null || wornMin >= storedWorn * 0.9) &&
-        (storedTst == null || day.sleepSub.tsSec.length / 60 >= storedTst * 0.9);
+    if (storedWorn == null && storedTst == null) return false;
+    // Every recorded minute, as the pipeline's `worn_min` counts them.
+    final wornMin = <int>{for (final t in sub.tsSec) t ~/ 60}.length;
+    return (storedWorn == null || wornMin >= storedWorn * 0.95) &&
+        (storedTst == null ||
+            day.sleepSub.tsSec.length / 60 >= storedTst * 0.95);
   }
 
   Future<Map<String, int>> _archiveRederiveFailures() async {

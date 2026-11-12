@@ -1130,6 +1130,9 @@ abstract final class SubstrateArchive {
     for (final device in devices) {
       final meta = metas[device];
       final blob = meta == null ? null : await readBlob(ex, device, utcDay);
+      // The row went between the two reads (archiving switched off): the
+      // day is not readable, which is not the same as empty.
+      if (meta != null && blob == null) throw ArchiveUnreadable(device, utcDay);
       final (onehz, rr) = await _readLivePages(ex, device, lo, hi);
       final bucket = await _mergeLiveOffIsolate(
         onehz,

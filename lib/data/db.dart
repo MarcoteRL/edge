@@ -15566,6 +15566,43 @@ class LocalDb {
   static Future<int?> substrateArchiveEarliestTs() async =>
       SubstrateArchive.earliestTs(await instance);
 
+  /// Whether every archived bucket touching `[fromRecTs, toRecTs]` was
+  /// recorded in the zone the phone is in now (its stored offset is this
+  /// zone's at the bucket's first or last second, so a clock change inside
+  /// the bucket does not count as travel). False on an unknown offset.
+  static Future<bool> substrateArchiveZoneMatches(
+    int fromRecTs,
+    int toRecTs,
+  ) async {
+    final db = await instance;
+    final rows = await db.query(
+      SubstrateArchive.table,
+      columns: ['tz_offset_min', 'from_ts', 'to_ts'],
+      where: 'utc_day >= ? AND utc_day <= ?',
+      whereArgs: [fromRecTs ~/ 86400, toRecTs ~/ 86400],
+    );
+    int zoneAt(Object? sec) => DateTime.fromMillisecondsSinceEpoch(
+          (sec as num).toInt() * 1000,
+        ).timeZoneOffset.inMinutes;
+    return rows.every((r) {
+      final tz = r['tz_offset_min'];
+      return tz is num && (tz == zoneAt(r['from_ts']) || tz == zoneAt(r['to_ts']));
+    });
+  }
+
+  /// Whether [dayId] has any row at [algoVersion], partial and skipped ones
+  /// included.
+  static Future<bool> hasDayResultAt(String dayId, int algoVersion) async {
+    final db = await instance;
+    return (await db.query(
+      'day_result',
+      columns: ['day_id'],
+      where: 'day_id = ? AND algo_version = ?',
+      whereArgs: [dayId, algoVersion],
+      limit: 1,
+    )).isNotEmpty;
+  }
+
   /// Days that have a result but no COMPLETE one (not skipped, not partial)
   /// at [algoVersion] or newer, oldest first: what a re-derive from the
   /// archive may still bring up to date. A complete row is never listed, so
