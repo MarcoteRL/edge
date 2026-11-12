@@ -15553,6 +15553,34 @@ class LocalDb {
     SubstrateArchivePolicy policy,
   ) async => SubstrateArchive.writePolicy(await instance, policy);
 
+  /// The decoded substrate with its archived part read back in, for
+  /// re-deriving a day the prune has cut into. Memory only: nothing it reads
+  /// is ever written back to `decoded_onehz` / `decoded_rr`.
+  static Future<RehydratedSubstrate> rehydratedSubstrate() async =>
+      RehydratedSubstrate(
+        await instance,
+        derivable: (s) => s == null || kDerivableSources.contains(s),
+      );
+
+  /// The earliest archived second; null with an empty archive.
+  static Future<int?> substrateArchiveEarliestTs() async =>
+      SubstrateArchive.earliestTs(await instance);
+
+  /// Days that have a result but no COMPLETE one (not skipped, not partial)
+  /// at [algoVersion] or newer, oldest first: what a re-derive from the
+  /// archive may still bring up to date. A complete row is never listed, so
+  /// it is never derived over.
+  static Future<List<String>> daysBelowVersion(int algoVersion) async {
+    final db = await instance;
+    final rows = await db.rawQuery(
+      'SELECT day_id FROM day_result GROUP BY day_id '
+      'HAVING COALESCE(MAX(CASE WHEN skipped = 0 AND partial = 0 '
+      'THEN algo_version END), -1) < ? ORDER BY day_id',
+      [algoVersion],
+    );
+    return [for (final r in rows) r['day_id'] as String];
+  }
+
   /// Drop archive buckets older than [policy] keeps, in whole UTC days behind
   /// the data edge [dataNowSec]. Returns buckets deleted.
   static Future<int> evictSubstrateArchive(

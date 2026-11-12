@@ -1084,6 +1084,88 @@ abstract final class SubstrateArchive {
     );
   }
 
+  // ── read side: re-deriving archived history ───────────────────────────────
+
+  /// `compute_freshness` key: per day_id, the passes on which a re-derive
+  /// could not read the archive. Deliberately NOT [failuresKey]: that count
+  /// decides when a bucket is deleted from the live tables unarchived, and a
+  /// read failure must never feed it.
+  static const String rederiveFailuresKey = 'archive_rederive_failures';
+
+  /// The earliest archived second, or null when nothing is archived. A day
+  /// whose derive window starts before it cannot be re-derived whole.
+  static Future<int?> earliestTs(DatabaseExecutor ex) async {
+    final r = await ex.rawQuery('SELECT MIN(from_ts) AS t FROM $table');
+    return (r.first['t'] as num?)?.toInt();
+  }
+
+  /// Every device's bucket for [utcDay], archive ∪ live with the live row
+  /// winning — the same rule the archive's own merge applies. Memory only.
+  /// Throws [ArchiveUnreadable] when an archived blob does not decode to its
+  /// recorded fingerprint.
+  static Future<List<ArchiveBucket>> _rehydrateDay(
+    DatabaseExecutor ex,
+    int utcDay,
+  ) async {
+    final lo = utcDay * 86400, hi = lo + 86400;
+    final metas = {
+      for (final r in await ex.query(
+        table,
+        columns: ['device_id', 'codec', 'fingerprint'],
+        where: 'utc_day = ?',
+        whereArgs: [utcDay],
+      ))
+        r['device_id'] as String: r,
+    };
+    final devices = <String>{
+      ...metas.keys,
+      for (final t in const ['decoded_onehz', 'decoded_rr'])
+        for (final r in await ex.rawQuery(
+          'SELECT DISTINCT device_id FROM $t WHERE rec_ts >= ? AND rec_ts < ?',
+          [lo, hi],
+        ))
+          r['device_id'] as String,
+    }.toList()..sort();
+    final out = <ArchiveBucket>[];
+    for (final device in devices) {
+      final meta = metas[device];
+      final blob = meta == null ? null : await readBlob(ex, device, utcDay);
+      final (onehz, rr) = await _readLivePages(ex, device, lo, hi);
+      final bucket = await _mergeLiveOffIsolate(
+        onehz,
+        rr,
+        blob,
+        (meta?['codec'] as num?)?.toInt() ?? SubstrateArchiveCodec.codecId,
+        (meta?['fingerprint'] as num?)?.toInt(),
+      );
+      if (bucket == null) throw ArchiveUnreadable(device, utcDay);
+      out.add(bucket);
+    }
+    return out;
+  }
+
+  /// Null when [blob] is unreadable or does not match [fingerprint].
+  static Future<ArchiveBucket?> _mergeLiveOffIsolate(
+    List<ArchiveTable> onehz,
+    List<ArchiveTable> rr,
+    Uint8List? blob,
+    int codec,
+    int? fingerprint,
+  ) => Isolate.run(() {
+    var archived = ArchiveBucket.empty;
+    if (blob != null) {
+      final b = SubstrateArchiveCodec.decode(blob, codec: codec);
+      if (b == null || SubstrateArchiveCodec.fingerprint(b) != fingerprint) {
+        return null;
+      }
+      archived = b;
+    }
+    return SubstrateArchiveCodec.merge(
+      ArchiveBucket(ArchiveTable.concat(onehz), ArchiveTable.concat(rr)),
+      archived,
+    );
+  });
+
   /// `{buckets, bytes, raw_bytes, oldest_from_ts, newest_to_ts}`; the two
   /// timestamps are null on an empty archive.
   static Future<Map<String, Object?>> stats(DatabaseExecutor ex) async {
@@ -1097,3 +1179,165 @@ abstract final class SubstrateArchive {
     return Map<String, Object?>.from(r);
   }
 }
+
+/// An archived bucket a re-derive needed and could not read back.
+class ArchiveUnreadable implements Exception {
+  const ArchiveUnreadable(this.deviceId, this.utcDay);
+  final String deviceId;
+  final int utcDay;
+  @override
+  String toString() => 'archive bucket ($deviceId, $utcDay) is unreadable';
+}
+
+/// The decoded substrate of a `rec_ts` range with its archived part read back
+/// in: what `decoded_onehz` / `decoded_rr` would hold had the prune never run.
+///
+/// READ-ONLY AND IN MEMORY. Nothing here writes: archived rows are never put
+/// back into the live tables (that would fight the prune, and re-open
+/// invariant 2 for seconds the live table no longer owns). Buckets are loaded
+/// per UTC day on demand ([load]) and kept columnar; row maps are only built
+/// a page at a time, in the shape and order of
+/// `LocalDb.decodedOneHzBatchByRecTsRange` / `decodedRrByRecTsRange`.
+class RehydratedSubstrate {
+  RehydratedSubstrate(this._ex, {required bool Function(Object? source) derivable})
+    : _derivable = derivable;
+
+  final DatabaseExecutor _ex;
+  final bool Function(Object? source) _derivable;
+  final Map<int, List<ArchiveBucket>> _days = {};
+
+  static const List<String> _onehzColumns = [
+    'counter', 'rec_ts', 'hr', 'ax', 'ay', 'az', //
+    'spo2_red_raw', 'spo2_ir_raw', 'skin_temp_raw', //
+    'step_count', 'step_cadence', 'activity_class', 'skin_temp_c', //
+    'on_wrist', 'hr_valid', 'hr_alt', 'device_family', 'device_id',
+    'band_sleep_state',
+  ];
+  static const List<String> _rrColumns = [
+    'rec_ts', 'beat_index', 'rr_ts_ms', 'rr_ms', 'beat_ts_ms', 'device_id', //
+  ];
+
+  /// Make every UTC day touching `[fromRecTs, toRecTs]` available.
+  Future<void> load(int fromRecTs, int toRecTs) async {
+    for (var d = fromRecTs ~/ 86400; d <= toRecTs ~/ 86400; d++) {
+      _days[d] ??= await SubstrateArchive._rehydrateDay(_ex, d);
+    }
+  }
+
+  // The rows of [tables] (one per device, each sorted by rec_ts) with
+  // `from <= rec_ts <= to` and a derivable source, in `rec_ts, tie` order.
+  List<(ArchiveTable, int)> _picks(
+    int from,
+    int to,
+    ArchiveTable Function(ArchiveBucket) table,
+    String tie,
+  ) {
+    final out = <(ArchiveTable, int)>[];
+    for (var d = from ~/ 86400; d <= to ~/ 86400; d++) {
+      final dayPicks = <(ArchiveTable, int)>[];
+      var contributors = 0;
+      for (final b in _days[d] ?? const <ArchiveBucket>[]) {
+        final t = table(b);
+        final before = dayPicks.length;
+        for (var i = _lowerBound(t, from); i < t.rowCount; i++) {
+          if (_ts(t, i) > to) break;
+          if (_derivable(t.valueAt('source', i))) dayPicks.add((t, i));
+        }
+        if (dayPicks.length > before) contributors++;
+      }
+      if (contributors > 1) {
+        int cmp(Object? a, Object? b) =>
+            a == null ? (b == null ? 0 : -1) : (b == null ? 1 : (a as Comparable).compareTo(b));
+        dayPicks.sort((x, y) {
+          for (final k in ['rec_ts', tie, 'device_id']) {
+            final c = cmp(x.$1.valueAt(k, x.$2), y.$1.valueAt(k, y.$2));
+            if (c != 0) return c;
+          }
+          return 0;
+        });
+      }
+      out.addAll(dayPicks);
+    }
+    return out;
+  }
+
+  static int _ts(ArchiveTable t, int row) =>
+      (t.valueAt('rec_ts', row) as num?)?.toInt() ?? 0;
+
+  static int _lowerBound(ArchiveTable t, int recTs) {
+    var lo = 0, hi = t.rowCount;
+    while (lo < hi) {
+      final mid = (lo + hi) >> 1;
+      if (_ts(t, mid) < recTs) {
+        lo = mid + 1;
+      } else {
+        hi = mid;
+      }
+    }
+    return lo;
+  }
+
+  (int, int)? _pageKey;
+  List<(ArchiveTable, int)> _pageIndex = const [];
+
+  /// 1 Hz rows of the range in `rec_ts, counter` order, [limit] of them from
+  /// position [offset].
+  List<Map<String, dynamic>> oneHzPage(
+    int fromRecTs,
+    int toRecTs, {
+    required int offset,
+    required int limit,
+  }) {
+    if (_pageKey != (fromRecTs, toRecTs)) {
+      _pageIndex = _picks(fromRecTs, toRecTs, (b) => b.onehz, 'counter');
+      _pageKey = (fromRecTs, toRecTs);
+    }
+    return [
+      for (var i = offset; i < _pageIndex.length && i < offset + limit; i++)
+        _pageIndex[i].$1.rowAt(_pageIndex[i].$2, _onehzColumns),
+    ];
+  }
+
+  /// Beats with `fromRecTs <= rec_ts <= toRecTs`, in `rec_ts, beat_index`
+  /// order.
+  List<Map<String, dynamic>> rr(int fromRecTs, int toRecTs) => [
+    for (final (t, i) in _picks(fromRecTs, toRecTs, (b) => b.rr, 'beat_index'))
+      t.rowAt(i, _rrColumns),
+  ];
+
+  /// `LocalDb.skinTempAmbientMinutes` over the rehydrated rows: the primary
+  /// band's own rows ([primaryDeviceId], no `source`) in `[fromSec, toSec)`.
+  List<(int, double, double)> skinTempAmbientMinutes(
+    int fromSec,
+    int toSec, {
+    required String primaryDeviceId,
+  }) {
+    final sums = <int, (double, double, int)>{};
+    for (var d = fromSec ~/ 86400; d <= (toSec - 1) ~/ 86400; d++) {
+      for (final b in _days[d] ?? const <ArchiveBucket>[]) {
+        final t = b.onehz;
+        for (var i = _lowerBound(t, fromSec); i < t.rowCount; i++) {
+          final ts = _ts(t, i);
+          if (ts >= toSec) break;
+          final skin = t.valueAt('skin_temp_raw', i);
+          final amb = t.valueAt('ambient_raw', i);
+          if (t.valueAt('source', i) != null ||
+              t.valueAt('device_id', i) != primaryDeviceId ||
+              skin is! num ||
+              amb is! num ||
+              skin <= 0 ||
+              amb <= 0) {
+            continue;
+          }
+          final s = sums[ts ~/ 60] ?? (0.0, 0.0, 0);
+          sums[ts ~/ 60] = (s.$1 + skin, s.$2 + amb, s.$3 + 1);
+        }
+      }
+    }
+    return [
+      for (final m in sums.keys.toList()..sort())
+        (m, sums[m]!.$1 / sums[m]!.$3, sums[m]!.$2 / sums[m]!.$3),
+    ];
+  }
+}
+

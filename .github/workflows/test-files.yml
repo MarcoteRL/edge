@@ -16,6 +16,10 @@ on:
         description: 'Run flutter analyze first'
         type: boolean
         default: true
+      tz:
+        description: 'TZ for the test step, e.g. Europe/Madrid (empty = UTC)'
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -52,6 +56,7 @@ jobs:
         if: inputs.files != ''
         env:
           FILES: ${{ inputs.files }}
+          TZ: ${{ inputs.tz }}
         run: |
           set -euo pipefail
           read -r -a list <<< "$FILES"

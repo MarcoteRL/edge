@@ -47,6 +47,9 @@ import '../data/coverage_resolver.dart';
 import '../data/db.dart';
 import '../data/day_label.dart';
 import '../data/series_codec.dart';
+import '../data/substrate_archive.dart'
+    show ArchiveUnreadable, RehydratedSubstrate, SubstrateArchive;
+import '../sync/headless_gate.dart';
 import '../notify/fired_keys.dart';
 import '../notify/notification_center.dart';
 import '../notify/notification_event.dart';
@@ -3581,7 +3584,9 @@ class DerivationEngine {
           await _runNotifications();
         }
         await _pruneOldDecoded(scope.rawDays, dataNowSec);
-        return rescored;
+        return rescored +
+            await _rederiveArchivedPass(profile, dataNowSec,
+                heavy: heavy, force: force, onDayDone: onDayDone);
       }
       _diag['todo_days'] = todoDays.length;
       _diag['stage'] = 'history';
@@ -3782,7 +3787,9 @@ class DerivationEngine {
         }
       }
       lastRunFailedDays = failures;
-      return done;
+      return done +
+          await _rederiveArchivedPass(profile, dataNowSec,
+              heavy: heavy, force: force, onDayDone: onDayDone);
     } catch (e, st) {
       _diag['last_error'] = '$e';
       lastRunError = '$e';
@@ -4770,7 +4777,20 @@ class DerivationEngine {
       if (owner == null) return true;
       return owner == (r['device_id'] as String? ?? LocalDb.kPrimaryDeviceId);
     }
+    // DATA-02: a day being re-derived from the archive reads the same two row
+    // streams, in the same shape and order, from memory ([_rehydrated]) —
+    // archive ∪ live, the live row winning. Null on every other derive, where
+    // these are the two LocalDb range reads they always were.
+    final rehydrated = _rehydrated;
+    var rehydratedOffset = 0;
+    Future<List<Map<String, dynamic>>> readRr(int lo, int hi) async =>
+        rehydrated != null
+            ? rehydrated.rr(lo, hi)
+            : await LocalDb.decodedRrByRecTsRange(fromRecTs: lo, toRecTs: hi);
     try {
+      // Inside the try: an unreadable bucket throws, and the worker spawned
+      // above must still be torn down.
+      await rehydrated?.load(fromRecTs, toRecTs);
       final worker = await ready.future;
       worker.send(const {'type': 'config', 'mode': 'substrate'});
       int? afterRecTs;
@@ -4799,13 +4819,21 @@ class DerivationEngine {
       // cheap and the alternative is a silent one-second attribution miss.
       var carry = const <Map<String, dynamic>>[];
       while (true) {
-        final decodedRows = await LocalDb.decodedOneHzBatchByRecTsRange(
-          limit: _rawDecodeBatchSize,
-          fromRecTs: fromRecTs,
-          toRecTs: toRecTs,
-          afterRecTs: afterRecTs,
-          afterCounter: afterCursor,
-        );
+        final decodedRows = rehydrated != null
+            ? rehydrated.oneHzPage(
+                fromRecTs,
+                toRecTs,
+                offset: rehydratedOffset,
+                limit: _rawDecodeBatchSize,
+              )
+            : await LocalDb.decodedOneHzBatchByRecTsRange(
+                limit: _rawDecodeBatchSize,
+                fromRecTs: fromRecTs,
+                toRecTs: toRecTs,
+                afterRecTs: afterRecTs,
+                afterCounter: afterCursor,
+              );
+        rehydratedOffset += decodedRows.length;
         if (decodedRows.isNotEmpty) {
           _trackPrepareBatch(decodedRows.length);
           rangePages += 1;
@@ -4845,10 +4873,7 @@ class DerivationEngine {
             // rec_ts index — no counter span (which broke across the strap's
             // reboot reset).
             final lastSentRecTs = (toSend.last['rec_ts'] as num).toInt();
-            final rawRrRows = await LocalDb.decodedRrByRecTsRange(
-              fromRecTs: rrFrom,
-              toRecTs: lastSentRecTs,
-            );
+            final rawRrRows = await readRr(rrFrom, lastSentRecTs);
             rrFrom = lastSentRecTs + 1;
             final frames = composeOneHzFrames(toSend, ownership);
             final rrRows = [
@@ -4869,10 +4894,7 @@ class DerivationEngine {
       // (the next fetch came back empty) — its trailing group is still held.
       if (carry.isNotEmpty) {
         final lastRecTs = (carry.last['rec_ts'] as num).toInt();
-        final rawRrRows = await LocalDb.decodedRrByRecTsRange(
-          fromRecTs: rrFrom,
-          toRecTs: lastRecTs,
-        );
+        final rawRrRows = await readRr(rrFrom, lastRecTs);
         rrFrom = lastRecTs + 1;
         final frames = composeOneHzFrames(carry, ownership);
         final rrRows = [
@@ -4886,10 +4908,7 @@ class DerivationEngine {
       // lookup; when it is not, these are seconds the band recorded and only
       // reported beats for.
       if (rrFrom <= toRecTs) {
-        final rawTailRr = await LocalDb.decodedRrByRecTsRange(
-          fromRecTs: rrFrom,
-          toRecTs: toRecTs,
-        );
+        final rawTailRr = await readRr(rrFrom, toRecTs);
         final tailRr = [
           for (final r in rawTailRr)
             if (owned(rrOwnedSpans, r)) r,
@@ -6131,8 +6150,12 @@ class DerivationEngine {
                       scMap['readiness'] == null),
             ) ||
             // An import brings its own substrate, the prune can't have cut it.
+            // Nor a day read back from the archive: what the prune cut is
+            // exactly what [_rehydrated] puts back, and a window that starts
+            // before the archive does is never offered to this path.
             // A rejected night has nothing to protect either.
             (!suppliedSubstrate &&
+                _rehydrated == null &&
                 sleepWindowTruncatedByPrune(
                   day.date,
                   await LocalDb.getCursorInt(_prunedBeforeCursor),
@@ -6291,8 +6314,11 @@ class DerivationEngine {
           (daySub.deviceFamily == null || daySub.deviceFamily == 'gen4') &&
           day.sleepOffsetSec > day.sleepOnsetSec) {
         scMap['skin_temp_ambient_r'] = skinTempAmbientR(
-            await LocalDb.skinTempAmbientMinutes(
-                day.sleepOnsetSec, day.sleepOffsetSec));
+            _rehydrated?.skinTempAmbientMinutes(
+                    day.sleepOnsetSec, day.sleepOffsetSec,
+                    primaryDeviceId: LocalDb.kPrimaryDeviceId) ??
+                await LocalDb.skinTempAmbientMinutes(
+                    day.sleepOnsetSec, day.sleepOffsetSec));
       }
       final napEdits = await ActivityStore.napEdits(reviewDb, day.date);
       final blocksInput = _DayBlocksInput(
@@ -7841,6 +7867,274 @@ class DerivationEngine {
     await LocalDb.putBaseline('rolling_artifact', jsonEncode(artifact));
     await LocalDb.putBaseline('rolling', jsonEncode(rolling));
     await _refreshCrossDayInputArtifact();
+  }
+
+  // ── re-deriving archived history (DATA-02) ─────────────────────────────────
+
+  /// Set only while [_rederiveArchivedPass] derives one day, under the run
+  /// latch: [_loadSubstrateRange] then reads that day's rows from the archive
+  /// (∪ live) instead of the live tables alone. Cleared in a `finally`.
+  RehydratedSubstrate? _rehydrated;
+
+  /// `compute_freshness` key: the state of the archive re-derive for one
+  /// `kAlgoVersion` — days brought up to date, days left on their version and
+  /// why, and the readiness of the last week as it stood before the first day
+  /// moved (see [archiveRederiveReport]).
+  static const String archiveRederiveKey = 'archive_rederive';
+
+  /// Archived days one heavy pass re-derives. "Re-analyze everything" has no
+  /// cap; both stop when a band offload or a headless sync wants the store.
+  static const int _archiveRederiveSlice = 4;
+
+  /// Passes on which a day's archive could not be read (or its derive failed)
+  /// before the day is left on its version for good.
+  static const int archiveRederiveMaxFailures = 3;
+
+  /// Test seam: called with each day right before it is re-derived.
+  @visibleForTesting
+  static void Function(String day)? debugOnArchiveRederive;
+
+  /// Bring days the prune has cut into up to [kAlgoVersion] from
+  /// `substrate_archive`. Returns the days written. Runs inside [run], so it
+  /// holds the run latch.
+  ///
+  ///  * WHICH DAYS: a result exists, none of it is a complete row at
+  ///    [kAlgoVersion] (so a complete row is never derived over), the day is
+  ///    measured (not imported), the live tables no longer hold its whole
+  ///    window, and the archive starts at or before that window. Anything
+  ///    else keeps its version, with the reason recorded.
+  ///  * ORDER: oldest first, the baseline history re-read before every day,
+  ///    so each day is scored against the days already brought up to date.
+  ///  * READ ONLY: see [RehydratedSubstrate]. The day's writes are the ones
+  ///    every derive makes ([_derivePreparedDay]), with its guards intact.
+  ///  * FAILURES: counted per day under
+  ///    [SubstrateArchive.rederiveFailuresKey] — never under the archive's own
+  ///    write-failure count, which decides deletions — and given up on after
+  ///    [archiveRederiveMaxFailures].
+  ///  * RESUMABLE: there is no position to lose. A day that was written is no
+  ///    longer listed; every other outcome is in the stored state.
+  ///
+  /// ponytail: each day decodes its own two or three UTC buckets again, so
+  /// neighbouring days decode a shared bucket twice. Keep the last buckets
+  /// across days if the per-day time logged below says it matters.
+  /// ponytail: a day's "tonight" exclusion reads the NEXT day's stored
+  /// window, which is still the older version's when this day is derived
+  /// (oldest first). Rows are immutable per version, so there is no second
+  /// pass; newest-first would fix this and break the baseline order instead.
+  Future<int> _rederiveArchivedPass(
+    Profile profile,
+    int dataNowSec, {
+    required bool heavy,
+    required bool force,
+    void Function(String day, int index, int total)? onDayDone,
+  }) async {
+    if (!(heavy || force) || background) return 0;
+    try {
+      var state = <String, dynamic>{};
+      if ((await LocalDb.computeFreshness(archiveRederiveKey))?['payload_json']
+          case final String j) {
+        final v = jsonDecode(j);
+        if (v is Map && v['algo_version'] == kAlgoVersion) {
+          state = v.cast<String, dynamic>();
+        }
+      }
+      if (state['finished'] == true && !force) return 0;
+      final kept = <String, dynamic>{
+        ...((state['kept'] as Map?) ?? const {}).cast<String, dynamic>(),
+      };
+      // A new version, or the user asking again, gives every day a fresh try.
+      final failures = state.isEmpty || force
+          ? <String, int>{}
+          : await _archiveRederiveFailures();
+      final earliest = await LocalDb.substrateArchiveEarliestTs();
+      final rawDays = (await LocalDb.decodedRecTsMaxByDay()).keys.toSet();
+      final prunedBefore = await LocalDb.getCursorInt(_prunedBeforeCursor);
+      final todo = <String>[];
+      for (final day in await LocalDb.daysBelowVersion(kAlgoVersion)) {
+        if (rawDays.contains(day) &&
+            !windowTruncatedByPrune(day, prunedBefore)) {
+          continue; // its whole window is live: the ordinary derive owns it
+        }
+        if (!await LocalDb.isMeasuredDay(day)) {
+          kept[day] = 'not_measured';
+        } else if (earliest == null || _targetDayWindow(day).$1 < earliest) {
+          kept[day] = 'before_archive';
+        } else if ((failures[day] ?? 0) >= archiveRederiveMaxFailures) {
+          kept[day] = 'unreadable';
+        } else if ((kept[day] == 'no_gain' || kept[day] == 'less_data') &&
+            !force) {
+          // Already tried: the guards kept the stored result.
+        } else {
+          kept.remove(day);
+          todo.add(day);
+        }
+      }
+      state['algo_version'] = kAlgoVersion;
+      state['readiness_before'] ??= await _recentReadiness();
+      var done = 0, tried = 0;
+      final written = <String>{};
+      for (final day in todo) {
+        if (!force && tried >= _archiveRederiveSlice) break;
+        if (offloadActive?.call() == true || HeadlessSyncGate.busy) break;
+        tried++;
+        _diag['stage'] = 'archive_rederive';
+        debugOnArchiveRederive?.call(day);
+        final clock = Stopwatch()..start();
+        var prepareMs = 0;
+        String outcome;
+        _rehydrated = await LocalDb.rehydratedSubstrate();
+        try {
+          final history = await _BaselineHistoryCache.load();
+          final prepared = await _prepareTargetDay(day);
+          prepareMs = clock.elapsedMilliseconds;
+          if (prepared != null && !await _archiveCoversStored(prepared)) {
+            outcome = kept[day] = 'less_data';
+          } else if (prepared == null ||
+              !await _derivePreparedDay(
+                  prepared, profile, dataNowSec, history)) {
+            outcome = kept[day] = 'no_gain';
+          } else if ((await LocalDb.dayResultIds(kAlgoVersion)).contains(day)) {
+            outcome = 'rederived';
+            written.add(day);
+            done++;
+          } else {
+            // Written, but partial: it stays listed and is tried again.
+            outcome = 'partial';
+            failures[day] = (failures[day] ?? 0) + 1;
+          }
+        } on ArchiveUnreadable catch (e) {
+          outcome = 'unreadable ($e)';
+          failures[day] = (failures[day] ?? 0) + 1;
+        } catch (e) {
+          outcome = 'failed ($e)';
+          failures[day] = (failures[day] ?? 0) + 1;
+        } finally {
+          _rehydrated = null;
+        }
+        if ((failures[day] ?? 0) >= archiveRederiveMaxFailures) {
+          kept[day] = 'unreadable';
+        }
+        // The per-day cost, for the owner to read on the phone.
+        _log('archive rederive $day: $outcome, read+prepare ${prepareMs}ms, '
+            'total ${clock.elapsedMilliseconds}ms');
+        state
+          ..['kept'] = kept
+          ..['rederived'] = ((state['rederived'] as num?)?.toInt() ?? 0) +
+              (outcome == 'rederived' ? 1 : 0);
+        await LocalDb.putComputeFreshness(
+            SubstrateArchive.rederiveFailuresKey, jsonEncode(failures));
+        await LocalDb.putComputeFreshness(archiveRederiveKey, jsonEncode(state));
+        onDayDone?.call(day, tried, todo.length);
+      }
+      state
+        ..['kept'] = kept
+        ..['rederived'] = (state['rederived'] as num?)?.toInt() ?? 0
+        // Finished when no listed day can still be tried: each was written,
+        // kept for a reason, or has failed as often as it may.
+        ..['finished'] = todo.every((d) =>
+            written.contains(d) ||
+            kept.containsKey(d) ||
+            (failures[d] ?? 0) >= archiveRederiveMaxFailures);
+      await LocalDb.putComputeFreshness(archiveRederiveKey, jsonEncode(state));
+      if (done > 0) {
+        await _refreshBaselines();
+        await _runCrossDay(profile);
+        _log('archive rederive: $done day(s) brought to v$kAlgoVersion, '
+            '${kept.length} kept on their version');
+      }
+      return done;
+    } catch (e, st) {
+      _log('archive rederive skipped (will retry): $e\n$st');
+      return 0;
+    }
+  }
+
+  /// Whether the rows read back for [day] hold at least the recording its
+  /// stored result was derived from. The archive can have holes the stored
+  /// day never had (a bucket deleted unarchived past the hold, archiving
+  /// switched off for a while), and a hole is indistinguishable from a band
+  /// left on the table — except that the stored day says how much it saw.
+  ///
+  /// ponytail: minutes worn and seconds asleep, each within 10 %. Good for a
+  /// 1 Hz band; a sparse device's night can fall short and keep its version,
+  /// which is the safe side. Compare per-signal coverage if that ever bites.
+  Future<bool> _archiveCoversStored(PreparedDerivationDay day) async {
+    final storedWorn = await LocalDb.metricValueOn(day.date, 'worn_min');
+    final storedTst = await LocalDb.metricValueOn(day.date, 'tst_min');
+    final sub = day.daySub;
+    final wornMin = <int>{
+      for (var i = 0; i < sub.tsSec.length; i++)
+        if (i < sub.hr.length && sub.hr[i] > 0) sub.tsSec[i] ~/ 60,
+    }.length;
+    return (storedWorn == null || wornMin >= storedWorn * 0.9) &&
+        (storedTst == null || day.sleepSub.tsSec.length / 60 >= storedTst * 0.9);
+  }
+
+  Future<Map<String, int>> _archiveRederiveFailures() async {
+    try {
+      final raw = (await LocalDb.computeFreshness(
+          SubstrateArchive.rederiveFailuresKey))?['payload_json'];
+      return {
+        for (final e in (jsonDecode(raw as String) as Map).entries)
+          if (e.value is int) e.key as String: e.value as int,
+      };
+    } catch (_) {
+      return {};
+    }
+  }
+
+  /// Stored readiness of today and the seven days before it, by day label.
+  static Future<Map<String, double>> _recentReadiness() async {
+    final now = DateTime.now();
+    final out = <String, double>{};
+    for (var i = 0; i <= 7; i++) {
+      final day = dayLabelOf(DateTime(now.year, now.month, now.day - i));
+      final v = await LocalDb.metricValueOn(day, 'readiness');
+      if (v != null) out[day] = v;
+    }
+    return out;
+  }
+
+  /// What the archive re-derive did for this [kAlgoVersion], as aggregates:
+  /// `rederived`, `kept` (reason → days), `finished`, and how far the stored
+  /// readiness of today / the last seven days has moved since before the
+  /// first day was re-derived (`n`, `mean_abs_delta`, `max_abs_delta`,
+  /// `today_delta`). Null when no re-derive has run for this version.
+  static Future<Map<String, dynamic>?> archiveRederiveReport() async {
+    final raw =
+        (await LocalDb.computeFreshness(archiveRederiveKey))?['payload_json'];
+    if (raw is! String) return null;
+    final state = (jsonDecode(raw) as Map).cast<String, dynamic>();
+    if (state['algo_version'] != kAlgoVersion) return null;
+    final reasons = <String, int>{};
+    for (final r in ((state['kept'] as Map?) ?? const {}).values) {
+      reasons['$r'] = (reasons['$r'] ?? 0) + 1;
+    }
+    final before =
+        ((state['readiness_before'] as Map?) ?? const {}).cast<String, dynamic>();
+    final now = await _recentReadiness();
+    final today = todayLabel();
+    final deltas = <double>[
+      for (final e in before.entries)
+        if (e.key != today && now[e.key] != null)
+          (now[e.key]! - (e.value as num)).abs().toDouble(),
+    ];
+    return {
+      'algo_version': kAlgoVersion,
+      'rederived': (state['rederived'] as num?)?.toInt() ?? 0,
+      'kept': reasons,
+      'finished': state['finished'] == true,
+      'readiness_7d': {
+        'n': deltas.length,
+        'mean_abs_delta': deltas.isEmpty
+            ? null
+            : deltas.reduce((a, b) => a + b) / deltas.length,
+        'max_abs_delta': deltas.isEmpty ? null : deltas.reduce(math.max),
+      },
+      'today_delta': before[today] != null && now[today] != null
+          ? now[today]! - (before[today] as num)
+          : null,
+    };
   }
 
   // ── raw pruning (raw-first invariant) ──────────────────────────────────────
