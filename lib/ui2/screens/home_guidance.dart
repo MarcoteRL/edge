@@ -55,7 +55,7 @@ class DecisionLine extends StatelessWidget {
   });
 
   /// Today's final recovery, 0–100; null when it is not scored.
-  final double? readiness;
+  final num? readiness;
 
   /// True while only the greyed estimate exists.
   final bool calibrating;
@@ -65,7 +65,7 @@ class DecisionLine extends StatelessWidget {
   final List<Map<String, dynamic>> drivers;
 
   /// Whether there is anything to say at all.
-  static bool has({required double? readiness, required bool calibrating}) =>
+  static bool has({required num? readiness, required bool calibrating}) =>
       readiness != null || calibrating;
 
   @override
