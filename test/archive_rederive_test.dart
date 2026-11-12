@@ -21,7 +21,8 @@
 //     is counted under `archive_rederive_failures` — never under
 //     `substrate_archive_failures`, which decides deletions — and is given up
 //     on after three passes.
-//  6. SAFE TO RUN. It yields to a band offload and picks up where it stopped.
+//  6. SAFE TO RUN. It yields to a band offload and picks up where it stopped,
+//     and it never creates an activity suggestion for a day it re-derives.
 //
 // "Same version" needs one trick: a binary has one kAlgoVersion, so the days
 // under test are relabelled one version down (and their stored scalars
@@ -200,6 +201,10 @@ Future<void> _roundTrip(String name, DateTime base,
 
   await DerivationEngine().run(_profile, heavy: true);
   await DerivationEngine().run(_profile, heavy: true);
+  // Activity review counts from "now" on a fresh install; these days are in
+  // the past, so open it up or no derive would ever propose anything.
+  final db = await LocalDb.instance;
+  await db.rawUpdate('UPDATE activity_review_meta SET activated_at = 0');
 
   // The reference: a forced live derive of the two days, twice. Agreeing
   // with itself is the precondition for comparing anything against it.
@@ -212,6 +217,13 @@ Future<void> _roundTrip(String name, DateTime base,
     expect(payload, isNotNull, reason: 'precondition: the day derived');
   }
   final liveRolling = await _rolling();
+  // The live derive proposed something to review on these days...
+  final marks = List.filled(targets.length, '?').join(',');
+  Future<int> proposals() => _count(
+      'SELECT COUNT(*) FROM activity_suggestions WHERE day_id IN ($marks)',
+      targets);
+  expect(await proposals(), greaterThan(0),
+      reason: 'precondition: a live derive proposes activities');
 
   // Archive and prune both days (and the evening the third day's night
   // starts in — which is why that day is not one of the targets).
@@ -226,6 +238,9 @@ Future<void> _roundTrip(String name, DateTime base,
   final buckets = await _count('SELECT COUNT(*) FROM substrate_archive');
 
   await _makeOld(targets);
+  // ...and the store has since lost them (reviewed, cleared, an older build).
+  await db.delete('activity_suggestions',
+      where: 'day_id IN ($marks)', whereArgs: targets);
   final old = [for (final d in targets) await _stored(d, _old)];
   expect(old.map((r) => r.$1), live.map((r) => r.$1));
 
@@ -266,6 +281,10 @@ Future<void> _roundTrip(String name, DateTime base,
   );
   expect(await _count('SELECT COUNT(*) FROM substrate_archive'), buckets);
 
+  // The re-derive asks the user nothing about a day that old.
+  expect(await proposals(), 0,
+      reason: 'an archive re-derive never creates an activity suggestion');
+
   final report = (await DerivationEngine.archiveRederiveReport())!;
   expect(report['rederived'], 2);
   expect(report['kept'], isEmpty);
@@ -273,7 +292,6 @@ Future<void> _roundTrip(String name, DateTime base,
   expect(await LocalDb.computeFreshness(SubstrateArchive.failuresKey), isNull);
 
   // 4. A second pass (and a third, forced to look again) writes nothing.
-  final db = await LocalDb.instance;
   // Only the days the prune has passed: a live, unfinalized day is derived
   // again on every pass by design.
   final firstLive = dayLabelOf(at(3));
@@ -409,13 +427,11 @@ void main() {
     await LocalDb.pruneDecodedBeforeRecTs(cut);
     expect((await liveOneHz()).length, lessThan(onehz.length));
 
-    Future<RehydratedSubstrate> read() async {
-      final s = await LocalDb.rehydratedSubstrate();
-      await s.load(from, to);
-      return s;
-    }
+    // The test isolate stands in for the worker: decode is plain Dart.
+    Future<RehydratedRows> read() async => RehydratedRows.decode(
+        await (await LocalDb.rehydratedSubstrate()).inputs(from, to));
 
-    List<Map<String, dynamic>> all(RehydratedSubstrate s) {
+    List<Map<String, dynamic>> all(RehydratedRows s) {
       final out = <Map<String, dynamic>>[];
       while (true) {
         final page = s.oneHzPage(from, to, offset: out.length, limit: 2000);

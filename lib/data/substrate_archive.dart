@@ -1099,11 +1099,10 @@ abstract final class SubstrateArchive {
     return (r.first['t'] as num?)?.toInt();
   }
 
-  /// Every device's bucket for [utcDay], archive ∪ live with the live row
-  /// winning — the same rule the archive's own merge applies. Memory only.
-  /// Throws [ArchiveUnreadable] when an archived blob does not decode to its
-  /// recorded fingerprint.
-  static Future<List<ArchiveBucket>> _rehydrateDay(
+  /// What a re-derive needs of [utcDay], one entry per device: the archived
+  /// blob as stored and the live rows as typed pages. I/O only — nothing is
+  /// decoded here, on the isolate that owns the database.
+  static Future<List<RehydratedBucket>> _bucketInputs(
     DatabaseExecutor ex,
     int utcDay,
   ) async {
@@ -1126,7 +1125,7 @@ abstract final class SubstrateArchive {
         ))
           r['device_id'] as String,
     }.toList()..sort();
-    final out = <ArchiveBucket>[];
+    final out = <RehydratedBucket>[];
     for (final device in devices) {
       final meta = metas[device];
       final blob = meta == null ? null : await readBlob(ex, device, utcDay);
@@ -1134,40 +1133,18 @@ abstract final class SubstrateArchive {
       // day is not readable, which is not the same as empty.
       if (meta != null && blob == null) throw ArchiveUnreadable(device, utcDay);
       final (onehz, rr) = await _readLivePages(ex, device, lo, hi);
-      final bucket = await _mergeLiveOffIsolate(
-        onehz,
-        rr,
-        blob,
-        (meta?['codec'] as num?)?.toInt() ?? SubstrateArchiveCodec.codecId,
-        (meta?['fingerprint'] as num?)?.toInt(),
-      );
-      if (bucket == null) throw ArchiveUnreadable(device, utcDay);
-      out.add(bucket);
+      out.add(RehydratedBucket(
+        deviceId: device,
+        utcDay: utcDay,
+        blob: blob,
+        codec: (meta?['codec'] as num?)?.toInt() ?? SubstrateArchiveCodec.codecId,
+        fingerprint: (meta?['fingerprint'] as num?)?.toInt(),
+        onehz: onehz,
+        rr: rr,
+      ));
     }
     return out;
   }
-
-  /// Null when [blob] is unreadable or does not match [fingerprint].
-  static Future<ArchiveBucket?> _mergeLiveOffIsolate(
-    List<ArchiveTable> onehz,
-    List<ArchiveTable> rr,
-    Uint8List? blob,
-    int codec,
-    int? fingerprint,
-  ) => Isolate.run(() {
-    var archived = ArchiveBucket.empty;
-    if (blob != null) {
-      final b = SubstrateArchiveCodec.decode(blob, codec: codec);
-      if (b == null || SubstrateArchiveCodec.fingerprint(b) != fingerprint) {
-        return null;
-      }
-      archived = b;
-    }
-    return SubstrateArchiveCodec.merge(
-      ArchiveBucket(ArchiveTable.concat(onehz), ArchiveTable.concat(rr)),
-      archived,
-    );
-  });
 
   /// `{buckets, bytes, raw_bytes, oldest_from_ts, newest_to_ts}`; the two
   /// timestamps are null on an empty archive.
@@ -1192,22 +1169,130 @@ class ArchiveUnreadable implements Exception {
   String toString() => 'archive bucket ($deviceId, $utcDay) is unreadable';
 }
 
+/// One (device, UTC day) as it sits on disk: the archived blob and the live
+/// rows of the same day. Plain data, cheap to send to an isolate.
+class RehydratedBucket {
+  const RehydratedBucket({
+    required this.deviceId,
+    required this.utcDay,
+    required this.blob,
+    required this.codec,
+    required this.fingerprint,
+    required this.onehz,
+    required this.rr,
+  });
+  final String deviceId;
+  final int utcDay;
+  final Uint8List? blob;
+  final int codec;
+  final int? fingerprint;
+  final List<ArchiveTable> onehz;
+  final List<ArchiveTable> rr;
+}
+
+/// Everything [RehydratedRows.decode] needs for a range: its buckets and the
+/// `source` values a derive may read besides NULL.
+class RehydratedInputs {
+  const RehydratedInputs(this.buckets, this.derivableSources);
+  final List<RehydratedBucket> buckets;
+  final Set<String> derivableSources;
+}
+
 /// The decoded substrate of a `rec_ts` range with its archived part read back
 /// in: what `decoded_onehz` / `decoded_rr` would hold had the prune never run.
 ///
 /// READ-ONLY AND IN MEMORY. Nothing here writes: archived rows are never put
 /// back into the live tables (that would fight the prune, and re-open
-/// invariant 2 for seconds the live table no longer owns). Buckets are loaded
-/// per UTC day on demand ([load]) and kept columnar; row maps are only built
-/// a page at a time, in the shape and order of
-/// `LocalDb.decodedOneHzBatchByRecTsRange` / `decodedRrByRecTsRange`.
+/// invariant 2 for seconds the live table no longer owns).
+///
+/// TWO HALVES, ON PURPOSE. This class lives on the isolate that owns the
+/// database and only FETCHES — blobs and typed live pages, per UTC day, kept
+/// for the days a derive asks for again. Turning them into rows
+/// ([RehydratedRows]) is CPU work over a whole day and happens in a worker
+/// isolate, never here (invariant 10).
 class RehydratedSubstrate {
-  RehydratedSubstrate(this._ex, {required bool Function(Object? source) derivable})
-    : _derivable = derivable;
+  RehydratedSubstrate(this._ex, {required Set<String> derivableSources})
+    : _derivableSources = derivableSources;
 
   final DatabaseExecutor _ex;
-  final bool Function(Object? source) _derivable;
-  final Map<int, List<ArchiveBucket>> _days = {};
+  final Set<String> _derivableSources;
+  final Map<int, List<RehydratedBucket>> _days = {};
+
+  /// The buckets of every UTC day touching `[fromRecTs, toRecTs]`, fetched
+  /// once per day.
+  Future<RehydratedInputs> inputs(int fromRecTs, int toRecTs) async {
+    final out = <RehydratedBucket>[];
+    for (var d = fromRecTs ~/ 86400; d <= toRecTs ~/ 86400; d++) {
+      out.addAll(_days[d] ??= await SubstrateArchive._bucketInputs(_ex, d));
+    }
+    return RehydratedInputs(out, _derivableSources);
+  }
+
+  /// `LocalDb.skinTempAmbientMinutes` over the rehydrated rows, computed in a
+  /// worker isolate.
+  Future<List<(int, double, double)>> skinTempAmbientMinutes(
+    int fromSec,
+    int toSec, {
+    required String primaryDeviceId,
+  }) async {
+    if (toSec <= fromSec) return const [];
+    return Isolate.run(
+      _ambientJob(await inputs(fromSec, toSec - 1), fromSec, toSec, primaryDeviceId),
+    );
+  }
+
+  // Built in a static so the closure holds these four values and not `this`
+  // (which holds the database).
+  static List<(int, double, double)> Function() _ambientJob(
+    RehydratedInputs data,
+    int fromSec,
+    int toSec,
+    String primaryDeviceId,
+  ) =>
+      () => RehydratedRows.decode(data).skinTempAmbientMinutes(
+        fromSec,
+        toSec,
+        primaryDeviceId: primaryDeviceId,
+      );
+}
+
+/// The rows of a [RehydratedInputs], decoded: archive ∪ live per bucket, the
+/// live row winning — the rule the archive's own merge applies. Row maps come
+/// out a page at a time in the shape and order of
+/// `LocalDb.decodedOneHzBatchByRecTsRange` / `decodedRrByRecTsRange`.
+///
+/// CALL [decode] IN A WORKER ISOLATE. It inflates whole days and everything
+/// after it walks them.
+class RehydratedRows {
+  RehydratedRows._(this._days, this._sources);
+
+  final Map<int, List<ArchiveBucket>> _days;
+  final Set<String> _sources;
+
+  /// Throws [ArchiveUnreadable] when an archived blob does not decode to its
+  /// recorded fingerprint.
+  factory RehydratedRows.decode(RehydratedInputs inputs) {
+    final days = <int, List<ArchiveBucket>>{};
+    for (final b in inputs.buckets) {
+      var archived = ArchiveBucket.empty;
+      final blob = b.blob;
+      if (blob != null) {
+        final decoded = SubstrateArchiveCodec.decode(blob, codec: b.codec);
+        if (decoded == null ||
+            SubstrateArchiveCodec.fingerprint(decoded) != b.fingerprint) {
+          throw ArchiveUnreadable(b.deviceId, b.utcDay);
+        }
+        archived = decoded;
+      }
+      (days[b.utcDay] ??= []).add(SubstrateArchiveCodec.merge(
+        ArchiveBucket(ArchiveTable.concat(b.onehz), ArchiveTable.concat(b.rr)),
+        archived,
+      ));
+    }
+    return RehydratedRows._(days, inputs.derivableSources);
+  }
+
+  bool _derivable(Object? source) => source == null || _sources.contains(source);
 
   static const List<String> _onehzColumns = [
     'counter', 'rec_ts', 'hr', 'ax', 'ay', 'az', //
@@ -1219,13 +1304,6 @@ class RehydratedSubstrate {
   static const List<String> _rrColumns = [
     'rec_ts', 'beat_index', 'rr_ts_ms', 'rr_ms', 'beat_ts_ms', 'device_id', //
   ];
-
-  /// Make every UTC day touching `[fromRecTs, toRecTs]` available.
-  Future<void> load(int fromRecTs, int toRecTs) async {
-    for (var d = fromRecTs ~/ 86400; d <= toRecTs ~/ 86400; d++) {
-      _days[d] ??= await SubstrateArchive._rehydrateDay(_ex, d);
-    }
-  }
 
   // The rows of [tables] (one per device, each sorted by rec_ts) with
   // `from <= rec_ts <= to` and a derivable source, in `rec_ts, tie` order.
@@ -1308,8 +1386,8 @@ class RehydratedSubstrate {
       t.rowAt(i, _rrColumns),
   ];
 
-  /// `LocalDb.skinTempAmbientMinutes` over the rehydrated rows: the primary
-  /// band's own rows ([primaryDeviceId], no `source`) in `[fromSec, toSec)`.
+  /// `LocalDb.skinTempAmbientMinutes` over these rows: the primary band's own
+  /// rows ([primaryDeviceId], no `source`) in `[fromSec, toSec)`.
   List<(int, double, double)> skinTempAmbientMinutes(
     int fromSec,
     int toSec, {
