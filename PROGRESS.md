@@ -4,7 +4,7 @@ Append new entries at the top of "Log". Keep "Status" current.
 
 ## Status
 
-- **Phase:** iteration 1 of the product plan closed (2026-11-12); iteration plan awaiting owner approval (`docs/development/ITERATION_PLAN.md`).
+- **Phase:** iteration 2 (foundations) closed 2026-11-12; next is iteration 3 (`docs/development/ITERATION_PLAN.md`).
 - **Base:** upstream `main` @ `38a83e9` (2026-11-09), app `0.11.3+78`,
   `kAlgoVersion 120`, `schemaVersion 58`.
 - **Remotes:** `upstream` = github.com/OpenStrap/edge. `origin` =
@@ -55,6 +55,15 @@ translations or a gallery entry:
 Any failure outside this list after a change is a regression.
 
 ## Log
+
+### 2026-11-12 — Iteration 2: DATA-02, awake-tap rule, T-02 (no kAlgoVersion bump)
+- **Full suite left open by the previous entry:** run 43233915353 hit the 90-min limit at 615 of 631 files with +6940 ~28 and no failure; run **43250024942** (the remaining 17 files, on `main`) passed. ALG-L1/ALG-C1 are therefore covered by the whole suite.
+- **DATA-02** (`_rederiveArchivedPass` in `derivation_engine.dart`, `RehydratedSubstrate` in `substrate_archive.dart`): a heavy or forced foreground pass brings days the prune has passed up to `kAlgoVersion` from `substrate_archive`, read back in memory (archive ∪ live, live wins), oldest first, 4 days per pass. A complete current-version row is never derived over. Failures go to `archive_rederive_failures`, never to `substrate_archive_failures`. Stands down with a pending timezone change or an active wearable. State and aggregate report: `compute_freshness.archive_rederive`. No day's output changes: no bump, freeze goldens untouched.
+- **Awake-tap rule** documented (ALGORITHMS.md §4, D-12) with its two limits; `test/awake_tap_provenance_test.dart`.
+- **T-02** `test/payload_contract_test.dart` + `test/fixtures/day_payload_contract.json` (262 paths, `tool/payload_contract.py`).
+- `test-files.yml` takes an optional `tz`. `CLAUDE.md` aligned with the runbook and the iteration workflow.
+- Independent review (read-only subagent): no P0; four P1 fixed before merge (outcome judged by the stored row, timezone guard, hole check counted like `worn_min`, wearable days stand down). Left open, written in IMPLEMENTATION_LOG.md: holes inside a night smaller than its time awake; row maps built on the UI isolate; the one-shot readiness backfill can stamp archived days first.
+- Evidence (branch `iter2/foundations`): **43255670024** — analyze clean + awake-tap, contract and archive tests, UTC (12 pass, 2 skipped: the clock-change cases); **43255676974** — archive tests under `tz=Europe/Madrid`, 5 pass, including the 23 h and 25 h days, byte-identical; full suite in two halves **43260273913** (+3792 ~12, analyze clean) and **43260295892** (+3334 ~18): all passed. CI-measured cost of one archived day: ~10 s read+prepare, ~25 s total on the runner. Unit-tested, not hardware-validated; time and memory on the iPhone are unmeasured.
 
 ### 2026-11-12 — Iteration 1: audit contrasted with the code, iteration plan (docs only)
 - Read the audit docs in order and checked their claims against `main` @ `cb3bbbeb` (`kAlgoVersion 121`, `schemaVersion 58`) and analytics @ `3a7ca34d`. Result: `docs/development/AUDIT_VERIFICATION.md`. Plan: `docs/development/ITERATION_PLAN.md` (**awaiting owner approval**, three open questions Q1–Q3). Resume point: `docs/development/IMPLEMENTATION_LOG.md`.
