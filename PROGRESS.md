@@ -62,7 +62,7 @@ Any failure outside this list after a change is a regression.
 - **ALG-C1:** `irregularRhythmFlag` (`lib/compute/onehz_pipeline.dart`) — published flag needs the sleep-window screen too; no scored night ⇒ null. New `test/irregular_flag_corroboration_test.dart` (3).
 - Freeze goldens checked by reading: their `load` note (`have=3,need=14`) and every `irregular_rhythm_flag` (0.0, sleep screen present) are unchanged by the logic; only `algo_version` 120 → 121 moves, so they need `GENERATE_GOLDEN=1` with owner approval and a diff limited to that field.
 - Dropped DATA-06 (no code needed) and most of FI-B4 (journal already has the ratings).
-- **Not run** (no Flutter in session). Owner: `flutter analyze`, `flutter test --concurrency=1`. Not hardware-validated.
+- Branch `audit/2026-11-12`. Evidence (CI_RUNBOOK.md): test-files **43231936403** — analyze clean ("No issues found"), crossday_pipeline/irregular/findings/freshness/serve-version/coach/two-device all pass; only the WHOOP freeze goldens failed, on `algo_version: got 121, golden 120` (first and only mismatch). Goldens updated mechanically (54 lines, `"algo_version": 120` → `121`, nothing else); **43232851823** — freeze goldens + crossday + irregular: all 58 pass, so no WHOOP number moved. Full suite: **43233915353** (result in the next entry). Unit-tested, not hardware-validated.
 
 ### 2026-11-12 — AUD-04: full audit and permanent docs (no code change)
 - Read the fork at `15d791a0`, analytics `3a7ca34`, protocol `b4fde6a`, and a
