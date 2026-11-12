@@ -23,7 +23,7 @@ Plantilla de cada tarea: **Qué** · **Por qué** · **Dónde** · **Cómo** ·
 - **Prueba:** `compute_freshness.substrate_archive_policy.keep_days = -1` en una exportación.
 - **Resultado:** cero pérdida de sustrato. **Esfuerzo:** S. **Repo:** edge.
 
-### DATA‑02 · Re‑derivar días desde `substrate_archive`
+### DATA‑02 · Re‑derivar días desde `substrate_archive` — **hecho (iteración 2, 2026‑11‑12; ver ALGORITHMS.md §7)**
 - **Qué:** que un cambio de `kAlgoVersion` (o "Re‑analizar") pueda recalcular días podados leyendo el archivo.
 - **Por qué:** sin esto, cada mejora de algoritmo solo llega a los últimos ~5 días (TD‑10).
 - **Dónde:** `lib/data/substrate_archive.dart` (lectura), `lib/compute/derive_prepare.dart` (fuente del sustrato), `DerivationEngine` (selección de días).

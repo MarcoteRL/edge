@@ -207,6 +207,25 @@ consumo (κ 0,21–0,53). **Las fases son orientativas.**
   versión sí se reescribe** (`putDayResult` usa REPLACE): la inmutabilidad
   hay que imponerla en cada ruta que re‑derive (AUDIT_VERIFICATION.md §2.2). Subirlo re‑deriva solo los días con sustrato vivo (≈ 5 días) y
   los no finalizados.
+- **Re‑derivación desde el archivo (DATA‑02, fork).** En una pasada `heavy` o
+  forzada en primer plano, `_rederiveArchivedPass` (`derivation_engine.dart`)
+  lleva a `kAlgoVersion` los días a los que la poda ya ha llegado, leyendo su
+  sustrato de `substrate_archive` **en memoria** (`RehydratedSubstrate`:
+  archivo ∪ vivo, gana la fila viva; nunca se reinserta en `decoded_*`).
+  Reglas: solo días sin fila completa de la versión actual; del más antiguo
+  al más reciente, recargando el historial de baselines antes de cada día;
+  4 días por pasada (sin tope en "Re‑analyze everything"); cede ante un
+  volcado BLE o un sync en segundo plano. Un día **conserva su versión**, con
+  el motivo guardado, si: empieza antes que el archivo (`before_archive`), el
+  archivo se grabó en otra zona horaria (`tz_changed`), lo leído tiene menos
+  grabación que el resultado guardado (`less_data`), las guardas del motor
+  prefieren el resultado existente (`no_gain`), no es un día medido
+  (`not_measured`) o el archivo no se pudo leer tres veces (`unreadable`,
+  contado en `archive_rederive_failures`, nunca en
+  `substrate_archive_failures`). No se ejecuta con una zona horaria pendiente
+  de resolver ni con un wearable activo. Estado e informe agregado:
+  `compute_freshness.archive_rederive` (`DerivationEngine.archiveRederiveReport`).
+  No cambia la salida de ningún día: sin subida de versión.
 - `metric_series` guarda la última versión de cada día.
 - Backfills idempotentes marcados en `compute_freshness`
   (`strain_rescale_v63`, `readiness_calibration_v112`, `quiet_hrr_seed_v1`…).

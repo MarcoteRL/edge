@@ -17,6 +17,12 @@
   gh workflow run test-files.yml -R MarcoteRL/edge --ref <rama> \
     -f files="$(git ls-files 'test/*_test.dart' 'test/**_test.dart' | sort -u | tr '\n' ' ')"
   ```
+- Suite completa **partida en dos** (el job corta a los 90 min): reparte la
+  lista anterior en dos mitades y lanza un run por mitad; `analyze=true` solo
+  en una.
+- Zona horaria (tests de días que cruzan dos días UTC o de cambio de hora):
+  añade `-f tz=Europe/Madrid`. Sin él, el run va en UTC y esos casos se
+  saltan.
 - Seguimiento:
   ```bash
   gh run list  -R MarcoteRL/edge -w test-files.yml -L 1

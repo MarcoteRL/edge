@@ -55,7 +55,7 @@ estado actual en la tabla `baselines` (una fila por clave).
 
 | Necesidad | Hoy | Propuesta mínima (justificada) |
 |---|---|---|
-| Recalcular histórico tras cambiar un algoritmo | Solo días vivos | Re‑derivar desde `substrate_archive` (O‑01); **sin tabla nueva** |
+| Recalcular histórico tras cambiar un algoritmo | **Hecho (DATA‑02, 2026‑11‑12):** los días archivados se re‑derivan en memoria desde `substrate_archive`; estado en `compute_freshness` (`archive_rederive`, `archive_rederive_failures`) | Sin tabla nueva ni migración. El archivo es de solo lectura para esta ruta |
 | Comparar versiones de una métrica | `metric_series` solo guarda la última | Leer `day_result` de ambas versiones (ya existen); no hace falta tabla |
 | Historial de baselines | En cada `payload_json.baselines` | Documentar y leer de ahí (ALG‑T2) |
 | Registrar recomendaciones y su resultado | No existe | Tabla `recommendation_log(day_id, kind, payload_json, shown_at, followed, outcome_json)` solo cuando exista el motor de recomendaciones (FI‑E4). Migración aditiva |

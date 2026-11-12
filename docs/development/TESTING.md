@@ -35,10 +35,10 @@ corregidos en el fork por CI‑05. Cualquier fallo nuevo es regresión
 | ID | Hueco | Propuesta |
 |---|---|---|
 | T‑01 | Ningún test de CTL/ATL con días no llevados | Test de ALG‑L1 con calendarios sintéticos |
-| T‑02 | Contrato `payload_json` ↔ `local_repository_impl.dart` implícito | Test que cargue un payload real anonimizado y compruebe que cada clave leída existe |
+| T‑02 | ~~Contrato `payload_json` ↔ read seam~~ **hecho**: `test/payload_contract_test.dart` + `test/fixtures/day_payload_contract.json` (262 rutas; se regenera con `tool/payload_contract.py` tras una subida de versión) | — |
 | T‑03 | Cribado irregular en días solo diurnos | Fixture sintético con RR diurno ruidoso → debe abstener (ALG‑C1) |
 | T‑04 | Temperatura gen5 en readiness | Test de que la entrada no se rechaza con banda de asentamiento definida (ALG‑R3) |
-| T‑05 | Re‑derivación desde archivo | Test de ida y vuelta `substrate_archive` → derivación idéntica a la del crudo vivo (O‑01) |
+| T‑05 | ~~Re‑derivación desde archivo~~ **hecho**: `test/archive_rederive_test.dart` (ida y vuelta byte a byte, solo lectura, idempotencia, fallos, cesión; con `tz=Europe/Madrid` cubre dos días UTC y cambio de hora) | — |
 | T‑06 | Validación con datos reales | Golden de derivación con una base sintética (generada, no la tuya) |
 
 ## 4. Cómo validar un cambio de algoritmo
