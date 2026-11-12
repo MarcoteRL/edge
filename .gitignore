@@ -119,3 +119,10 @@ docs/internal/
 payload*.json
 
 MULTIDEVICE_PROGRESS.md
+
+# SQLite exports and their WAL/SHM side files: a DB export is the user's
+# whole health history. Never commit one, wherever it was dropped.
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
