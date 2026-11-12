@@ -113,3 +113,45 @@ hay ECG para confirmarlo. Propuesta: ALG‑C1.
 - Detectar anomalías: requiere ≥ 10 noches.
 
 Plan para repetir este análisis con más datos: DATA_OPPORTUNITIES.md §4.
+
+## 8. 2026-11-12 — Exportaciones antes y después de la re‑derivación (DATA‑02)
+
+Dos exportaciones del propietario, con ~11 min de diferencia: antes de
+instalar el build `f7380fb` (`kAlgoVersion 120`) y después de instalarlo y
+pulsar "Re‑analyze everything" (`121`). Solo lectura, solo agregados.
+
+| Medida | Antes | Después |
+|---|---|---|
+| Días con resultado | 8 | 8 |
+| Días con crudo vivo | 4 | 4 |
+| Cubos en `substrate_archive` | 4 | 4 (sin cambios: no se escribió ni borró nada) |
+| Filas `day_result` por versión | 113: 5 · 120: 7 | 113: 5 · 120: 7 · **121: 7** |
+| Días re‑derivados desde el archivo | — | **3** (los tres sin noche: solo datos diurnos) |
+| Días que conservan su versión | — | **1**, `before_archive` (su ventana empieza antes que el archivo; sigue en v113) |
+| Fallos de lectura (`archive_rederive_failures`) | — | 0 |
+| `substrate_archive_failures` | ausente | ausente |
+| Sugerencias de actividad (total / pendientes) | 2 / 1 | 2 / 1 |
+| Noches con readiness | 0 | 0 |
+
+- **[Comprobado] Qué cambió en los 3 días re‑derivados:** una sola serie,
+  `irregular_rhythm_flag`, pasa de tener valor a ausente. Es el efecto buscado
+  de ALG‑C1 (v121): un día sin noche puntuada ya no publica la bandera. Ningún
+  otro escalar de esos días cambió; `worn_min` es idéntico en los tres.
+- **[Comprobado] Coste en el iPhone:** las filas v121 de dos de los tres días
+  archivados se sellaron con 5,8 s y 6,1 s de separación (`computed_at`), con
+  el build que aún montaba las filas en el hilo principal. Son días parciales
+  sin noche; **un día completo con noche no está medido**. El tercero no tiene
+  referencia anterior para medirlo.
+- **Readiness de hoy y de los últimos 7 días:** no hay ninguna noche con
+  readiness (sigue absteniéndose: 3 noches de 14), así que **no hay delta que
+  informar**. `readiness_before` quedó vacío por lo mismo.
+- **Strain:** ningún día tiene `strain` guardado ni antes ni después. Las
+  notas de abstención son las mismas en las dos exportaciones para todos los
+  días salvo uno, que pasa de `need_input:name=age` a
+  `need_input:name=resting_hr` (ahora el perfil tiene edad). Los tres días más
+  recientes siguen en `need_baseline:have=0/1/2,need=3`.
+- Los cambios en los días vivos (12 escalares de un día, hipnograma de otro)
+  son datos nuevos de la banda entre las dos exportaciones, no la
+  re‑derivación.
+- Limitación: los tiempos por día del log local (`archive rederive <día>: …`)
+  no están en la exportación; lo de arriba sale de `computed_at`.
