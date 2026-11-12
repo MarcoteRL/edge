@@ -174,10 +174,9 @@ Map<String, dynamic> buildCrossDayBundle(
   // across the gaps and TSB was systematically wrong. Build a DENSE per-day
   // series over the observed date span instead — a day with no TRIMP, and a
   // calendar day with no derived row at all, are both 0-load impulses.
-  final dailyTrimp = _denseDailyTrimp(dates, [
-    for (final d in days) _numOrNull(d['trimp']),
-  ]);
-  final load = ana.ctlAtlTsb(dailyTrimp);
+  final trimps = [for (final d in days) _numOrNull(d['trimp'])];
+  final load =
+      _loadWithCoverage(dates, trimps, _denseDailyTrimp(dates, trimps));
 
   // ── skin-temp illness flag (Smarr, cycle-aware) ────────────────────────────
   // WH-01 — the `luteal` argument was written, typed and never passed, so the
@@ -946,6 +945,56 @@ List<bool> _lutealFlags(List<String> dates, List<String> cycleStartDates) {
     if (elapsed >= len / 2) out[i] = true;
   }
   return out;
+}
+
+/// The calendar window the load coverage gate reads: CTL's own time constant.
+const int _loadCoverageWindowDays = 42;
+
+/// Share of that window that must carry a MEASURED TRIMP before CTL/ATL/TSB
+/// is reported.
+const double _loadMinKnownFraction = 0.8;
+
+/// CTL/ATL/TSB, or absent while too few of the recent calendar days were
+/// measured.
+///
+/// A day with no TRIMP is UNMEASURED, not a rest day: any worn day with a
+/// resting HR accrues waking TRIMP, so a null means no band, no night to anchor
+/// the resting HR, or no derived row at all. [_denseDailyTrimp] still has to
+/// feed those days to the EWMA as 0 (one element per calendar day), so with 3
+/// measured days in 15 the model reported a fitness and fatigue built mostly
+/// from invented rest (real export, 2026-11-12). Abstain with the standard
+/// `need_baseline` note instead, which the Workout tab already turns into
+/// "wear N more days".
+///
+/// ponytail: the unmeasured days left inside a window that passes the gate
+/// (up to 20 %) are still 0-load impulses. Upgrade path: `ctlAtlTsb` taking a
+/// nullable series that decays without an impulse on an unknown day
+/// (analytics; ALG-L1 in docs/development/ALGORITHM_EVALUATION.md).
+ana.Metric<ana.LoadState> _loadWithCoverage(
+  List<String> dates,
+  List<double?> trimps,
+  List<double> dailyTrimp,
+) {
+  // Same calendar densification, 1 for a measured day and 0 for anything else.
+  final known = _denseDailyTrimp(dates, [
+    for (final t in trimps) t == null ? null : 1.0,
+  ]);
+  final window = known.length > _loadCoverageWindowDays
+      ? known.sublist(known.length - _loadCoverageWindowDays)
+      : known;
+  final have = window.where((v) => v > 0).length;
+  final need = math.max(
+    ana.ctlAtlMinDays,
+    (_loadMinKnownFraction * window.length).ceil(),
+  );
+  if (have < need) {
+    return ana.Metric<ana.LoadState>.absent(
+      tier: ana.Tier.estimate,
+      inputs_used: const ['daily_trimp'],
+      note: ana.needBaselineNote(have: have, need: need),
+    );
+  }
+  return ana.ctlAtlTsb(dailyTrimp);
 }
 
 /// Guard on how far [_denseDailyTrimp] will densify. Past this the input is not

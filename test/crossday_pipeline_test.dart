@@ -291,7 +291,9 @@ void main() {
     // across rest gaps and TSB was systematically wrong for anyone who trains
     // sporadically.
     test('rest days are 0-load impulses, not omitted from the load EWMA', () {
-      // 90 days, but only every 9th day carries a TRIMP (10 loaded days).
+      // 90 MEASURED days, but only every 9th one carries training (10 loaded
+      // days); the rest are measured rest (TRIMP 0). An UNMEASURED day (no
+      // TRIMP at all) is a different thing: see the coverage gate test below.
       final days = <Map<String, dynamic>>[];
       var dt = DateTime(2024, 1, 1);
       for (var i = 0; i < 90; i++) {
@@ -300,7 +302,7 @@ void main() {
               '-${dt.day.toString().padLeft(2, '0')}',
           'rhr': 55.0,
           'rmssd': 45.0,
-          if (i % 9 == 0) 'trimp': 150.0,
+          'trimp': i % 9 == 0 ? 150.0 : 0.0,
         });
         dt = DateTime(dt.year, dt.month, dt.day + 1);
       }
@@ -325,6 +327,40 @@ void main() {
       // CI by exactly 1e-6). 1e-4 still pins the relationship without
       // asserting bit-level float reproducibility across architectures.
       expect((load['tsb'] as num).toDouble(), closeTo(ctl - atl, 1e-4));
+    });
+
+    test('unmeasured days are not rest: too few measured days abstain', () {
+      // The real 2026-11-12 export: 15 calendar days, a TRIMP on only the last
+      // 3. Densifying those 12 unmeasured days into 0-load "rest" used to
+      // report a fitness and fatigue made mostly of invented rest.
+      final days = _synthDays(15);
+      for (var i = 0; i < 12; i++) {
+        days[i].remove('trimp');
+      }
+      final load =
+          (buildCrossDayBundle(days, const {})['load'] as Map).cast<String, dynamic>();
+      expect(load['value'], '—');
+      expect(load['confidence'], 0);
+      expect(load['note'], 'need_baseline:have=3,need=14');
+    });
+
+    test('a 42-day window with under 80 % measured days abstains', () {
+      // 60 days, every day measured except 10 inside the last 42: 32/42 < 34.
+      final days = _synthDays(60);
+      for (var i = 25; i < 35; i++) {
+        days[i].remove('trimp');
+      }
+      final load =
+          (buildCrossDayBundle(days, const {})['load'] as Map).cast<String, dynamic>();
+      expect(load['note'], 'need_baseline:have=32,need=34');
+
+      // Same history with only 8 holes (34/42): the model reports.
+      final ok = _synthDays(60);
+      for (var i = 25; i < 33; i++) {
+        ok[i].remove('trimp');
+      }
+      final v = (buildCrossDayBundle(ok, const {})['load'] as Map)['value'];
+      expect(v, isA<Map>());
     });
 
     test('an every-day-trained series is unchanged by densification', () {

@@ -14,6 +14,13 @@ done (with evidence) / blocked. Complexity: S / M / L.
 | AUD-01 | Record test/analyze baseline from first `test.yml` run | DEBT | P1 | S | CI-02 | done (2026-11-09): run 42655279966, 8 pre-existing l10n/gallery failures (PROGRESS.md) |
 | AUD-02 | Deep bug sweep of hotspots (db, derivation, ble_engine, app_state) | DEBT | P2 | L | AUD-01 | todo |
 | AUD-03 | `flutter pub outdated` + advisory check, no upgrades | DEBT | P2 | S | toolchain | todo |
+| AUD-04 | Full audit: code + real DB export + algorithms + UX + roadmap (docs/development/AUDIT_SUMMARY.md) | DEBT | P1 | L | — | done (2026-11-12): docs only, no code change |
+| SEC-09 | `*.db`/`*.db-wal`/`*.db-shm`/`*.sqlite` in .gitignore | DEBT | P0 | S | — | done (`git check-ignore` verified) |
+| ALG-L1 | CTL/ATL abstain until 80 % of last 42 days have a measured TRIMP (`_loadWithCoverage`); kAlgoVersion 121 | BUG | P0 | M | — | code done, NOT run: owner runs tests + regenerates freeze goldens (algo_version only) |
+| ALG-C1 | irregular_rhythm_flag needs the sleep-window screen to agree (`irregularRhythmFlag`); same bump 121 | BUG | P1 | S | — | code done, NOT run |
+| DATA-06 | Dropped: an I'm-awake tap is already recognisable (offset_ts ≈ created_at) | — | — | — | — | won't do |
+| FI-B4 | Morning ratings already exist in the journal; only a "no alarm" night flag is missing | ENH | P2 | S | — | todo |
+| NEXT | ALG-L2 (RPE + strength load), UX-P04, ALG-S2, DATA-02 — after the tests above pass | — | — | — | ALG-L1, ALG-C1 | todo |
 
 **CI-01 detail.** *Motivation:* a Windows developer needs CI to get any IPA or
 validation. *Acceptance:* (1) a manual "Run workflow" on your repo finishes

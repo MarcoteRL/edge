@@ -56,6 +56,28 @@ Any failure outside this list after a change is a regression.
 
 ## Log
 
+### 2026-11-12 — SEC-09, ALG-L1, ALG-C1 (kAlgoVersion 120 → 121)
+- **SEC-09:** `*.db`, `*.db-wal`, `*.db-shm`, `*.sqlite` ignored (verified with `git check-ignore`; no tracked file matched).
+- **ALG-L1:** `_loadWithCoverage` (`lib/compute/crossday_pipeline.dart`) — CTL/ATL/TSB abstain with `need_baseline:have=H,need=N` until max(14, 80 % of the last 42 calendar days) carry a measured TRIMP. Test `rest days are 0-load impulses` now models rest as measured 0; two new cases (real-export shape 3/15 → `have=3,need=14`; 32/42 abstains, 34/42 reports).
+- **ALG-C1:** `irregularRhythmFlag` (`lib/compute/onehz_pipeline.dart`) — published flag needs the sleep-window screen too; no scored night ⇒ null. New `test/irregular_flag_corroboration_test.dart` (3).
+- Freeze goldens checked by reading: their `load` note (`have=3,need=14`) and every `irregular_rhythm_flag` (0.0, sleep screen present) are unchanged by the logic; only `algo_version` 120 → 121 moves, so they need `GENERATE_GOLDEN=1` with owner approval and a diff limited to that field.
+- Dropped DATA-06 (no code needed) and most of FI-B4 (journal already has the ratings).
+- **Not run** (no Flutter in session). Owner: `flutter analyze`, `flutter test --concurrency=1`. Not hardware-validated.
+
+### 2026-11-12 — AUD-04: full audit and permanent docs (no code change)
+- Read the fork at `15d791a0`, analytics `3a7ca34`, protocol `b4fde6a`, and a
+  real WHOOP 5.0 DB export (read-only copy, 3 nights, 4 live days). New docs
+  in `docs/development/` (index `README.md`, `AGENT_GUIDE.md`,
+  `AUDIT_SUMMARY.md` + 30 more) and offline scripts in `analysis/`.
+- Verified on real data: RHR, RMSSD (±3 %), TRIMP and quiet level recompute
+  from raw. Found: CTL/ATL counts unworn days as rest (Q-05); irregular-rhythm
+  screen flags 3/3 daytime-only days, 0/4 nights (Q-04); gen5 skin temp never
+  enters readiness (Q-02); both `manual` sleep overrides are "I'm awake" taps
+  (offset == created_at), indistinguishable from edits (DATA-06); `*.db` not in
+  .gitignore (SEC-09).
+- Every cited path/symbol grepped against the tree after the owner's pull.
+  No tests run (no toolchain in session). No biometric values in the docs.
+
 ### 2026-11-09 — Physiological age rebuilt on WHOOP's nine contributors
 - Owner asked for "the same as WHOOP". Rebuilt `lib/compute/healthspan.dart`
   on WHOOP's published structure (nine contributors, six months, break-even

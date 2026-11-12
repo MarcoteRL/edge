@@ -309,6 +309,29 @@ String? readinessUnstableBaselineNote(
       'history, so it was held back rather than shown.';
 }
 
+/// The day's published irregular-rhythm verdict (1/0, null = no verdict):
+/// the 24/7 screen, CORROBORATED by the same screen over the sleep window.
+///
+/// The day-span screen reads RR across waking hours, where wrist pulse timing
+/// is at its noisiest (movement, posture, ~25 % RR coverage by day on a real
+/// gen5 export). On that export it flagged all 3 days that had only daytime
+/// data and none of the 4 days with a night — the signature of motion artifact,
+/// not of a rhythm. A persistent irregular rhythm is still there at rest, so
+/// the verdict now needs the sleep-window screen too: no scored night ⇒ no
+/// verdict (abstain, never a guessed 0), and a flag only when both screens flag.
+///
+/// ponytail: a rhythm present only while awake can no longer flag. Upgrade
+/// path: mask the day-span RR to still, high-quality seconds (`dyn_accel_g`,
+/// `signal_quality_logvar`) inside the screen (ALG-C1 in
+/// docs/development/ALGORITHM_EVALUATION.md).
+double? irregularRhythmFlag(
+  Metric<IrregularRhythm> day,
+  Metric<IrregularRhythm> sleep,
+) {
+  if (!day.present || !sleep.present) return null;
+  return day.value!.flag && sleep.value!.flag ? 1.0 : 0.0;
+}
+
 /// Serializable input to the isolate: one physiological day's decoded 1 Hz
 /// substrate (the day slice), the PRECOMPUTED single-source sleep segmentation,
 /// the profile, and trailing baseline history for the readiness pass.
@@ -1861,9 +1884,7 @@ Map<String, dynamic> deriveDayBundle(Map<String, dynamic> inputJson) {
       'lf_hf': lfhf == null ? null : _round(lfhf, 3),
       'hrv_cv': hrvCv == null ? null : _round(hrvCv, 1),
       // 24/7 irregular-rhythm screen flag (1/0) → drives trend + notification.
-      'irregular_rhythm_flag': irregular24h.present
-          ? (irregular24h.value!.flag ? 1.0 : 0.0)
-          : null,
+      'irregular_rhythm_flag': irregularRhythmFlag(irregular24h, irregularSleep),
       // Breathing-rate variability (CV) + Theil-Sen trend slope.
       'brv_cv': brv.present ? _round(brv.value!.cv, 4) : null,
       'brv_slope': brv.present && brv.value!.trendSlope != null

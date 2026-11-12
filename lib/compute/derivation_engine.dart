@@ -1852,7 +1852,18 @@ import 'vendor_sleep.dart';
 // more than the windowed live/phone sources, instead of only when they counted
 // nothing, so a short tracked walk no longer hides the day's chip total.
 // gen4 (no counter) is unchanged. Edge-only.
-const int kAlgoVersion = 120;
+// 120 → 121 (fork, edge-only; ALG-L1 + ALG-C1 in
+// docs/development/ALGORITHM_EVALUATION.md): (1) CTL/ATL/TSB abstains with
+// `need_baseline` until 80 % of the last 42 calendar days (and at least
+// `ctlAtlMinDays`) carry a MEASURED TRIMP — a day with no TRIMP is unmeasured,
+// not rest, and densifying it into a 0 impulse reported fitness and fatigue
+// built mostly from invented rest (crossday_pipeline `_loadWithCoverage`).
+// (2) `irregular_rhythm_flag` needs the sleep-window screen to agree with the
+// 24/7 one: no scored night ⇒ null, a flag only when both screens flag (a real
+// gen5 export flagged 3/3 daytime-only days and 0/4 days with a night). Both
+// can only move a number towards abstaining or 0, never manufacture one.
+// Analytics and protocol pins unchanged.
+const int kAlgoVersion = 121;
 /// The sibling SHAs this version was derived against, asserted against
 /// pubspec.yaml in test/db_serve_version_and_reads_test.dart.
 ///
