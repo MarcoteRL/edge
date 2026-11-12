@@ -2,7 +2,7 @@
 // read seam (lib/data/local_repository_impl.dart).
 //
 // The payload has no declared schema: the read seam indexes it by string keys
-// and casts. test/fixtures/payload_contract.json pins, for every payload path
+// and casts. test/fixtures/day_payload_contract.json pins, for every payload path
 // whose keys the read seam names, the JSON types (with `null` and `absent`)
 // that the WHOOP freeze goldens carry at the current kAlgoVersion.
 //
@@ -48,7 +48,7 @@ void _walk(Object? v, String path, Map<String, Set<String>> out, int depth,
 
 void main() {
   final contract = (jsonDecode(
-          File('test/fixtures/payload_contract.json').readAsStringSync()) as Map)
+          File('test/fixtures/day_payload_contract.json').readAsStringSync()) as Map)
       .cast<String, dynamic>();
   final paths = (contract['paths'] as Map).map(
       (k, v) => MapEntry(k as String, {for (final t in v as List) t as String}));

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerate test/fixtures/payload_contract.json (T-02).
+"""Regenerate test/fixtures/day_payload_contract.json (T-02).
 
 The contract is the SHAPE of `day_result.payload_json` that the read seam
 (lib/data/local_repository_impl.dart) depends on: for every payload path
@@ -60,7 +60,7 @@ def main():
             types |= out.get(p, {'absent'})
         paths[p] = sorted(types)
     json.dump({'algo_version': version, 'max_depth': MAX_DEPTH, 'paths': paths},
-              open('test/fixtures/payload_contract.json', 'w', encoding='utf-8'),
+              open('test/fixtures/day_payload_contract.json', 'w', encoding='utf-8'),
               indent=1, sort_keys=True)
     print(f'{len(paths)} paths, v{version}, {len(days)} golden days')
 

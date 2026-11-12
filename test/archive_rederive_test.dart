@@ -134,7 +134,9 @@ Future<String> _rolling() async {
 }
 
 Future<int> _count(String sql, [List<Object?> args = const []]) async =>
-    Sqflite.firstIntValue(await (await LocalDb.instance).rawQuery(sql, args)) ??
+    ((await (await LocalDb.instance).rawQuery(sql, args)).first.values.first
+            as num?)
+        ?.toInt() ??
     0;
 
 /// Move [days]' current-version results one version down and nudge their
