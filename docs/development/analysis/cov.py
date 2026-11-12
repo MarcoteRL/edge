@@ -1,0 +1,30 @@
+import sys
+TZ = sys.argv[2] if len(sys.argv) > 2 else 'Europe/Madrid'
+import sqlite3, pandas as pd, numpy as np, json
+c=sqlite3.connect('file:'+sys.argv[1]+'?mode=ro',uri=True)
+d=pd.read_sql("select rec_ts, counter, hr, hr_alt, skin_temp_c, step_count, step_cadence, activity_class, band_sleep_state, signal_quality_logvar, dyn_accel_g, ts_subsec, temp_ch2_c, temp_ch3_c from decoded_onehz order by rec_ts",c)
+d['t']=pd.to_datetime(d.rec_ts,unit='s',utc=True).dt.tz_convert(TZ)
+d['day']=d.t.dt.date
+gap=d.rec_ts.diff()
+print('gaps >60s:', (gap>60).sum(), 'gaps >10min:', (gap>600).sum(), 'total gap hours:', round(gap[gap>60].sum()/3600,1))
+big=d.loc[gap>600,['rec_ts']].assign(gap_min=(gap[gap>600]/60).round(0))
+big['start']=pd.to_datetime(big.rec_ts-big.gap_min*60,unit='s',utc=True).dt.tz_convert(TZ).dt.strftime('%m-%d %H:%M')
+print(big[['start','gap_min']].to_string())
+print('counter gaps vs ts gaps: ', ((d.counter.diff()!=gap)&(gap<=60)).sum())
+g=d.groupby('day')
+print(pd.DataFrame({'rows':g.size(),'h':g.size()/3600,'hr_null%':g.hr.apply(lambda s:100*s.isna().mean()),'hr0%':g.hr.apply(lambda s:100*(s==0).mean())}).round(1))
+print('hr distribution pct <35:', 100*(d.hr<35).mean(), ' >200', (d.hr>200).sum())
+print('hr vs hr_alt equal%:', 100*(d.hr==d.hr_alt).mean(), 'hr_alt==0%', 100*(d.hr_alt==0).mean())
+print('band_sleep_state counts', d.band_sleep_state.value_counts().to_dict())
+print('activity_class counts', d.activity_class.value_counts().to_dict())
+print('skin_temp_c quantiles', d.skin_temp_c.quantile([.01,.05,.5,.95,.99]).round(1).to_dict())
+print('ts_subsec quantiles', d.ts_subsec.quantile([.5,.9,.99,1]).to_dict(), 'unique', d.ts_subsec.nunique())
+# step counter monotonic?
+sc=d.step_count.diff(); print('step decreases', (sc<0).sum(), 'step jumps >100/s', (sc>100).sum())
+print('sigq quantiles', d.signal_quality_logvar.quantile([.05,.5,.95]).round(2).to_dict())
+s=pd.read_sql("select ts, hr from samples order by ts",c)
+m=d.merge(s,left_on='rec_ts',right_on='ts',suffixes=('','_s'))
+print('samples rows match', len(m), 'hr equal%', 100*((m.hr==m.hr_s)|(m.hr.isna()&(m.hr_s==0))).mean(), 'samples.hr=0 where onehz null', ((m.hr.isna())&(m.hr_s==0)).sum())
+ra=pd.read_sql("select counter, captured_at from raw_archive_frames",c)
+inon=ra.counter.isin(d.counter); print('raw_archive counters also in decoded_onehz:', inon.mean())
+print('raw_archive counter range within onehz range frac', ((ra.counter>=d.counter.min())&(ra.counter<=d.counter.max())).mean())

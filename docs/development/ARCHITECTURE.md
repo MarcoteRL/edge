@@ -97,3 +97,45 @@ TECHNICAL_AUDIT.md).
 `Signing.xcconfig`. Firebase is optional at build time: a dummy
 `lib/firebase_options.dart` is committed and an Xcode phase writes a
 placeholder `GoogleService-Info.plist`.
+
+## Mapa de módulos (ampliación 2026-11-12, commit `15d791a0`)
+
+Tamaños medidos con `wc -l` (cambian en cada versión: vuelve a medir).
+
+| Carpeta `lib/` | Archivos | Líneas | Responsabilidad | Leer antes de tocar |
+|---|---:|---:|---|---|
+| `ui2/` | 81+ | ~72 k | Pantallas y sistema de diseño | `lib/ui2/README.md`, UI_UX_AUDIT.md |
+| `data/` | 27 | ~30 k | `LocalDb`, lectura para la UI, archivo, exportación | DATA_MODEL.md, DATA_DICTIONARY.md |
+| `ble/` | 38 | ~28 k | Motor BLE WHOOP + adaptadores de otros dispositivos | WHOOP_INTEGRATION.md, AGENTS.md §3.1–2 |
+| `compute/` | 35 | ~26 k | Orquestación de la analítica (sin fórmulas) | ALGORITHMS.md, DATA_FLOW.md |
+| `state/` | 15 | ~11 k | `AppState` y controladores | AGENTS.md §4.3, §4.5 |
+| `coach/` | 9 | ~4,7 k | Coach determinista y LLM sobre vistas `v_*` | SECURITY.md |
+| `health/` | 10 | ~4,4 k | HealthKit / Health Connect | FEATURES.md §7 |
+| `notify/` | 13 | ~4,3 k | Emisor único de notificaciones | AGENTS.md §4.6 |
+| `sync/` | 15 | ~3,7 k | Segundo plano, BG tasks, OTA | WHOOP_INTEGRATION.md §2 |
+| `import/` | 9 | ~4 k | Backups, WHOOP oficial, Hevy, CSV | research/DATA_SOURCES.md |
+| `ai/`, `gps/`, `ecg/`, `widget/`, `stress/`, `gestures/`, `platform/`, `telemetry/`… | — | ~8 k | Funciones acotadas | FEATURES.md |
+
+Dependencias internas principales:
+
+```mermaid
+flowchart LR
+  ui2 --> data
+  ui2 --> state
+  state --> ble
+  state --> data
+  state --> compute
+  ble --> data
+  ble --> protocol[(openstrap_protocol)]
+  compute --> data
+  compute --> analytics[(openstrap_analytics)]
+  compute --> protocol
+  coach --> data
+  health --> data
+  notify --> data
+  sync --> ble
+  sync --> compute
+```
+
+Regla: `ui2` no calcula (lee de `data/local_repository_impl.dart`), `compute`
+no dibuja, y las fórmulas están en `openstrap_analytics`.

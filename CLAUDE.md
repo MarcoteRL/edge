@@ -9,6 +9,10 @@ upstream merges stay clean. Everything fork-specific lives here and under
 
 ## Before changing anything
 
+0. Start at `docs/development/README.md` (knowledge index) and
+   `docs/development/AGENT_GUIDE.md` (fork rules for agents: what to read per
+   module, what to update, privacy of biometric data). `AUDIT_SUMMARY.md`
+   there is the executive summary of the 2026-11-12 audit.
 1. Read `PROGRESS.md` (current state, last validation) and the task's entry in
    `docs/development/PLANNING.md`.
 2. Read the relevant section of `docs/development/ARCHITECTURE.md` and
@@ -30,6 +34,11 @@ writer of a table). Keep edits in the main thread. For a change touching an
 AGENTS.md §3 invariant, get an independent review pass before calling it done.
 
 ## Validation
+
+**Follow `docs/development/CI_RUNBOOK.md`** (owner instruction, 2026-11-12):
+there is no Flutter in the agent session, so tests run through the manual
+`test-files.yml` workflow with `gh`, and the IPA through `ios-sideload.yml`.
+Record the run id as evidence in `PROGRESS.md`.
 
 - Local (Windows): `flutter analyze` and `flutter test --concurrency=1`
   (Flutter 3.41.6 exactly). `--concurrency=1` is required: tests share sqflite
