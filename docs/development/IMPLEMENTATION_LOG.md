@@ -7,14 +7,59 @@
 
 ## Estado actual
 
-- **Iteración:** 2 cerrada y fusionada. **Siguiente:** iteración 3
-  (ALG‑T1 primero), con las condiciones de D‑15.
-- **Bloqueos:** ninguno. Pendiente del propietario: medir en el iPhone
-  (pasos en PROGRESS.md / mensaje de cierre) y, cuando haya ≥ 15 noches, una
-  exportación para ALG‑R1.
-- **Entorno de trabajo:** clon en la nube de `MarcoteRL/edge` con `gh`. El
-  checkout de Windows no se toca desde la sesión; el propietario hace
-  `git pull`.
+- **`main`:** iteración 2 (`f7380fb`). Tres ramas apiladas **sin fusionar**:
+  1. `iter2/rederive-off-ui` — run 43273419312 en verde (parcial).
+  2. `iter3/fork-trends` — run 43305607581 en verde (parcial).
+  3. `iter4/home-guidance` — **escrita a ciegas: ni analizador ni tests**.
+     El propietario la prueba en su PC (comandos en PROGRESS.md).
+- **Siguiente:** corregir lo que salga en la prueba local; después suite
+  completa local y fusión. No empujar código a `main` sin decidir el IPA
+  (≈ 130 min facturados; presupuesto de Actions casi agotado hasta el
+  2026‑12‑01).
+- **Iteración 5, go/no‑go (2026‑11‑12):**
+
+  | Funcionalidad | Condición | Veredicto |
+  |---|---|---|
+  | Laboratorio de periodos | ALG‑T1 en `main` | **No‑go hoy**: ALG‑T1 está en rama, no en `main`. Go en cuanto se fusione |
+  | N‑of‑1 | diario en uso | **No‑go**: `journal`, `journal_metric` y `journal_field_def` tienen 0 filas en la exportación del 2026‑11‑12 |
+  | Registro de recomendaciones | P‑01 en `main` | **No‑go hoy** (P‑01 en rama) y además requiere tabla nueva: **preguntar al propietario** antes de la migración |
+  | Informe semanal | P‑02 y P‑08 en `main` | **No‑go hoy** (P‑08 en rama) |
+  | Validación frente a WHOOP | exportación oficial | **No‑go**: no hay ZIP |
+
+  Con todo en ramas, la iteración 5 queda en este documento de go/no‑go, que
+  el plan admite como resultado válido, hasta que haya fusión.
+- **Abierto con el propietario:** "días anteriores sin esfuerzo" (ver
+  DATA_ANALYSIS.md §8): falta pantalla y día.
+
+## 2026-11-12 — Iteración 4 (Home): escrita, sin validar
+
+- **Qué:** PROGRESS.md (misma fecha) y UI_UX_AUDIT.md §9.
+- **Por qué así:** al leer el código, P‑02, P‑04 y los rangos de P‑05 ya
+  existían en buena parte; se añadió lo que faltaba en vez de duplicarlo.
+- **Riesgos conocidos de escribir sin analizador:** avisos *info* de lints;
+  la fila nueva al final de Home y la línea de frescura pueden empujar
+  elementos fuera de la vista en tests existentes de pantallas largas
+  (agrandar la vista del test, no borrarlo); `LucideIcons`/claves l10n mal
+  escritas no compilarían.
+- **Limitaciones:** la página "Cómo se calcula" es texto estático; el peso
+  levantado va solo en kg; `HomeEvolution` no tiene test de widget propio
+  (lee la base; su mitad pura `EvolutionCard` sí).
+
+## 2026-11-12 — DATA‑02 fuera del hilo principal; iteración 3 (cálculo)
+
+- **Qué:** ver PROGRESS.md (misma fecha). `pageDecodedRange` es el bucle de
+  páginas de `_loadSubstrateRange` extraído sin cambios y compartido por la
+  carga viva y la de archivo; `rehydratedSubstrateOf` corre entero en un
+  isolate. `RehydratedSubstrate` (hilo de la base) solo trae bytes;
+  `RehydratedRows` (worker) decodifica y sirve filas.
+- **Por qué:** invariante 10; "Re‑analyze everything" no tiene tope de días.
+- **Limitaciones:** cada día decodifica sus cubos en cada una de sus tres
+  cargas de rango (marcado `ponytail:`); la lectura de filas vivas del cubo
+  (`_readLivePages`) sigue en el hilo de la base, como en el archivado.
+  Refactor de un *hotspot* validado con los goldens y 7 archivos, **no con la
+  suite completa**.
+- **D‑17:** el IC de la regla de "cambio relevante" es el de la diferencia,
+  no el de la pendiente. Revisable.
 
 ## 2026-11-12 — Iteración 2: fundamentos
 

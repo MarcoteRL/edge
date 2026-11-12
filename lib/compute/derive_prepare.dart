@@ -531,6 +531,19 @@ SleepSessionCandidate prepareSleepSessionCandidate(
   );
 }
 
+/// The worker's own accumulator, for a caller that is ALREADY off the UI
+/// isolate and has its pages in hand (a day re-derived from the archive):
+/// same pages in, same [Substrate] out, no second decode path.
+class DecodedPageAccumulator {
+  final _PrepareAccumulator _state = _PrepareAccumulator();
+
+  void add(List<Map<String, dynamic>> frames, List<Map<String, dynamic>> rr) {
+    if (frames.isNotEmpty || rr.isNotEmpty) _state.addDecodedPage(frames, rr);
+  }
+
+  Substrate build() => _state.buildSubstrate();
+}
+
 class _PrepareAccumulator {
   final List<int> tsSec = [];
   final List<int> hr = [];

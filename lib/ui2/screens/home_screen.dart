@@ -79,6 +79,7 @@ import 'detected_activities.dart';
 import 'day_timeline.dart' show DayTimelineScreen;
 import '../../coach/coach_config.dart' show CoachConfig;
 import '../../data/strength_summary.dart';
+import 'home_guidance.dart';
 import 'metric_detail.dart';
 import 'readiness_detail.dart';
 import 'sleep_detail.dart';
@@ -2047,15 +2048,40 @@ class _TrainingCardState extends State<_TrainingCard> {
           final most = week.isEmpty ? 1 : week.first.value;
           final rested = mostRestedGroup(st.daysSince);
           final rv = widget.final_ ? widget.readiness : null;
+          // The SAME bands the ring and the day's call (DecisionLine) use:
+          // this clause had cut-offs of its own (67 / 34) and could say
+          // "moderate" under a headline saying "good to go". A steady day
+          // adds no caveat (DECISIONS D-18).
           final clause = rv == null
               ? null
-              : rv >= 67
-                  ? (l?.homeTrainingGreen ?? 'Your recovery is up for it.')
-                  : rv >= 34
-                      ? (l?.homeTrainingYellow ??
-                          'Keep the intensity moderate today.')
-                      : (l?.homeTrainingRed ??
-                          'Today, something light or rest is the better call.');
+              : switch (readinessBand(rv, l).tier) {
+                  3 => l?.homeTrainingGreen ?? 'Your recovery is up for it.',
+                  2 => null,
+                  1 => l?.homeTrainingYellow ??
+                      'Keep the intensity moderate today.',
+                  _ => l?.homeTrainingRed ??
+                      'Today, something light or rest is the better call.',
+                };
+          // ponytail: kilograms only. Convert with UnitsController when the
+          // strength log itself learns pounds.
+          final load = st.weekLoad;
+          final rpe = st.weekRpe;
+          final loadLines = <String>[
+            if (load != null && load.setsWithLoad > 0)
+              l?.homeTrainingWeekLoad(thousands(load.kg.round())) ??
+                  'Lifted this week: ${thousands(load.kg.round())} kg',
+            if (load != null && load.setsWithoutLoad > 0)
+              l?.homeTrainingNoLoadSets(load.setsWithoutLoad) ??
+                  'Sets with no load recorded: ${load.setsWithoutLoad}',
+            if (rpe.total case final au?)
+              rpe.complete
+                  ? (l?.homeTrainingSrpe(thousands(au.round())) ??
+                      'Session load (effort × minutes): ${thousands(au.round())}')
+                  : (l?.homeTrainingSrpeFloor(
+                          thousands(au.round()), rpe.unrated) ??
+                      'Session load: at least ${thousands(au.round())} '
+                          '(sessions not rated: ${rpe.unrated})'),
+          ];
           return Padding(
             padding: const EdgeInsets.only(top: S.x3),
             child: Surface(
@@ -2159,6 +2185,12 @@ class _TrainingCardState extends State<_TrainingCard> {
                         ),
                       ]),
                     ),
+                ],
+                // Muscular load, in its own words and units: never folded
+                // into the 0–21 strain.
+                for (final line in loadLines) ...[
+                  const SizedBox(height: S.x2),
+                  Text(line, style: F.cap.copyWith(color: p.ink2)),
                 ],
                 if (rested != null) ...[
                   const SizedBox(height: S.x3),
@@ -3589,17 +3621,38 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
           firstWeekCard(c,
               days: _days.length,
               strainScored: !d.strain.isEmpty,
-              recoveryNightsLeft: recoveryNightsLeft),
+              recoveryNightsLeft: recoveryNightsLeft,
+              estimates: d.readinessCalibrating != null ||
+                  d.strainCalibrating != null),
         ],
 
         // ── today's plan: only what the app can actually stand behind ──
         // Skipped on a past day — "3,000 steps left" or "aim for 11.4
         // strain" about a day already over is an instruction, not a fact.
+        // The call first, then the plan that follows from it. Made only on
+        // a FINAL score: a provisional morning number can still move, and a
+        // call that flips at breakfast is worse than one that arrives late.
+        if (isToday &&
+            DecisionLine.has(
+                readiness:
+                    d.recoveryState == 'final' ? d.readiness.value : null,
+                calibrating: d.readinessCalibrating != null)) ...[
+          const SizedBox(height: S.x3),
+          Rise(5,
+              play: play,
+              child: DecisionLine(
+                  readiness:
+                      d.recoveryState == 'final' ? d.readiness.value : null,
+                  calibrating: d.readinessCalibrating != null,
+                  drivers: d.drivers)),
+        ],
         if (isToday)
           Rise(5,
               play: play,
               child: Section(
                   l?.homeTodaysPlan ?? "Today's plan", _plan(c, p, d))),
+        // Weeks, not today: loaded on its own, off the day's read.
+        if (isToday && widget.data == null) const HomeEvolution(),
 
         // ── the way into the whole day ──
         //
@@ -3613,6 +3666,11 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
             l?.homeBreakdownTitle ?? 'Breakdown of your day',
             l?.homeBreakdownSubtitle ?? 'Hour by hour',
             () => go(c, DayTimelineScreen(day: _day))),
+        const SizedBox(height: S.x3),
+        detailLinkRow(c, LucideIcons.circleHelp,
+            l?.howComputedTitle ?? 'How these numbers are computed',
+            l?.howComputedSub ?? 'Measured, derived or estimated',
+            () => go(c, const HowComputedScreen())),
       ],
 
       // ── the next alarm: a door, same as the one above ──
@@ -4006,7 +4064,10 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
 /// earlier nights give it a normal range. Read from the analytics constants so
 /// the card cannot drift from the gate.
 Widget firstWeekCard(BuildContext c,
-    {required int days, required bool strainScored, int? recoveryNightsLeft}) {
+    {required int days,
+    required bool strainScored,
+    int? recoveryNightsLeft,
+    bool estimates = false}) {
   final p = P.of(c);
   final l = AppLocalizations.of(c);
   final strainDay = quietHrrMinDays + 1;
@@ -4048,6 +4109,16 @@ Widget firstWeekCard(BuildContext c,
       const SizedBox(height: S.x1),
       Text(l?.homeFirstWeekSoFar(days) ?? '$days days recorded so far',
           style: F.cap.copyWith(color: p.ink3)),
+      // Said only while a grey number is actually on screen: whose normal it
+      // is measured against is the one thing the grey alone cannot say.
+      if (estimates) ...[
+        const SizedBox(height: S.x2),
+        Text(
+            l?.homeFirstWeekEstimates ??
+                'Grey numbers are estimates that start from a general adult '
+                    'reference. They become yours as nights add up.',
+            style: F.cap.copyWith(color: p.ink3)),
+      ],
     ]),
   );
 }

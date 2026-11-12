@@ -48,7 +48,12 @@ import '../data/db.dart';
 import '../data/day_label.dart';
 import '../data/series_codec.dart';
 import '../data/substrate_archive.dart'
-    show ArchiveUnreadable, RehydratedSubstrate, SubstrateArchive;
+    show
+        ArchiveUnreadable,
+        RehydratedInputs,
+        RehydratedRows,
+        RehydratedSubstrate,
+        SubstrateArchive;
 import '../sync/headless_gate.dart';
 import '../notify/fired_keys.dart';
 import '../notify/notification_center.dart';
@@ -2435,6 +2440,176 @@ int trailingRecTsGroupStart(List<Map<String, dynamic>> rows) {
   return i;
 }
 
+/// The page loop of a substrate load: walk a range's 1 Hz rows a [batch] at a
+/// time, splice each page across devices by [ownership], pair it with its
+/// beats, and hand both to [emit].
+///
+/// ONE LOOP FOR BOTH SOURCES. The live load (`_loadSubstrateRange`) reads the
+/// two streams from the database and emits to its worker isolate; a day
+/// re-derived from the archive (DATA-02) reads them from memory INSIDE an
+/// isolate and emits straight into the accumulator. Sharing the loop is what
+/// keeps the two byte-identical.
+///
+/// [readOneHz] returns the next page in `rec_ts, counter` order: after the
+/// keyset `(afterRecTs, afterCounter)`, equivalently from position [offset].
+/// [readRr] returns the beats with `lo <= rec_ts <= hi` in
+/// `rec_ts, beat_index` order.
+Future<void> pageDecodedRange({
+  required int fromRecTs,
+  required int toRecTs,
+  required int batch,
+  required Map<InputSignal, List<OwnedSpan>> ownership,
+  required FutureOr<List<Map<String, dynamic>>> Function(
+    int? afterRecTs,
+    int? afterCounter,
+    int offset,
+  ) readOneHz,
+  required FutureOr<List<Map<String, dynamic>>> Function(int lo, int hi) readRr,
+  required void Function(
+    List<Map<String, dynamic>> frames,
+    List<Map<String, dynamic>> rr,
+  ) emit,
+  void Function(int rows)? onPage,
+}) async {
+  // M5: the resolved spans for this call's window, one list per anchor
+  // signal. Read once, outside the loop — `ownership` never changes while
+  // this range loads.
+  final rrOwnedSpans = ownership[InputSignal.rrIntervals] ?? const <OwnedSpan>[];
+  bool owned(List<OwnedSpan> spans, Map<String, dynamic> r) {
+    if (spans.isEmpty) return true;
+    final owner = spanAt(spans, (r['rec_ts'] as num).toInt())?.deviceId;
+    if (owner == null) return true;
+    return owner == (r['device_id'] as String? ?? LocalDb.kPrimaryDeviceId);
+  }
+
+  int? afterRecTs;
+  int? afterCursor;
+  var offset = 0;
+  // Low water mark for the BEAT read, which is NOT the same window as the
+  // frame read. Paging is driven by `decoded_onehz`, but a beat can exist
+  // for a second with no 1 Hz row at all (gen4 R10-lite is hr-only and
+  // stays out of that table — see db.dart `_queueDecodedOneHz`). Clamping
+  // each page's beat read to that page's own first/last frame second
+  // dropped every such beat that fell before the day's first frame, after
+  // its last, or in the seam between two pages. Each page instead reads
+  // beats from wherever the previous page stopped, and the tail is swept
+  // after the loop — so the day's beat window is covered exactly once.
+  var rrFrom = fromRecTs;
+  // A contended second's OTHER row can land on the far side of a page
+  // boundary — `decodedOneHzBatchByRecTsRange`'s LIMIT is applied after
+  // ordering by rec_ts, not aligned to rec_ts groups. Composing a page
+  // whose trailing rec_ts group is only half-present would keep the
+  // hr1Hz-owner's own accel/ppg/skin-temp value for that ONE boundary
+  // second instead of splicing in the other device's, so the group's
+  // rows that arrived this round are held here until the rest of the
+  // group is seen (or the range ends). Rare in practice — it takes a
+  // page-sized batch of rows to land exactly mid-group — but the fix is
+  // cheap and the alternative is a silent one-second attribution miss.
+  var carry = const <Map<String, dynamic>>[];
+  while (true) {
+    final decodedRows = await readOneHz(afterRecTs, afterCursor, offset);
+    offset += decodedRows.length;
+    if (decodedRows.isNotEmpty) {
+      onPage?.call(decodedRows.length);
+      // THE CURSOR ADVANCES OFF THE UNFILTERED PAGE, ALWAYS. `afterRecTs`/
+      // `afterCursor` and the `decodedRows.length < batch`
+      // break are driven by `decodedRows` alone — never by `carry` or the
+      // filtered `frames`/`rrRows` sent to the worker. Filtering first
+      // would stall the keyset cursor on a page whose surviving rows are
+      // fewer than the batch size and silently truncate the day.
+      final isFinalPage = decodedRows.length < batch;
+      final combined =
+          carry.isEmpty ? decodedRows : [...carry, ...decodedRows];
+      final splitIdx = trailingRecTsGroupStart(combined);
+      // splitIdx == 0 means the WHOLE page-sized batch shares one
+      // rec_ts — a pathological amount of contention no real pairing
+      // produces. Send it as-is rather than risk carrying forever.
+      final toSend =
+          (isFinalPage || splitIdx == 0) ? combined : combined.sublist(0, splitIdx);
+      carry = (isFinalPage || splitIdx == 0)
+          ? const <Map<String, dynamic>>[]
+          : combined.sublist(splitIdx);
+      if (toSend.isNotEmpty) {
+        // decoded_rr carries the same rec_ts as its decoded_onehz parent,
+        // so [rrFrom, lastSentRecTs] is a range read on decoded_rr's
+        // rec_ts index — no counter span (which broke across the strap's
+        // reboot reset).
+        final lastSentRecTs = (toSend.last['rec_ts'] as num).toInt();
+        final rawRrRows = await readRr(rrFrom, lastSentRecTs);
+        rrFrom = lastSentRecTs + 1;
+        final frames = composeOneHzFrames(toSend, ownership);
+        final rrRows = [
+          for (final r in rawRrRows)
+            if (owned(rrOwnedSpans, r)) r,
+        ];
+        emit(frames, rrRows);
+      }
+      final last = decodedRows.last;
+      afterRecTs = (last['rec_ts'] as num?)?.toInt() ?? afterRecTs;
+      afterCursor = (last['counter'] as num?)?.toInt() ?? afterCursor;
+      if (isFinalPage) break;
+      continue;
+    }
+    break;
+  }
+  // A page landed EXACTLY on [batch] as the true last page
+  // (the next fetch came back empty) — its trailing group is still held.
+  if (carry.isNotEmpty) {
+    final lastRecTs = (carry.last['rec_ts'] as num).toInt();
+    final rawRrRows = await readRr(rrFrom, lastRecTs);
+    rrFrom = lastRecTs + 1;
+    final frames = composeOneHzFrames(carry, ownership);
+    final rrRows = [
+      for (final r in rawRrRows)
+        if (owned(rrOwnedSpans, r)) r,
+    ];
+    emit(frames, rrRows);
+  }
+  // The tail: beats after the last frame second (or, on a range with no
+  // frames at all, the whole range). Usually zero rows and one indexed
+  // lookup; when it is not, these are seconds the band recorded and only
+  // reported beats for.
+  if (rrFrom <= toRecTs) {
+    final rawTailRr = await readRr(rrFrom, toRecTs);
+    final tailRr = [
+      for (final r in rawTailRr)
+        if (owned(rrOwnedSpans, r)) r,
+    ];
+    if (tailRr.isNotEmpty) {
+      emit(const <Map<String, dynamic>>[], tailRr);
+    }
+  }
+}
+
+/// A range's [Substrate] built from archived buckets (∪ live rows), entirely
+/// in the isolate that calls it: decode, merge, row maps, splice and
+/// accumulate. None of it may run on the UI isolate (invariant 10) — a full
+/// day is over a hundred thousand row maps.
+///
+/// Goes through the same JSON round trip as the live worker's result, so the
+/// two cannot differ in how a number is represented.
+Future<Substrate> rehydratedSubstrateOf(
+  RehydratedInputs inputs,
+  int fromRecTs,
+  int toRecTs,
+  Map<InputSignal, List<OwnedSpan>> ownership,
+  int batch,
+) async {
+  final rows = RehydratedRows.decode(inputs);
+  final acc = DecodedPageAccumulator();
+  await pageDecodedRange(
+    fromRecTs: fromRecTs,
+    toRecTs: toRecTs,
+    batch: batch,
+    ownership: ownership,
+    readOneHz: (_, _, offset) =>
+        rows.oneHzPage(fromRecTs, toRecTs, offset: offset, limit: batch),
+    readRr: rows.rr,
+    emit: acc.add,
+  );
+  return Substrate.fromJson(acc.build().toJson());
+}
+
 /// Test seam: the rolling baseline window the readiness computation actually
 /// runs against, loaded exactly as production does. Exposed to assert the read
 /// path ignores a polluted `rolling_artifact` and rebuilds from `metric_series`.
@@ -4698,6 +4873,17 @@ class DerivationEngine {
     return (startSec: startSec, endSec: endSec);
   }
 
+  // Built in a static so the closure sent to the isolate holds exactly these
+  // four values — never the engine.
+  static Future<Substrate> Function() _archiveSubstrateJob(
+    RehydratedInputs inputs,
+    int fromRecTs,
+    int toRecTs,
+    Map<InputSignal, List<OwnedSpan>> ownership,
+  ) =>
+      () => rehydratedSubstrateOf(
+          inputs, fromRecTs, toRecTs, ownership, _rawDecodeBatchSize);
+
   Future<Substrate> _loadSubstrateRange(
     int fromRecTs,
     int toRecTs, {
@@ -4711,6 +4897,18 @@ class DerivationEngine {
     Map<InputSignal, List<OwnedSpan>> ownership = const {},
   }) async {
     if (toRecTs < fromRecTs) return Substrate.empty;
+    // DATA-02: a day being re-derived from the archive. The main isolate
+    // only fetches the buckets' bytes; decoding them, building the row maps
+    // and accumulating the substrate all happen in the isolate below.
+    final rehydrated = _rehydrated;
+    if (rehydrated != null) {
+      final inputs = await rehydrated.inputs(fromRecTs, toRecTs);
+      return _runIsolateCancellable(
+        _archiveSubstrateJob(inputs, fromRecTs, toRecTs, ownership),
+        _perDayTimeout,
+        label: 'archive substrate $dayId',
+      );
+    }
     final port = ReceivePort();
     // onError/onExit are LOAD-BEARING. Without them, an uncaught throw inside
     // the worker (a malformed SQLite row reaching one of the numeric reads in
@@ -4767,80 +4965,35 @@ class DerivationEngine {
         fail(StateError('prepare worker exited without a result'));
       }
     });
-    // M5: the resolved spans for this call's window, one list per anchor
-    // signal. Read once, outside the loop — `ownership` never changes while
-    // this range loads.
-    final rrOwnedSpans = ownership[InputSignal.rrIntervals] ?? const <OwnedSpan>[];
-    bool owned(List<OwnedSpan> spans, Map<String, dynamic> r) {
-      if (spans.isEmpty) return true;
-      final owner = spanAt(spans, (r['rec_ts'] as num).toInt())?.deviceId;
-      if (owner == null) return true;
-      return owner == (r['device_id'] as String? ?? LocalDb.kPrimaryDeviceId);
-    }
-    // DATA-02: a day being re-derived from the archive reads the same two row
-    // streams, in the same shape and order, from memory ([_rehydrated]) —
-    // archive ∪ live, the live row winning. Null on every other derive, where
-    // these are the two LocalDb range reads they always were.
-    final rehydrated = _rehydrated;
-    var rehydratedOffset = 0;
-    Future<List<Map<String, dynamic>>> readRr(int lo, int hi) async =>
-        rehydrated != null
-            ? rehydrated.rr(lo, hi)
-            : await LocalDb.decodedRrByRecTsRange(fromRecTs: lo, toRecTs: hi);
     try {
-      // Inside the try: an unreadable bucket throws, and the worker spawned
-      // above must still be torn down.
-      await rehydrated?.load(fromRecTs, toRecTs);
       final worker = await ready.future;
       worker.send(const {'type': 'config', 'mode': 'substrate'});
-      int? afterRecTs;
-      int? afterCursor;
       var rangePages = 0;
       var rangeRows = 0;
-      // Low water mark for the BEAT read, which is NOT the same window as the
-      // frame read. Paging is driven by `decoded_onehz`, but a beat can exist
-      // for a second with no 1 Hz row at all (gen4 R10-lite is hr-only and
-      // stays out of that table — see db.dart `_queueDecodedOneHz`). Clamping
-      // each page's beat read to that page's own first/last frame second
-      // dropped every such beat that fell before the day's first frame, after
-      // its last, or in the seam between two pages. Each page instead reads
-      // beats from wherever the previous page stopped, and the tail is swept
-      // after the loop — so the day's beat window is covered exactly once.
-      var rrFrom = fromRecTs;
-      // A contended second's OTHER row can land on the far side of a page
-      // boundary — `decodedOneHzBatchByRecTsRange`'s LIMIT is applied after
-      // ordering by rec_ts, not aligned to rec_ts groups. Composing a page
-      // whose trailing rec_ts group is only half-present would keep the
-      // hr1Hz-owner's own accel/ppg/skin-temp value for that ONE boundary
-      // second instead of splicing in the other device's, so the group's
-      // rows that arrived this round are held here until the rest of the
-      // group is seen (or the range ends). Rare in practice — it takes a
-      // page-sized batch of rows to land exactly mid-group — but the fix is
-      // cheap and the alternative is a silent one-second attribution miss.
-      var carry = const <Map<String, dynamic>>[];
-      while (true) {
-        final decodedRows = rehydrated != null
-            ? rehydrated.oneHzPage(
-                fromRecTs,
-                toRecTs,
-                offset: rehydratedOffset,
-                limit: _rawDecodeBatchSize,
-              )
-            : await LocalDb.decodedOneHzBatchByRecTsRange(
-                limit: _rawDecodeBatchSize,
-                fromRecTs: fromRecTs,
-                toRecTs: toRecTs,
-                afterRecTs: afterRecTs,
-                afterCounter: afterCursor,
-              );
-        rehydratedOffset += decodedRows.length;
-        if (decodedRows.isNotEmpty) {
-          _trackPrepareBatch(decodedRows.length);
+      await pageDecodedRange(
+        fromRecTs: fromRecTs,
+        toRecTs: toRecTs,
+        batch: _rawDecodeBatchSize,
+        ownership: ownership,
+        readOneHz: (afterRecTs, afterCounter, _) =>
+            LocalDb.decodedOneHzBatchByRecTsRange(
+          limit: _rawDecodeBatchSize,
+          fromRecTs: fromRecTs,
+          toRecTs: toRecTs,
+          afterRecTs: afterRecTs,
+          afterCounter: afterCounter,
+        ),
+        readRr: (lo, hi) =>
+            LocalDb.decodedRrByRecTsRange(fromRecTs: lo, toRecTs: hi),
+        emit: (frames, rr) =>
+            worker.send({'type': 'page', 'frames': frames, 'rr': rr}),
+        onPage: (rows) {
+          _trackPrepareBatch(rows);
           rangePages += 1;
-          rangeRows += decodedRows.length;
+          rangeRows += rows;
           if (stats != null) {
             stats.pages += 1;
-            stats.rows += decodedRows.length;
+            stats.rows += rows;
           }
           _enforcePrepareBudget(
             dayId: dayId,
@@ -4849,78 +5002,8 @@ class DerivationEngine {
             rangePages: rangePages,
             rangeRows: rangeRows,
           );
-          // THE CURSOR ADVANCES OFF THE UNFILTERED PAGE, ALWAYS. `afterRecTs`/
-          // `afterCursor` and the `decodedRows.length < _rawDecodeBatchSize`
-          // break are driven by `decodedRows` alone — never by `carry` or the
-          // filtered `frames`/`rrRows` sent to the worker. Filtering first
-          // would stall the keyset cursor on a page whose surviving rows are
-          // fewer than the batch size and silently truncate the day.
-          final isFinalPage = decodedRows.length < _rawDecodeBatchSize;
-          final combined =
-              carry.isEmpty ? decodedRows : [...carry, ...decodedRows];
-          final splitIdx = trailingRecTsGroupStart(combined);
-          // splitIdx == 0 means the WHOLE page-sized batch shares one
-          // rec_ts — a pathological amount of contention no real pairing
-          // produces. Send it as-is rather than risk carrying forever.
-          final toSend =
-              (isFinalPage || splitIdx == 0) ? combined : combined.sublist(0, splitIdx);
-          carry = (isFinalPage || splitIdx == 0)
-              ? const <Map<String, dynamic>>[]
-              : combined.sublist(splitIdx);
-          if (toSend.isNotEmpty) {
-            // decoded_rr carries the same rec_ts as its decoded_onehz parent,
-            // so [rrFrom, lastSentRecTs] is a range read on decoded_rr's
-            // rec_ts index — no counter span (which broke across the strap's
-            // reboot reset).
-            final lastSentRecTs = (toSend.last['rec_ts'] as num).toInt();
-            final rawRrRows = await readRr(rrFrom, lastSentRecTs);
-            rrFrom = lastSentRecTs + 1;
-            final frames = composeOneHzFrames(toSend, ownership);
-            final rrRows = [
-              for (final r in rawRrRows)
-                if (owned(rrOwnedSpans, r)) r,
-            ];
-            worker.send({'type': 'page', 'frames': frames, 'rr': rrRows});
-          }
-          final last = decodedRows.last;
-          afterRecTs = (last['rec_ts'] as num?)?.toInt() ?? afterRecTs;
-          afterCursor = (last['counter'] as num?)?.toInt() ?? afterCursor;
-          if (isFinalPage) break;
-          continue;
-        }
-        break;
-      }
-      // A page landed EXACTLY on `_rawDecodeBatchSize` as the true last page
-      // (the next fetch came back empty) — its trailing group is still held.
-      if (carry.isNotEmpty) {
-        final lastRecTs = (carry.last['rec_ts'] as num).toInt();
-        final rawRrRows = await readRr(rrFrom, lastRecTs);
-        rrFrom = lastRecTs + 1;
-        final frames = composeOneHzFrames(carry, ownership);
-        final rrRows = [
-          for (final r in rawRrRows)
-            if (owned(rrOwnedSpans, r)) r,
-        ];
-        worker.send({'type': 'page', 'frames': frames, 'rr': rrRows});
-      }
-      // The tail: beats after the last frame second (or, on a range with no
-      // frames at all, the whole range). Usually zero rows and one indexed
-      // lookup; when it is not, these are seconds the band recorded and only
-      // reported beats for.
-      if (rrFrom <= toRecTs) {
-        final rawTailRr = await readRr(rrFrom, toRecTs);
-        final tailRr = [
-          for (final r in rawTailRr)
-            if (owned(rrOwnedSpans, r)) r,
-        ];
-        if (tailRr.isNotEmpty) {
-          worker.send({
-            'type': 'page',
-            'frames': const <Map<String, dynamic>>[],
-            'rr': tailRr,
-          });
-        }
-      }
+        },
+      );
       worker.send(const {'type': 'finish'});
       // BOUNDED. `result.future` had no timeout at all, so any path that left
       // the worker unable to answer hung this call — and with it the whole
@@ -6314,7 +6397,7 @@ class DerivationEngine {
           (daySub.deviceFamily == null || daySub.deviceFamily == 'gen4') &&
           day.sleepOffsetSec > day.sleepOnsetSec) {
         scMap['skin_temp_ambient_r'] = skinTempAmbientR(
-            _rehydrated?.skinTempAmbientMinutes(
+            await _rehydrated?.skinTempAmbientMinutes(
                     day.sleepOnsetSec, day.sleepOffsetSec,
                     primaryDeviceId: LocalDb.kPrimaryDeviceId) ??
                 await LocalDb.skinTempAmbientMinutes(
@@ -6495,10 +6578,17 @@ class DerivationEngine {
         await LocalDb.setSessionHrr(w.$1, w.$2);
       }
       final activityStore = ActivityStore(await LocalDb.instance);
-      final newSuggestions = [
-        ...await activityStore.reconcile(ActivityKind.workout, blocks.suggestionsToPersist),
-        ...await activityStore.reconcile(ActivityKind.nap, blocks.napSuggestions),
-      ];
+      // A day re-derived from the archive asks nothing of the user: the
+      // review store keeps what the day's own derive left in it, and no
+      // "did you work out?" appears for a day that is weeks old.
+      final newSuggestions = _rehydrated != null
+          ? const <ActivitySuggestion>[]
+          : [
+              ...await activityStore.reconcile(
+                  ActivityKind.workout, blocks.suggestionsToPersist),
+              ...await activityStore.reconcile(
+                  ActivityKind.nap, blocks.napSuggestions),
+            ];
       for (final suggestion in newSuggestions) {
         // The rows are already banked; a failed prompt must not mark the day partial.
         try {
@@ -7914,9 +8004,12 @@ class DerivationEngine {
   ///  * RESUMABLE: there is no position to lose. A day that was written is no
   ///    longer listed; every other outcome is in the stored state.
   ///
-  /// ponytail: each day decodes its own two or three UTC buckets again, so
-  /// neighbouring days decode a shared bucket twice. Keep the last buckets
-  /// across days if the per-day time logged below says it matters.
+  /// OFF THE UI ISOLATE: this isolate only fetches each bucket's bytes
+  /// (once per day, [RehydratedSubstrate]); decoding, row maps and the
+  /// substrate itself are built in a worker ([rehydratedSubstrateOf]).
+  /// ponytail: a day's three range loads each decode the buckets they touch,
+  /// and neighbouring days decode a shared bucket again. Keep decoded buckets
+  /// in a long-lived worker if the per-day time logged below says it matters.
   /// ponytail: a day's "tonight" exclusion reads the NEXT day's stored
   /// window, which is still the older version's when this day is derived
   /// (oldest first). Rows are immutable per version, so there is no second

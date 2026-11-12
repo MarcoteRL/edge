@@ -100,7 +100,7 @@ Strain 2/3, Carga 3/14, Sueño libre 0/3, Temperatura 2/3. Datos: notas
 ### P‑05 · Fases como rango y jerarquía de sueño (UX‑04, UX‑05)
 
 > **Corrección (iteración 1):** el rango de fases ya existe en
-> `sleep_detail.dart`; `light_range_sec` no es una columna. Queda la jerarquía.
+> `sleep_detail.dart`; `light_range_sec` es un campo del payload del candidato, no una columna. Queda la jerarquía.
 
 Orden: duración → horario y regularidad → deuda → fases. Fases como barra
 apilada con **rangos** (`light_range_sec`…) y la etiqueta "estimación de
@@ -182,3 +182,16 @@ o fallará `ui2_tokens_test.dart`.
 | P2 | P‑03 evolución en Home, P‑08 frescura de datos | M |
 | P2 | P‑05 sueño, P‑07 workout | M |
 | P3 | Heatmaps y correlaciones avanzadas | M–L |
+
+## 9. Estado tras la iteración 4 (2026‑11‑12, en rama, sin validar en CI ni en dispositivo)
+
+| Propuesta | Estado | Dónde |
+|---|---|---|
+| P‑01 línea de decisión | **Hecha.** `DecisionLine`: una frase por banda de Recovery (las mismas bandas que el anillo) + qué entradas ayudaron y cuáles frenaron. Solo con Recovery final (D‑19). La frase del bloque de fuerza se alinea con las mismas bandas (D‑18) | `ui2/screens/home_guidance.dart`, `home_screen.dart` |
+| P‑02 banda + MDC | **Ya existía la banda** (`UsualRange`, `ui2/trend.dart`, abstiene < 14 días). **No añadida** la puerta del MDC en las tarjetas de Health: el veredicto con significancia vive en la nueva sección de evolución de Home. Pendiente decidir si se unifican |
+| P‑03 evolución en Home | **Hecha.** `HomeEvolution` → `TrendService` (isolate + caché) → `EvolutionCard`: HRV, FC en reposo y sueño, "estable" / "Δ frente a tu normal" / "aún no hay días suficientes" | `home_guidance.dart` |
+| P‑04 calibración | **Ya existía** `firstWeekCard` (qué llega y cuándo, con cuenta atrás). **Añadido:** una línea que explica que el gris parte de una referencia general, solo mientras hay un número gris en pantalla. Sin hoja con barras por métrica: habría duplicado esa tarjeta |
+| P‑05 fases como rango / jerarquía | Rango: ya existía. **Jerarquía de la pantalla de sueño: sin tocar** (no revisada) |
+| P‑07 Workout por carga | **Parcial.** La carga muscular de la semana (kg levantados, series sin carga, sRPE o su suelo) se muestra en el bloque de fuerza de Home, separada del strain. **La pestaña Workout no se ha reordenado** |
+| P‑08 frescura en todas las pestañas | **Hecha** en Health, Workout y Sueño (`dataFreshnessLine`); sin datos de banda no dibuja nada |
+| Ficha "Cómo se calcula" | **Hecha** como página (`HowComputedScreen`, puerta al final de Home): Recovery, Strain, Sueño, HRV/FC en reposo, con tipo, entradas, ventana y datos ausentes, límites y versión del algoritmo. Texto estático; **no** muestra todavía la suficiencia de los datos de hoy por métrica |

@@ -15559,7 +15559,7 @@ class LocalDb {
   static Future<RehydratedSubstrate> rehydratedSubstrate() async =>
       RehydratedSubstrate(
         await instance,
-        derivable: (s) => s == null || kDerivableSources.contains(s),
+        derivableSources: kDerivableSources,
       );
 
   /// The earliest archived second; null with an empty archive.

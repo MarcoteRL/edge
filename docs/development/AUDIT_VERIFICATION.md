@@ -53,9 +53,9 @@ hay fila de `kAlgoVersion`); el esquema no lo garantiza.
 **[Comprobado]** `sleep_detail.dart`: `_ranges(n)`, `_rangeText(ana.StageInterval)`
 y el texto `sleepDetailStageRangeExplain` (traducido en los 8 ARB); analytics
 expone `stageRanges` en `sleep/segment.dart`. La auditoría proponía crearlo
-(ALG‑S2, P‑05) y citaba columnas `light_range_sec`/`deep_range_sec`/
-`rem_range_sec` en `sleep_session_candidates`: **esas columnas no existen**
-(la tabla es `day_id, algo_version, payload_json, computed_at`).
+(ALG‑S2, P‑05). **Rectificación (iteración 3):** aquí se afirmó que
+`light_range_sec`/`deep_range_sec`/`rem_range_sec` no existían; **sí existen**, pero no como columnas: son campos de `sleep_session_candidates.payload_json.sleep_json` (comprobado en una exportación real el 2026‑11‑12; la iteración 1 dijo por error que no existían).
+La auditoría tenía razón en eso.
 **Consecuencia:** ALG‑S2 queda reducida a comprobar la jerarquía de la
 pantalla (duración → horario → deuda → fases) y la etiqueta "estimación de
 muñeca"; no hay componente `StageRangeBar` que construir sin antes ver qué
@@ -119,7 +119,7 @@ exacto se fija leyendo `usualRangeFor` al empezar P‑02.
 | ALGORITHMS.md §1 ritmo irregular | bandera diurna sola | exige cribado nocturno coincidente |
 | DATA_QUALITY.md §2 | CTL/ATL "se calcula" | abstiene desde 121 |
 | IMPROVEMENT_BACKLOG.md | ALG‑L1/C1 "pendiente de tests"; ALG‑S2 y ALG‑L2 como trabajo nuevo | ver §2.1, §2.3, §2.4 |
-| ALGORITHM_EVALUATION.md ALG‑S2, UI_UX_AUDIT.md P‑05, DATA_MODEL.md | columnas `*_range_sec` | no existen; el rango sale de `stageRanges` |
+| ALGORITHM_EVALUATION.md ALG‑S2, UI_UX_AUDIT.md P‑05, DATA_MODEL.md | `*_range_sec` descritos como columnas | son campos del payload del candidato; la UI ya muestra el rango (`stageRanges`) |
 | DECISIONS.md | D‑05, D‑06, D‑09, D‑11 "Propuesta" | decididas por el propietario |
 | PLANNING.md | ALG‑L1/C1 "done on branch" | en `main`; suite completa pendiente |
 | README.md (índice) | "última auditoría … 120" | se añade el puntero a este documento |

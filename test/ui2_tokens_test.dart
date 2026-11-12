@@ -119,7 +119,11 @@ void main() {
     test('no ${rule.name} outside the token boundary', () {
       final hits = <String>[];
       for (final f in files) {
-        final rel = f.path.replaceFirst(RegExp(r'^\./'), '');
+        // Forward slashes on every platform: the allow-lists below are
+        // written that way, and on Windows `f.path` is `lib/ui2\\theme.dart`,
+        // which matched none of them and failed the token file against itself.
+        final rel =
+            f.path.replaceAll(r'\', '/').replaceFirst(RegExp(r'^\./'), '');
         if (rule.allow.contains(rel)) continue;
         final lines = codeLines(f.readAsStringSync());
         for (var i = 0; i < lines.length; i++) {
@@ -198,6 +202,10 @@ const _notComponents = {
   // Fork screen: reads the database on open (healthspan_screen.dart).
   'HealthspanScreen',
   'HevyScreen',
+  // Fork: HomeEvolution reads the stored series on open (TrendService) and
+  // its pure half, EvolutionCard, IS in the gallery; HowComputedScreen is a
+  // Scaffold route of static text.
+  'HomeEvolution', 'HowComputedScreen',
   // WHOOP MG ECG routes: the Heart Screener entry reads the database and
   // pushes; the capture screen owns a live BLE reading (a gallery case would
   // start one); the detail screen reads and deletes a reading and routes to

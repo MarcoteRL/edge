@@ -48,6 +48,7 @@ import 'log_workout.dart';
 import 'metric_detail.dart' show MetricDetail, detailLinkRow;
 import 'nutrition_screen.dart';
 import 'start_card.dart';
+import 'home_guidance.dart' show dataFreshnessLine;
 
 class WorkoutScreen extends StatefulWidget {
   const WorkoutScreen({super.key});
@@ -134,6 +135,7 @@ class _WorkoutScreenState extends State<WorkoutScreen> with RevisionReload {
             for (final w in <Widget>[
               ScreenTitle(loc?.tabActivity ?? 'Activity',
                   trailing: const ProfileAvatar(accent: C.domMove)),
+              dataFreshnessLine(c),
               SubTabs(_tabs(loc), tab, (i) => setState(() => tab = i),
                   color: C.domMove),
               const SizedBox(height: S.x5),

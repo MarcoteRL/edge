@@ -4,6 +4,7 @@
 // muscles (`exercise_def` for imported lifts, the built-in catalogue for the
 // rest). Nothing is estimated: a lift with no known muscles counts toward no
 // group, and a group nobody trained is simply not listed.
+import '../compute/fork/load.dart';
 import '../ui2/activity/catalogue.dart' show exerciseByKey;
 import 'day_label.dart' show calendarDaysBetween;
 import 'db.dart';
@@ -76,6 +77,15 @@ typedef StrengthSummary = ({
   StrengthSession? last,
   Map<MuscleGroup, int> weekSets,
   Map<MuscleGroup, int> daysSince,
+
+  /// Volume load of the last 7 days: Σ reps × kg over working sets, each set
+  /// once (not once per muscle group), with the sets that carry no load
+  /// counted beside it. Null when no working set was logged in the week.
+  Tonnage? weekLoad,
+
+  /// Session-RPE load of the last 7 days over the sessions with sets; a floor
+  /// while any of them is unrated ([RpeLoad.complete]).
+  RpeLoad weekRpe,
 });
 
 /// Working sets: a warm-up is logged but is not training volume.
@@ -116,12 +126,31 @@ Future<StrengthSummary?> loadStrengthSummary({DateTime? now}) async {
 
   final weekSets = <MuscleGroup, int>{};
   final lastTrained = <MuscleGroup, int>{};
+  // The week's muscular load, kept apart from strain (DECISIONS D-09): the
+  // arithmetic lives in compute/fork/load.dart.
+  final weekLifts = <(int, int?, double?)>[];
+  final weekRatings = <(double?, double)>[];
   Map<String, dynamic>? newest;
   for (final r in sessions) {
     final id = r['id'] as String;
     final sets = setsBySession[id];
     if (sets == null) continue;
     final start = (r['start_ts'] as num).toInt();
+    if (start >= from7) {
+      final end = (r['end_ts'] as num?)?.toInt();
+      weekRatings.add((
+        (r['rpe'] as num?)?.toDouble(),
+        // No end, no duration: the session has no sRPE and counts as unrated.
+        end == null ? 0.0 : (end - start) / 60,
+      ));
+      for (final s in sets.where(isWorkingSet)) {
+        weekLifts.add((
+          0,
+          (s['reps'] as num?)?.toInt(),
+          (s['load_kg'] as num?)?.toDouble(),
+        ));
+      }
+    }
     for (final s in sets.where(isWorkingSet)) {
       for (final g in groupsOf('${s['exercise_key']}')) {
         if (start >= from7) weekSets[g] = (weekSets[g] ?? 0) + 1;
@@ -188,6 +217,8 @@ Future<StrengthSummary?> loadStrengthSummary({DateTime? now}) async {
   return (
     last: last,
     weekSets: weekSets,
+    weekLoad: tonnageBy<int>(weekLifts)[0],
+    weekRpe: rpeLoadOf(weekRatings),
     // Calendar days, local: trained yesterday evening is 1 day this morning,
     // however few hours ago that was.
     daysSince: {

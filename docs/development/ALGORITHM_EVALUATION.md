@@ -128,6 +128,11 @@ información distinta de la media (aumenta con fatiga/estrés no adaptativo).
 `crossday_pipeline.dart` (orquestación) o función nueva en analytics.
 Complejidad S. Validación: test con series sintéticas.
 
+> **Implementado en el fork (iteración 3):** `lnRmssdCv7` en
+> `lib/compute/fork/trends.dart`: `CV7 = 100·SD/media` de lnRMSSD de las
+> últimas 7 noches, ausente con menos de 5 o con media ≤ 0. Solo noches del
+> mismo método. Sintético únicamente.
+
 ### ALG‑H2 · Titular de HRV: media vs mediana de ventanas (Hecho + Propuesta)
 
 El titular usa la **media** de ventanas; existe la **mediana** (`rmssd_nocturnal`).
@@ -183,6 +188,15 @@ Edwards (1993): `Σ min_zona_i × i`. Es casi lo que ya hay en `zones` y no
 requiere modelo exponencial. Útil para **distribución de intensidad**
 (polarizado/piramidal). Solo presentación; S.
 
+> **Implementado en el fork (iteración 3), ALG‑L2 y ALG‑L3:**
+> `lib/compute/fork/load.dart`. `sessionRpeLoad` (RPE × min; sin RPE ⇒ null),
+> `rpeLoadOf` (suma de la semana + nº de sesiones sin valorar: con alguna, el
+> total es un suelo y se muestra como tal), `tonnageBy` (Σ reps × kg por
+> grupo; una serie sin carga se cuenta, no suma 0 kg), `edwardsLoad` /
+> `edwardsShares` (Σ min_zona × i; reparto 1‑2 / 3 / 4‑5). Aritmética pura,
+> separada del strain (D‑09). **Sin cablear a pantalla todavía** (iteración
+> 4, P‑07). Foster 2001 sigue marcada **G** en REFERENCES.md: sin verificar.
+
 ### ALG‑L4 · No usar ACWR como predictor de lesión (Decisión)
 
 ACWR sufre acoplamiento matemático y su base teórica ha sido cuestionada
@@ -224,16 +238,21 @@ rangos (`light_range_sec`, `deep_range_sec`, `rem_range_sec` **ya existen**
 en `sleep_session_candidates`) y una etiqueta "estimación de muñeca". No
 cambia la fórmula. S.
 
-> **Corrección (iteración 1, 2026‑11‑12):** las fases **ya se muestran como
-> rango** (`_ranges`/`_rangeText` en `ui2/screens/sleep_detail.dart`, con
-> `stageRanges` de analytics). Las columnas `light_range_sec`… citadas arriba
-> **no existen** en `sleep_session_candidates`. Lo pendiente es la jerarquía
-> de la pantalla (UI_UX_AUDIT.md P‑05).
+> **Corrección (iteración 1, rectificada en la 3):** las fases **ya se
+> muestran como rango** (`_ranges`/`_rangeText` en
+> `ui2/screens/sleep_detail.dart`, con `stageRanges` de analytics). Los
+> `light_range_sec`… existen, pero no como columnas: son campos de `sleep_session_candidates.payload_json.sleep_json` (comprobado en una exportación real el 2026‑11‑12; la iteración 1 dijo por error que no existían).
+> Lo pendiente es la jerarquía de la pantalla (UI_UX_AUDIT.md P‑05).
 
 ### ALG‑S3 · Consistencia de sueño útil antes del SRI completo (Propuesta)
 
 SRI necesita ≥ 7 días (y Phillips usa 30). Mientras tanto: SD de hora de
 acostarse / despertar en 7 días con mínimo 5 noches. Complejidad S.
+
+> **Implementado en el fork (iteración 3):** `scheduleSdMin` en
+> `lib/compute/fork/trends.dart`: desviación estándar **circular** (minutos)
+> de la hora de acostarse o de despertar de las últimas 7 noches, ausente con
+> menos de 5. Circular porque 23:50 y 00:10 distan 20 min.
 
 ### ALG‑S4 · Despertares (Hecho + Propuesta)
 
@@ -278,6 +297,48 @@ artefactos explícitos. Complejidad S (investigación).
    `crossday_pipeline.dart`; resultado en `baselines.crossday`.
 4. **Complejidad:** M. 5. **Validación:** series sintéticas con escalón y
    rampa; debe callar en ruido blanco (tasa de falsos positivos < 5 %).
+
+#### ALG‑T1 · Implementación en el fork (iteración 3, 2026‑11‑12)
+
+`lib/compute/fork/trends.dart` (`trendOf`), servido por
+`fork/trend_service.dart` (`Isolate.run` + caché por clave, última fecha de la
+serie, día y `kAlgoVersion`). Al leer, sin persistir (D‑15).
+
+- **Problema:** decir "has cambiado" solo cuando el cambio supera el ruido.
+- **Fórmula.** Serie diaria `x_d` (un valor por día local; los huecos son
+  huecos). Medias de 7/14/30/90 días naturales, cada una ausente con menos de
+  4/9/18/54 valores (≥ 60 %). *Reciente* = media de los últimos 7 días (≥ 4
+  valores). *Habitual* = mediana de los 28 días **anteriores** a esos 7
+  (≥ 14 valores). `Δ = reciente − habitual`.
+  `MDC = 1,96·√2·(MADσ_habitual / √n_reciente)`; `SWC = 0,5·SD_habitual`.
+  **Relevante** ⇔ `|Δ| > max(MDC, SWC)` y el IC 95 % por bootstrap de Δ
+  (500 remuestreos de ambas ventanas) excluye 0 (D‑17). Pendiente: Theil‑Sen
+  sobre los últimos 30 días (≥ 15 valores, x = número de día) con IC 95 % por
+  bootstrap de pares; se informa aparte.
+- **Ventanas por variable [Hipótesis]:** las mismas para HRV, RHR, sueño y
+  carga en esta primera versión. Justificación: 7 días promedia el ciclo
+  semanal (relevante para sueño y carga) y es la ventana de Plews para HRV;
+  28 días son cuatro ciclos semanales completos. Ajustarlas por variable
+  requiere ≥ 60 noches reales (ALG‑R2).
+- **Baseline lento:** el habitual no contiene la semana reciente y es una
+  mediana: una semana enferma no se avala a sí misma, y tarda ~2 semanas en
+  empezar a moverlo.
+- **Entrada ausente/escasa/atípica:** `relevant = null` con nota
+  `need_baseline:have=H,need=N`; habitual plano (MAD = 0) ⇒ `no_dispersion`;
+  valores no finitos y días posteriores a hoy se ignoran; un día repetido
+  conserva el último valor.
+- **n mínimo:** 18 días con valor repartidos en 35 naturales. Con menos no
+  hay veredicto. Motivo: 2 parámetros (centro, dispersión) del habitual con
+  ≥ 14 valores; coste de un falso positivo (alarma) mayor que el de un falso
+  negativo (silencio una semana más).
+- **Coste:** ~0,2 M pendientes por pares por serie; en isolate, cacheado.
+- **Validación (solo sintética, `test/fork_trends_test.dart`):** escalón,
+  rampa, ruido blanco, huecos, días repetidos y cambio de hora. Tasa de falsos
+  positivos en ruido blanco y resultado del run: ver PROGRESS.md. **Ganar en
+  sintético no valida para producción.**
+- **Limitaciones:** sin datos reales; ventanas iguales para todas las
+  variables; el bootstrap con 4–7 valores recientes subestima la anchura del
+  IC (por eso además se exige el MDC).
 
 ### ALG‑T2 · Guardar el historial de baselines (Propuesta)
 
