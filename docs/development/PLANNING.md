@@ -24,7 +24,10 @@ done (with evidence) / blocked. Complexity: S / M / L.
 | DATA-02 | Re-derive pruned days from `substrate_archive` (read-only, oldest first, no bump) | ENH | P0 | L | — | done (runs 43255670024, 43255676974; full suite 43260273913 + 43260295892); device check pending |
 | T-02 | `payload_json` contract test | DEBT | P2 | S | — | done (run 43255670024) |
 | AWAKE | "I'm awake" provenance rule documented and pinned | DEBT | P1 | S | — | done (run 43255670024) |
-| NEXT | Iteration 3 as in docs/development/ITERATION_PLAN.md (fork modules in `lib/compute/fork/`, D-15) | — | — | — | — | todo |
+| DATA-02b | Archive re-derive off the UI isolate; no activity suggestions for re-derived days | BUG | P1 | M | — | done on branch `iter2/rederive-off-ui` (run 43273419312); **not merged**: full suite not run (Actions budget) |
+| ALG-T1/H1/S3/L2/L3 | Fork read-time modules (`lib/compute/fork/`) | ENH | P1 | M | D-15 | done on branch `iter3/fork-trends` (run 43305607581), synthetic only; not wired to UI; **not merged** |
+| ALG-R1 / ALG-S1 | Offline scripts written; wait for data (10 nights with readiness / 10 taps) | ENH | P1 | S | owner export | blocked on data |
+| NEXT | Merge the two branches (needs a full suite: owner's PC or after the Actions reset), then iteration 4 | — | — | — | Actions budget | blocked on budget |
 
 **CI-01 detail.** *Motivation:* a Windows developer needs CI to get any IPA or
 validation. *Acceptance:* (1) a manual "Run workflow" on your repo finishes

@@ -84,7 +84,7 @@ Plantilla de cada tarea: **Qué** · **Por qué** · **Dónde** · **Cómo** ·
 - Ver ALGORITHM_EVALUATION.md §2. **Esfuerzo:** S.
 
 ### ALG‑S2 · Fases de sueño como rango — **ya existe (comprobado 2026‑11‑12)**
-- `sleep_detail.dart` ya muestra cada fase como rango (`stageRanges`). No hay columnas `*_range_sec`. Queda solo la jerarquía de la pantalla (P‑05).
+- `sleep_detail.dart` ya muestra cada fase como rango (`stageRanges`). Los `*_range_sec` son campos del payload del candidato, no columnas. Queda solo la jerarquía de la pantalla (P‑05).
 
 ## P2 — Evolución
 

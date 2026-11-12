@@ -7,14 +7,42 @@
 
 ## Estado actual
 
-- **Iteración:** 2 cerrada y fusionada. **Siguiente:** iteración 3
-  (ALG‑T1 primero), con las condiciones de D‑15.
-- **Bloqueos:** ninguno. Pendiente del propietario: medir en el iPhone
-  (pasos en PROGRESS.md / mensaje de cierre) y, cuando haya ≥ 15 noches, una
-  exportación para ALG‑R1.
-- **Entorno de trabajo:** clon en la nube de `MarcoteRL/edge` con `gh`. El
-  checkout de Windows no se toca desde la sesión; el propietario hace
-  `git pull`.
+- **`main`:** iteración 2 (`f7380fb`). **Sin fusionar**, por presupuesto de
+  Actions (≈ 90 % gastado; se renueva el 2026‑12‑01):
+  - `iter2/rederive-off-ui`: DATA‑02 fuera del hilo principal + sin
+    sugerencias de actividad. Run 43273419312 en verde. Falta la suite
+    completa y los casos `tz=Europe/Madrid`.
+  - `iter3/fork-trends` (encima de la anterior): módulos del fork de la
+    iteración 3 + scripts + docs. Run 43305607581 en verde.
+- **Para fusionar hace falta:** suite completa (≈ 90 min de Linux, o gratis
+  en el PC del propietario con `flutter test --concurrency=1`) y decidir si
+  se gasta un IPA (≈ 130 min facturados). Un push de código a `main` lanza el
+  IPA solo: **no empujar a `main` sin decidirlo**.
+- **Pendiente de la iteración 3:** nada de cálculo. Los módulos no están
+  cableados a ninguna pantalla; eso es la iteración 4 (P‑02, P‑03, P‑07).
+  ALG‑R1 y ALG‑S1 esperan datos (≥ 10 noches con readiness / 10 pulsaciones).
+- **Abierto con el propietario:** dice que "los días anteriores salen sin
+  esfuerzo" tras actualizar. Las dos exportaciones muestran el mismo estado de
+  strain antes y después (ningún día con strain guardado; ver
+  DATA_ANALYSIS.md §8). [Hipótesis] es el comportamiento previo: la
+  estimación gris solo se calcula para hoy (`getToday`), así que un día deja
+  de mostrarla al pasar a ser "ayer". Falta saber pantalla y día exactos.
+
+## 2026-11-12 — DATA‑02 fuera del hilo principal; iteración 3 (cálculo)
+
+- **Qué:** ver PROGRESS.md (misma fecha). `pageDecodedRange` es el bucle de
+  páginas de `_loadSubstrateRange` extraído sin cambios y compartido por la
+  carga viva y la de archivo; `rehydratedSubstrateOf` corre entero en un
+  isolate. `RehydratedSubstrate` (hilo de la base) solo trae bytes;
+  `RehydratedRows` (worker) decodifica y sirve filas.
+- **Por qué:** invariante 10; "Re‑analyze everything" no tiene tope de días.
+- **Limitaciones:** cada día decodifica sus cubos en cada una de sus tres
+  cargas de rango (marcado `ponytail:`); la lectura de filas vivas del cubo
+  (`_readLivePages`) sigue en el hilo de la base, como en el archivado.
+  Refactor de un *hotspot* validado con los goldens y 7 archivos, **no con la
+  suite completa**.
+- **D‑17:** el IC de la regla de "cambio relevante" es el de la diferencia,
+  no el de la pendiente. Revisable.
 
 ## 2026-11-12 — Iteración 2: fundamentos
 

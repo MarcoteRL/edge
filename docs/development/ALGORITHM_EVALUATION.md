@@ -238,11 +238,11 @@ rangos (`light_range_sec`, `deep_range_sec`, `rem_range_sec` **ya existen**
 en `sleep_session_candidates`) y una etiqueta "estimación de muñeca". No
 cambia la fórmula. S.
 
-> **Corrección (iteración 1, 2026‑11‑12):** las fases **ya se muestran como
-> rango** (`_ranges`/`_rangeText` en `ui2/screens/sleep_detail.dart`, con
-> `stageRanges` de analytics). Las columnas `light_range_sec`… citadas arriba
-> **no existen** en `sleep_session_candidates`. Lo pendiente es la jerarquía
-> de la pantalla (UI_UX_AUDIT.md P‑05).
+> **Corrección (iteración 1, rectificada en la 3):** las fases **ya se
+> muestran como rango** (`_ranges`/`_rangeText` en
+> `ui2/screens/sleep_detail.dart`, con `stageRanges` de analytics). Los
+> `light_range_sec`… existen, pero no como columnas: son campos de `sleep_session_candidates.payload_json.sleep_json` (comprobado en una exportación real el 2026‑11‑12; la iteración 1 dijo por error que no existían).
+> Lo pendiente es la jerarquía de la pantalla (UI_UX_AUDIT.md P‑05).
 
 ### ALG‑S3 · Consistencia de sueño útil antes del SRI completo (Propuesta)
 

@@ -100,7 +100,7 @@ Strain 2/3, Carga 3/14, Sueño libre 0/3, Temperatura 2/3. Datos: notas
 ### P‑05 · Fases como rango y jerarquía de sueño (UX‑04, UX‑05)
 
 > **Corrección (iteración 1):** el rango de fases ya existe en
-> `sleep_detail.dart`; `light_range_sec` no es una columna. Queda la jerarquía.
+> `sleep_detail.dart`; `light_range_sec` es un campo del payload del candidato, no una columna. Queda la jerarquía.
 
 Orden: duración → horario y regularidad → deuda → fases. Fases como barra
 apilada con **rangos** (`light_range_sec`…) y la etiqueta "estimación de
