@@ -119,7 +119,11 @@ void main() {
     test('no ${rule.name} outside the token boundary', () {
       final hits = <String>[];
       for (final f in files) {
-        final rel = f.path.replaceFirst(RegExp(r'^\./'), '');
+        // Forward slashes on every platform: the allow-lists below are
+        // written that way, and on Windows `f.path` is `lib/ui2\\theme.dart`,
+        // which matched none of them and failed the token file against itself.
+        final rel =
+            f.path.replaceAll(r'\', '/').replaceFirst(RegExp(r'^\./'), '');
         if (rule.allow.contains(rel)) continue;
         final lines = codeLines(f.readAsStringSync());
         for (var i = 0; i < lines.length; i++) {
