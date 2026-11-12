@@ -32,7 +32,7 @@ temperatura de piel cae a valores de ambiente (ver §3).
 | Calibración personal de readiness | 0 | 14 (`readinessCalibrationMinNights`) | — |
 | Readiness lnRMSSD (Plews) | 2 previas | 4 | Abstiene |
 | Strain diario | 2 días de nivel de reposo | 3 (`personalQuietWakingHrr`) | Abstiene |
-| CTL/ATL/TSB | 3 días con TRIMP | 14 (`ctlAtlMinDays`) | **Se calcula** (ver Q-05) |
+| CTL/ATL/TSB | 3 días con TRIMP | 14 (`ctlAtlMinDays`) | Se calculaba en v120 (Q‑05); **abstiene desde v121** (`_loadWithCoverage`) |
 | Desviación de temperatura (gen5) | 2 previas | `kSkinTempDevMinNights` | Abstiene |
 | Illness CUSUM | 2 | 7 | Abstiene |
 | Anomalía multivariante | 2 | 10 | Abstiene |

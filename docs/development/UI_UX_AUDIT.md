@@ -72,6 +72,10 @@ Por qué: HRV por encima de tu media 7 d · RHR estable · dormiste lo necesario
 
 ### P‑02 · Valor + banda personal en cada métrica (UX‑02, UX‑08)
 
+> **Corrección (iteración 1):** las tendencias de Health ya dibujan el rango
+> habitual y abstienen con < 14 días (`usualRangeFor`, `ui2/trend.dart`).
+> Falta la puerta del MDC y llevarlo a las constantes de Home.
+
 En Health → Overview, y como evolución del "Usual" de Home: sustituir la
 flecha por un **mini gráfico de bala** (bullet): punto de hoy sobre la banda
 personal (mediana ± MAD de 28 d) y la línea del MDC. Color solo
@@ -94,6 +98,9 @@ Strain 2/3, Carga 3/14, Sueño libre 0/3, Temperatura 2/3. Datos: notas
 `need_baseline` del payload. Desaparece cuando todas están completas.
 
 ### P‑05 · Fases como rango y jerarquía de sueño (UX‑04, UX‑05)
+
+> **Corrección (iteración 1):** el rango de fases ya existe en
+> `sleep_detail.dart`; `light_range_sec` no es una columna. Queda la jerarquía.
 
 Orden: duración → horario y regularidad → deuda → fases. Fases como barra
 apilada con **rangos** (`light_range_sec`…) y la etiqueta "estimación de

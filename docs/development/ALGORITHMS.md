@@ -1,7 +1,7 @@
 # Algoritmos actuales
 
-> Fecha: 2026-11-12. Contrastado con el código: app `edge` @ `15d791a0`
-> (`kAlgoVersion 120`), `openstrap_analytics` @ `3a7ca34` (pin de
+> Fecha: 2026-11-12. Contrastado con el código: app `edge` @ `cb3bbbeb`
+> (`kAlgoVersion 121`; revisado en la iteración 1, ver AUDIT_VERIFICATION.md), `openstrap_analytics` @ `3a7ca34` (pin de
 > `pubspec.lock`), `openstrap_protocol` @ `b4fde6a`. Las rutas
 > `analytics:<ruta>` son relativas a `lib/src/onehz/` del paquete de analítica;
 > las demás, a `lib/` de este repo. El índice oficial de métodos y citas es
@@ -36,7 +36,7 @@ Todo devuelve `Metric<T>{value, confidence, tier, inputs_used, drivers, note}`
 | Frecuencia respiratoria | `analytics:respiration/resp_rate.dart` `rsaRespRate` | Pico HF (arritmia sinusal respiratoria): Lomb‑Scargle en sub‑ventanas de 300 s ≥ 80 % cubiertas, mediana con puerta de acuerdo | [PUB] |
 | Temperatura de piel | `lib/compute/onehz_pipeline.dart` + `analytics:wellness/temp_circadian.dart` `nightlySkinTemp` | Media nocturna; gen4 en ADC, gen5 en centi‑°C; "settled fraction" solo donde hay banda de asentamiento medida (no en gen5) | [PROPIO] |
 | Estrés | `analytics:clinical/stress_si.dart` | Índice de Baevsky `SI = AMo / (2·Mo·MxDMn)` sobre histograma de RR (bins 50 ms) → 0–100 | [PUB] |
-| Ritmo irregular | `analytics:clinical/irregular_rhythm.dart` | Poincaré SD1/SD2 + pNN70. Cribado, no diagnóstico | [INSP] |
+| Ritmo irregular | `analytics:clinical/irregular_rhythm.dart` + `irregularRhythmFlag` (`lib/compute/onehz_pipeline.dart`) | Poincaré SD1/SD2 + pNN70. Desde v121 la bandera diaria exige que el cribado de la ventana de sueño exista y coincida; sin noche puntuada ⇒ null. Cribado, no diagnóstico | [INSP] |
 
 ## 2. Recovery / Readiness
 
@@ -124,8 +124,12 @@ Evaluación en ALGORITHM_EVALUATION.md ALG‑R1.
 5. Curva intradía: `strainCurveFromSeries` (acumulado por minuto).
 6. **Carga crónica/aguda** (`ctlAtlTsb`): EWMA, CTL τ = 42 d, ATL τ = 7 d,
    `TSB = CTL − ATL`; mínimo 14 días; arranca con la media de los 7 primeros.
-   La app le pasa una serie diaria **densa** (días sin datos = 0,
-   `_denseDailyTrimp` en `lib/compute/crossday_pipeline.dart`).
+   Desde v121 (`_loadWithCoverage` en `lib/compute/crossday_pipeline.dart`) la
+   carga **abstiene** con `need_baseline:have=H,need=N` hasta que
+   max(14, 80 % de los últimos 42 días naturales) tengan TRIMP medido; un día
+   sin medir ya no cuenta como descanso. La serie que recibe `ctlAtlTsb` sigue
+   siendo densa (`_denseDailyTrimp`): aceptar nulos es una fórmula pendiente
+   en analytics.
 7. **Zonas de FC**: 5 zonas sobre `zone_max_hr` (`zone_source` indica si es
    observada, por edad o editada; `analytics:workout/hr_zones.dart`,
    `observed_max_hr.dart`).
@@ -151,7 +155,7 @@ ALGORITHM_EVALUATION.md §3.
 | Recorte final | `analytics:sleep/band_offset.dart` | Si la banda pasa a despierto y se queda así hasta el final de la ventana, recorta ese tramo ("corroboración, nunca fuente") | [PROPIO] |
 | Noche aún abierta | `lib/compute/substrate.dart` `tonightStillGoing` (BUG‑T01) | Un bloque quieto que empieza ≥ 11:00 y sigue abierto en el borde de datos pertenece al día en que termine, no a hoy | [PROPIO] |
 | Cierre manual | `AppState.markAwakeNow` ("I'm awake") | Guarda inicio detectado → ahora como ventana `manual` | — |
-| Fases | `analytics:sleep/cardio_stager.dart` `cardioStager` | Épocas de 30 s; vigilia por movimiento ENMO o FC por encima de mediana local; REM/profundo por puntuación ponderada de R(k), SDNN, SD de FC, LF/HF, z frente a la propia noche. Sin ML | [INSP] |
+| Fases (la UI las muestra como rango: `stageRanges` de `analytics:sleep/segment.dart`, `_ranges` en `ui2/screens/sleep_detail.dart`) | `analytics:sleep/cardio_stager.dart` `cardioStager` | Épocas de 30 s; vigilia por movimiento ENMO o FC por encima de mediana local; REM/profundo por puntuación ponderada de R(k), SDNN, SD de FC, LF/HF, z frente a la propia noche. Sin ML | [INSP] |
 | Contabilidad | `analytics:sleep/accounting.dart` | TIB, TST, WASO, eficiencia = TST/TIB observado; despertar = ≥ 300 s (`kSustainedAwakeningSec`) | [PUB] |
 | Ciclos | `analytics:sleep/cycles.dart` | Método fractal sobre RMSSD por minuto (Rosenblum 2024) | [PUB] |
 | Siestas | `analytics:sleep/nap.dart` `detectNaps` | Inmovilidad fuera de la ventana principal + caída de FC; sin fases | [PROPIO] |
@@ -198,7 +202,9 @@ consumo (κ 0,21–0,53). **Las fases son orientativas.**
 ## 7. Versionado y recalculado
 
 - `kAlgoVersion` (`lib/compute/derivation_engine.dart`) etiqueta cada
-  `day_result`. Subirlo re‑deriva solo los días con sustrato vivo (≈ 5 días) y
+  `day_result`. Una versión nueva no pisa a la anterior, pero **la misma
+  versión sí se reescribe** (`putDayResult` usa REPLACE): la inmutabilidad
+  hay que imponerla en cada ruta que re‑derive (AUDIT_VERIFICATION.md §2.2). Subirlo re‑deriva solo los días con sustrato vivo (≈ 5 días) y
   los no finalizados.
 - `metric_series` guarda la última versión de cada día.
 - Backfills idempotentes marcados en `compute_freshness`

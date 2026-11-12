@@ -1,5 +1,10 @@
 # Resumen ejecutivo de la auditoría
 
+> **Contrastada con el código en la iteración 1 (2026‑11‑12):** varias
+> afirmaciones de abajo están corregidas o matizadas en
+> [AUDIT_VERIFICATION.md](AUDIT_VERIFICATION.md) (fases como rango y RPE ya
+> existen; "piezas sin producto" es parcial; `kAlgoVersion` es 121).
+
 > Fecha: 2026-11-12 · commit `15d791a0` · `kAlgoVersion 120` ·
 > `schemaVersion 58` · analytics `3a7ca34` · protocol `b4fde6a`.
 > Alcance: código del fork, paquetes de analítica y protocolo en sus pins,

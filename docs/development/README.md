@@ -2,7 +2,8 @@
 
 > Punto de entrada para cualquier persona o agente. Última auditoría:
 > **2026-11-12**, commit `15d791a0`, `kAlgoVersion 120`, `schemaVersion 58`,
-> con una exportación real de WHOOP 5.0 (3 noches). Empieza por
+> con una exportación real de WHOOP 5.0 (3 noches). Código actual: léelo en
+> `derivation_engine.dart` (`kAlgoVersion`, 121 a 2026‑11‑12) y `db.dart`. Empieza por
 > **AUDIT_SUMMARY.md** si solo vas a leer una cosa.
 
 ## En 30 segundos
@@ -22,6 +23,9 @@
 | Necesitas… | Documento |
 |---|---|
 | Resumen ejecutivo | [AUDIT_SUMMARY.md](AUDIT_SUMMARY.md) |
+| Auditoría contrastada con el código | [AUDIT_VERIFICATION.md](AUDIT_VERIFICATION.md) |
+| Plan de iteraciones (pendiente de aprobación) | [ITERATION_PLAN.md](ITERATION_PLAN.md) |
+| Bitácora de implementación | [IMPLEMENTATION_LOG.md](IMPLEMENTATION_LOG.md) |
 | Reglas para agentes | [AGENT_GUIDE.md](AGENT_GUIDE.md) |
 | Qué es y estado | [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md) |
 | Arquitectura y módulos | [ARCHITECTURE.md](ARCHITECTURE.md) |

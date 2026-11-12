@@ -4,7 +4,7 @@ Append new entries at the top of "Log". Keep "Status" current.
 
 ## Status
 
-- **Phase:** A (foundation). Audit and docs done. CI-01 written, awaiting first run.
+- **Phase:** iteration 1 of the product plan closed (2026-11-12); iteration plan awaiting owner approval (`docs/development/ITERATION_PLAN.md`).
 - **Base:** upstream `main` @ `38a83e9` (2026-11-09), app `0.11.3+78`,
   `kAlgoVersion 120`, `schemaVersion 58`.
 - **Remotes:** `upstream` = github.com/OpenStrap/edge. `origin` =
@@ -55,6 +55,12 @@ translations or a gallery entry:
 Any failure outside this list after a change is a regression.
 
 ## Log
+
+### 2026-11-12 — Iteration 1: audit contrasted with the code, iteration plan (docs only)
+- Read the audit docs in order and checked their claims against `main` @ `cb3bbbeb` (`kAlgoVersion 121`, `schemaVersion 58`) and analytics @ `3a7ca34d`. Result: `docs/development/AUDIT_VERIFICATION.md`. Plan: `docs/development/ITERATION_PLAN.md` (**awaiting owner approval**, three open questions Q1–Q3). Resume point: `docs/development/IMPLEMENTATION_LOG.md`.
+- Corrected stale docs: stage ranges and the RPE prompt already exist; `putDayResult` REPLACEs a same-version row; CTL/ATL abstains since 121; D-05/06/09/11 accepted, D-12…D-16 added.
+- **Correction to the entry below:** ALG-L1/ALG-C1 are in `main`, but the full-suite run 43233915353 was still `in_progress` (1 h 21 min of a 90-min limit) when they were merged. Its result is not recorded yet.
+- No code change, no tests run. Branch `iter1/audit-contrast`. Evidence: `gh run list -R MarcoteRL/edge` (2026-11-12).
 
 ### 2026-11-12 — SEC-09, ALG-L1, ALG-C1 (kAlgoVersion 120 → 121)
 - **SEC-09:** `*.db`, `*.db-wal`, `*.db-shm`, `*.sqlite` ignored (verified with `git check-ignore`; no tracked file matched).

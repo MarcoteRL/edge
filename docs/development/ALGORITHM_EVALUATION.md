@@ -173,6 +173,10 @@ se muestra y usar la mediana para baselines si ALG‑R2 demuestra menor ruido.
 5. **Complejidad:** M. 6. **Validación:** correlación de sRPE con TRIMP en
    sesiones de cardio (Foster informa r ≈ 0,75–0,90 con TRIMP).
 
+> **Corrección (iteración 1):** el RPE **ya se pide** al cerrar una sesión
+> (`ui2/activity/summary.dart`, `LocalDb.setSessionRpe`). Falta usarlo
+> (sRPE semanal) y comprobar si las sesiones de Hevy pueden recibirlo.
+
 ### ALG‑L3 · Edwards / tiempo en zonas como vista complementaria (Propuesta)
 
 Edwards (1993): `Σ min_zona_i × i`. Es casi lo que ya hay en `zones` y no
@@ -219,6 +223,12 @@ polisomnografía (~20–25 %). **Propuesta:** en Sueño, mostrar fases como
 rangos (`light_range_sec`, `deep_range_sec`, `rem_range_sec` **ya existen**
 en `sleep_session_candidates`) y una etiqueta "estimación de muñeca". No
 cambia la fórmula. S.
+
+> **Corrección (iteración 1, 2026‑11‑12):** las fases **ya se muestran como
+> rango** (`_ranges`/`_rangeText` en `ui2/screens/sleep_detail.dart`, con
+> `stageRanges` de analytics). Las columnas `light_range_sec`… citadas arriba
+> **no existen** en `sleep_session_candidates`. Lo pendiente es la jerarquía
+> de la pantalla (UI_UX_AUDIT.md P‑05).
 
 ### ALG‑S3 · Consistencia de sueño útil antes del SRI completo (Propuesta)
 

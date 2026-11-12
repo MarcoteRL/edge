@@ -60,7 +60,7 @@ estado actual en la tabla `baselines` (una fila por clave).
 | Historial de baselines | En cada `payload_json.baselines` | Documentar y leer de ahí (ALG‑T2) |
 | Registrar recomendaciones y su resultado | No existe | Tabla `recommendation_log(day_id, kind, payload_json, shown_at, followed, outcome_json)` solo cuando exista el motor de recomendaciones (FI‑E4). Migración aditiva |
 | Experimentos personales | No existe | `experiment(id, hypothesis, metric_key, start, end, arms_json)` + reutilizar `journal` para la exposición diaria (FI‑F2) |
-| Procedencia de correcciones de sueño | "I'm awake" y edición manual comparten `source = 'manual'` | Nuevo valor `source = 'awake_tap'` en `sleep_override` (sin cambio de esquema: es un TEXT). Las filas antiguas se reconocen por `offset_ts == created_at` (DATA‑06) |
+| Procedencia de correcciones de sueño | "I'm awake" y edición manual comparten `source = 'manual'` | Nuevo valor `source = 'awake_tap'` en `sleep_override` (sin cambio de esquema: es un TEXT). Las filas antiguas se reconocen por `offset_ts == created_at` (DATA‑06). **Descartado:** se usa la regla `source='manual' AND abs(created_at − offset_ts) ≤ 60`, con sus límites (AUDIT_VERIFICATION.md §2.6) |
 | Bienestar subjetivo diario | `journal_metric` + `journal_field_def` existen | Reutilizar: definir campos fijos "energía", "agujetas", "sueño percibido" |
 
 Regla: cualquier tabla nueva es una migración **aditiva e idempotente** en la

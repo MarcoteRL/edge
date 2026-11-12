@@ -6,7 +6,7 @@
 > (≤ 1 semana), L (> 1 semana). "Repo" indica dónde va el cambio
 > (edge = este repo, analytics = `OpenStrap/analytics`).
 > El estado vivo de cada tarea se lleva en PLANNING.md; este archivo es la
-> especificación.
+> especificación. Plan de ejecución por iteraciones: ITERATION_PLAN.md.
 
 Plantilla de cada tarea: **Qué** · **Por qué** · **Dónde** · **Cómo** ·
 **Prueba** · **Resultado esperado**.
@@ -31,7 +31,7 @@ Plantilla de cada tarea: **Qué** · **Por qué** · **Dónde** · **Cómo** ·
 - **Prueba:** T‑05 (ida y vuelta: derivar desde vivo y desde archivo produce el mismo `payload_json`).
 - **Resultado:** histórico recalculable. **Esfuerzo:** M–L. **Repo:** edge (candidato a PR upstream; el propio código lo anuncia como siguiente paso).
 
-### ALG‑L1 · CTL/ATL: "no llevada" ≠ "descanso" — **implementada (2026‑11‑12, pendiente de tests)**
+### ALG‑L1 · CTL/ATL: "no llevada" ≠ "descanso" — **en `main` (kAlgoVersion 121; runs 43231936403, 43232851823; suite completa 43233915353 pendiente de resultado)**
 - `_loadWithCoverage` en `lib/compute/crossday_pipeline.dart`: abstiene hasta que el 80 % de los últimos 42 días naturales (y ≥ 14) tengan TRIMP medido. Tests en `test/crossday_pipeline_test.dart`. Queda el *upgrade* en analytics (serie con nulos), marcado con `ponytail:`.
 - **Qué / Por qué / Cómo / Prueba:** ALGORITHM_EVALUATION.md §3 ALG‑L1.
 - **Dónde:** `lib/compute/crossday_pipeline.dart` (`_denseDailyTrimp`) + `ctlAtlTsb` en analytics.
@@ -44,7 +44,7 @@ Plantilla de cada tarea: **Qué** · **Por qué** · **Dónde** · **Cómo** ·
 
 ## P1 — Alto valor
 
-### ALG‑C1 · Cribado de ritmo irregular solo en reposo — **primera fase implementada (2026‑11‑12, pendiente de tests)**
+### ALG‑C1 · Cribado de ritmo irregular solo en reposo — **primera fase en `main` (mismos runs que ALG‑L1)**
 - `irregularRhythmFlag` en `lib/compute/onehz_pipeline.dart`: el veredicto diario exige que el cribado nocturno también exista y coincida. Test: `test/irregular_flag_corroboration_test.dart`. Segunda fase (enmascarar RR diurno por movimiento/calidad) pendiente, marcada con `ponytail:`.
 - Ver ALGORITHM_EVALUATION.md §5. **Prueba:** T‑03. **Esfuerzo:** M. **Repo:** analytics + edge; bump.
 
@@ -55,6 +55,7 @@ Plantilla de cada tarea: **Qué** · **Por qué** · **Dónde** · **Cómo** ·
 - Ver ALGORITHM_EVALUATION.md §6. **Esfuerzo:** M. **Repo:** analytics (función) + edge (llamada y UI P‑03).
 
 ### ALG‑L2 · Carga interna de fuerza (sRPE + tonelaje)
+- **Comprobado 2026‑11‑12:** el RPE ya se pide (`ui2/activity/summary.dart`); falta usarlo.
 - **Qué:** pedir RPE (CR‑10) al cerrar una sesión de fuerza; `sRPE = RPE × min`; tonelaje por grupo con el mapeo de `strength_summary.dart`; mostrar junto a la carga cardiovascular, sin mezclarlas.
 - **Dónde:** `ui2/screens/log_workout.dart` / cierre de sesión → `sessions.rpe`; cálculo en analytics `workout/`; vista en `workout_screen.dart`.
 - **Prueba:** test de ausencia (sin RPE ⇒ null), test de suma semanal. **Esfuerzo:** M.
@@ -82,8 +83,8 @@ Plantilla de cada tarea: **Qué** · **Por qué** · **Dónde** · **Cómo** ·
 ### ALG‑H1 · CV de lnRMSSD a 7 días
 - Ver ALGORITHM_EVALUATION.md §2. **Esfuerzo:** S.
 
-### ALG‑S2 · Fases de sueño como rango
-- Ver ALGORITHM_EVALUATION.md §4 y UI_UX_AUDIT P‑05. Los rangos ya existen en `sleep_session_candidates`. **Esfuerzo:** S.
+### ALG‑S2 · Fases de sueño como rango — **ya existe (comprobado 2026‑11‑12)**
+- `sleep_detail.dart` ya muestra cada fase como rango (`stageRanges`). No hay columnas `*_range_sec`. Queda solo la jerarquía de la pantalla (P‑05).
 
 ## P2 — Evolución
 
