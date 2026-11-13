@@ -7,15 +7,13 @@
 
 ## Estado actual
 
-- **`main`:** iteración 2 (`f7380fb`). Tres ramas apiladas **sin fusionar**:
-  1. `iter2/rederive-off-ui` — run 43273419312 en verde (parcial).
-  2. `iter3/fork-trends` — run 43305607581 en verde (parcial).
-  3. `iter4/home-guidance` — **escrita a ciegas: ni analizador ni tests**.
-     El propietario la prueba en su PC (comandos en PROGRESS.md).
-- **Siguiente:** corregir lo que salga en la prueba local; después suite
-  completa local y fusión. No empujar código a `main` sin decidir el IPA
-  (≈ 130 min facturados; presupuesto de Actions casi agotado hasta el
-  2026‑12‑01).
+- **`main`:** iteraciones 2, 3 y 4 fusionadas por el propietario (PR #1,
+  `6bf7cd7`); IPA de esa versión: run 43327489818.
+- **En rama `fix/naps-inside-sleep`:** BUG‑N01 y los arreglos de
+  portabilidad de tests, **sin evidencia de tests** todavía.
+- **Siguiente:** prueba local del propietario (`flutter analyze` y los
+  archivos tocados); si sale en verde, fusión a `main` (genera IPA, ≈ 130 min
+  facturados; presupuesto de Actions casi agotado hasta el 2026‑12‑01).
 - **Iteración 5, go/no‑go (2026‑11‑12):**
 
   | Funcionalidad | Condición | Veredicto |
@@ -30,6 +28,20 @@
   el plan admite como resultado válido, hasta que haya fusión.
 - **Abierto con el propietario:** "días anteriores sin esfuerzo" (ver
   DATA_ANALYSIS.md §8): falta pantalla y día.
+
+## 2026-11-13 — BUG‑N01 y portabilidad de tests en Windows
+
+- **Qué:** PROGRESS.md (misma fecha).
+- **Por qué así (BUG‑N01):** el fallo no está en el detector sino en que
+  nadie retira una propuesta que deja de ofrecerse. Un barrido en el único
+  almacén (`ActivityStore`), después de escribir la fila del día, cubre las
+  propuestas nuevas y las que ya están en el teléfono sin migración ni
+  borrado: la fila pasa a `superseded`, no se elimina.
+- **Autoría:** los commits salen con la identidad del propietario (la del
+  merge del PR #1), sin autor ni coautor Claude. Los ya publicados no se
+  reescriben (sin reset ni force‑push).
+- **Limitaciones:** sin evidencia todavía (sin Flutter en la sesión); los
+  fallos 1–9 de la suite local no estaban en el log recibido.
 
 ## 2026-11-12 — Iteración 4 (Home): escrita, sin validar
 
