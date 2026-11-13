@@ -340,6 +340,29 @@ serie, día y `kAlgoVersion`). Al leer, sin persistir (D‑15).
   variables; el bootstrap con 4–7 valores recientes subestima la anchura del
   IC (por eso además se exige el MDC).
 
+### ALG‑P1 · Dos periodos elegidos por el usuario (Hecho 2026‑11‑13, sin validar con datos reales)
+
+- **Qué:** `periodChange` en `lib/compute/fork/trends.dart`; servicio
+  `TrendService.periods`; pantalla `PeriodLabScreen`.
+- **Regla [Decidido, D‑20]:** Δ = media(después) − media(antes). Relevante si
+  \|Δ\| > max(1,96 · SD agrupada · √(1/nₐ + 1/n_b), 0,5 · SD(antes)) y el IC
+  95 % por bootstrap (500 remuestreos de ambos periodos) excluye 0.
+- **n mínimo:** 60 % de los días de cada periodo y nunca menos de 4
+  (7 → 4, 14 → 8, 28 → 17). Con menos: `need_baseline:have=H,need=N` del
+  periodo más corto, y la pantalla dice cuántos días hay y cuántos faltan.
+- **Abstenciones:** dos periodos planos (SD agrupada 0) ⇒ `no_dispersion`,
+  sin veredicto. Días posteriores al último guardado simplemente no existen.
+- **Validación (solo sintética, `test/fork_trends_test.dart`):** escalón en
+  la fecha, ruido blanco con 200 semillas (se exige < 30 falsos positivos; el
+  valor nominal es ~10), periodo escaso, periodos planos, periodo que se sale
+  del final de la serie. **Ganar en sintético no valida para producción.**
+- **Limitaciones [Comprobado en el código]:** trata las noches como
+  independientes (no lo son del todo: la autocorrelación hace el umbral algo
+  optimista); con 7 días por lado la potencia es baja y casi todo dirá "sin
+  diferencia"; no corrige por comparaciones múltiples si el usuario prueba
+  muchas fechas; describe, no atribuye causa. **[Recomendación]** medir la
+  tasa real de falsos positivos con ≥ 60 noches antes de fiarse de 7 días.
+
 ### ALG‑T2 · Guardar el historial de baselines (Propuesta)
 
 `baselines` guarda una fila por clave (se sobrescribe). Para explicar "por qué

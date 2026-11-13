@@ -127,6 +127,118 @@ class DecisionLine extends StatelessWidget {
   }
 }
 
+// ── the three series every week-level verdict is made on ───────────────────
+
+/// The stored series the fork's trend rules read, and how each one prints.
+/// One list, so Home's evolution card, the weekly line under a Health trend,
+/// the period lab and the weekly report cannot disagree about a unit.
+enum GuideMetric {
+  hrv('ln_rmssd'),
+  rhr('rhr'),
+  sleep('tst_min');
+
+  const GuideMetric(this.seriesKey);
+
+  /// The `metric_series` key.
+  final String seriesKey;
+
+  String label(AppLocalizations? l) => switch (this) {
+        hrv => l?.homeDriverHrv ?? 'HRV',
+        rhr => l?.homeDriverRhr ?? 'Resting heart rate',
+        sleep => l?.homeRingSleep ?? 'Sleep',
+      };
+
+  /// A signed difference in this metric, with its unit. The HRV series is
+  /// lnRMSSD, so its differences read as a percentage of RMSSD: e^Δ − 1.
+  String delta(double d, AppLocalizations? l) => switch (this) {
+        hrv => signed(
+            d,
+            '${displayFixed(((math.exp(d.abs()) - 1) * 100).clamp(0, 999), 0)} %',
+          ),
+        rhr => signed(
+            d,
+            '${displayFixed(d.abs(), 1)} ${l?.activityZonesBpmUnit ?? 'bpm'}',
+          ),
+        sleep => signed(d, hm(d.abs())),
+      };
+
+  /// A level (a mean of the series) in the unit the app shows. The mean of
+  /// lnRMSSD goes back to milliseconds as e^mean — a geometric mean.
+  String level(double v, AppLocalizations? l) => switch (this) {
+        hrv => '${displayFixed(math.exp(v), 0)} ms',
+        rhr => '${displayFixed(v, 1)} ${l?.activityZonesBpmUnit ?? 'bpm'}',
+        sleep => hm(v),
+      };
+}
+
+/// What a week-against-usual verdict says: the signed change when it clears
+/// the noise, "Stable" when it does not, and "not enough days" when it cannot
+/// be judged (never "stable" for that).
+String weekVerdict(GuideMetric m, fork.Trend t, AppLocalizations? l) =>
+    switch (t.relevant) {
+      true => l?.homeEvolutionChanged(m.delta(t.change!.delta, l)) ??
+          '${m.delta(t.change!.delta, l)} vs your usual',
+      false => l?.homeEvolutionStable ?? 'Stable',
+      null => l?.homeEvolutionNeedsDays ?? 'Not enough days yet',
+    };
+
+/// P-02 — the week's verdict under a single-day trend card: "Last 7 days:
+/// stable". The card above it judges ONE reading against your usual range;
+/// this line judges the week, and only calls it a change when it clears the
+/// minimal detectable change. Loads on its own ([TrendService]); until it
+/// has an answer, and when reading fails, it draws nothing.
+class WeekTrendLine extends StatefulWidget {
+  const WeekTrendLine(this.metric, {super.key});
+  final GuideMetric metric;
+
+  @override
+  State<WeekTrendLine> createState() => _WeekTrendLineState();
+}
+
+class _WeekTrendLineState extends State<WeekTrendLine> with RevisionReload {
+  fork.Trend? _trend;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  // The tabs live in an IndexedStack, so without this a new night never
+  // reached a line that was already on screen.
+  @override
+  void reload() => _load();
+
+  Future<void> _load() async {
+    final read = beginRead(#trend);
+    try {
+      final t = await TrendService.of(widget.metric.seriesKey);
+      if (stillNewest(#trend, read)) setState(() => _trend = t);
+    } catch (_) {
+      // No database (a test host, a locked store): nothing to show.
+    }
+  }
+
+  @override
+  Widget build(BuildContext c) {
+    final t = _trend;
+    if (t == null) return const SizedBox.shrink();
+    final p = P.of(c);
+    final l = AppLocalizations.of(c);
+    final verdict = weekVerdict(widget.metric, t, l);
+    return Padding(
+      padding: const EdgeInsets.only(left: S.x1, top: S.x2),
+      child: Text(
+        l?.trendWeekLine(verdict) ?? 'Last 7 days: $verdict',
+        style: F.cap.copyWith(
+          color: t.relevant == true ? p.ink : p.ink3,
+          fontWeight: t.relevant == true ? FontWeight.w600 : FontWeight.w400,
+        ),
+      ),
+    );
+  }
+}
+
 // ── P-03 · how you are evolving ────────────────────────────────────────────
 
 /// One metric's verdict: [relevant] true = changed beyond the noise, false =
@@ -194,10 +306,8 @@ class HomeEvolution extends StatefulWidget {
   State<HomeEvolution> createState() => _HomeEvolutionState();
 }
 
-class _HomeEvolutionState extends State<HomeEvolution> {
+class _HomeEvolutionState extends State<HomeEvolution> with RevisionReload {
   List<fork.Trend>? _trends;
-
-  static const _keys = ['ln_rmssd', 'rhr', 'tst_min'];
 
   @override
   void initState() {
@@ -205,13 +315,19 @@ class _HomeEvolutionState extends State<HomeEvolution> {
     _load();
   }
 
+  // Home stays mounted for the life of the app: re-read when a derive or an
+  // import lands, or the card would show the week it was first opened in.
+  @override
+  void reload() => _load();
+
   Future<void> _load() async {
+    final read = beginRead(#trends);
     try {
       final out = <fork.Trend>[];
-      for (final k in _keys) {
-        out.add(await TrendService.of(k));
+      for (final m in GuideMetric.values) {
+        out.add(await TrendService.of(m.seriesKey));
       }
-      if (mounted) setState(() => _trends = out);
+      if (stillNewest(#trends, read)) setState(() => _trends = out);
     } catch (_) {
       // No database (a test host, a locked store): nothing to show.
     }
@@ -222,24 +338,15 @@ class _HomeEvolutionState extends State<HomeEvolution> {
     final t = _trends;
     if (t == null) return const SizedBox.shrink();
     final l = AppLocalizations.of(c);
-    // lnRMSSD differences read as a percentage of RMSSD: e^Δ − 1.
-    String hrv(double d) => signed(
-        d, '${displayFixed(((math.exp(d.abs()) - 1) * 100).clamp(0, 999), 0)} %');
-    final bpmUnit = l?.activityZonesBpmUnit ?? 'bpm';
-    String bpm(double d) => signed(d, '${displayFixed(d.abs(), 1)} $bpmUnit');
-    String sleep(double d) => signed(d, hm(d.abs()));
-    EvolutionRow row(String label, fork.Trend tr, String Function(double) f) =>
-        (
-          label: label,
-          relevant: tr.relevant,
-          delta: tr.change == null ? '' : f(tr.change!.delta),
-        );
     return Section(
       l?.homeEvolutionTitle ?? "How you're evolving",
       EvolutionCard([
-        row(l?.homeDriverHrv ?? 'HRV', t[0], hrv),
-        row(l?.homeDriverRhr ?? 'Resting heart rate', t[1], bpm),
-        row(l?.homeRingSleep ?? 'Sleep', t[2], sleep),
+        for (final (i, m) in GuideMetric.values.indexed)
+          (
+            label: m.label(l),
+            relevant: t[i].relevant,
+            delta: t[i].change == null ? '' : m.delta(t[i].change!.delta, l),
+          ),
       ]),
     );
   }
@@ -271,12 +378,40 @@ Widget dataFreshnessLine(BuildContext c) {
 
 // ── how each headline number is computed ───────────────────────────────────
 
+/// What today's number stands on: [scored] from the user's own data,
+/// [estimate] while a baseline is still building ([have] of [need] nights
+/// when the count is known), [absent] when there is nothing for it today.
+enum HowKind { scored, estimate, absent }
+
+typedef HowStatus = ({HowKind kind, int? have, int? need});
+typedef HowToday = ({
+  HowStatus recovery,
+  HowStatus strain,
+  HowStatus sleep,
+  HowStatus vitals,
+});
+
+String howTodayText(HowStatus s, AppLocalizations? l) => switch (s.kind) {
+      HowKind.scored => l?.howTodayScored ?? 'Today: from your own data',
+      HowKind.absent => l?.howTodayAbsent ?? 'Today: nothing to compute it from',
+      HowKind.estimate => s.have != null && s.need != null
+          ? (l?.howTodayEstimateOf(s.have!, s.need!) ??
+              'Today: an estimate, ${s.have} of ${s.need} nights of your own')
+          : (l?.howTodayEstimate ??
+              'Today: an estimate, your own baseline is still building'),
+    };
+
 /// A plain page: for each headline number, whether it is measured, derived
 /// or estimated, what goes into it, the window it looks at and what it does
-/// with missing data, and where it stops being trustworthy. Static text and
-/// the running algorithm version; it reads nothing.
+/// with missing data, and where it stops being trustworthy. Static text, the
+/// running algorithm version and, when Home hands it over, what today's
+/// number of each kind stands on; it reads nothing itself.
 class HowComputedScreen extends StatelessWidget {
-  const HowComputedScreen({super.key});
+  const HowComputedScreen({super.key, this.today});
+
+  /// What today's number of each kind stands on, from the day Home already
+  /// loaded; null (a deep link, a test) draws the page without those lines.
+  final HowToday? today;
 
   @override
   Widget build(BuildContext c) {
@@ -296,7 +431,7 @@ class HowComputedScreen extends StatelessWidget {
           ),
         );
     Widget metric(String name, String kind, String unit, String what,
-            String data, String limits) =>
+            String data, String limits, [HowStatus? now]) =>
         Padding(
           padding: const EdgeInsets.only(bottom: S.x4),
           child: Surface(
@@ -306,6 +441,12 @@ class HowComputedScreen extends StatelessWidget {
                 Text(name, style: F.head.copyWith(color: p.ink)),
                 const SizedBox(height: S.x1),
                 Text('$kind · $unit', style: F.cap.copyWith(color: p.ink3)),
+                if (now != null) ...[
+                  const SizedBox(height: S.x2),
+                  Text(howTodayText(now, l),
+                      style: F.cap.copyWith(
+                          color: p.ink, fontWeight: FontWeight.w600)),
+                ],
                 part(l?.howComputedInputs ?? 'What goes in', what),
                 part(l?.howComputedMissing ?? 'Window and missing data', data),
                 part(l?.howComputedLimits ?? 'Limits', limits),
@@ -336,6 +477,7 @@ class HowComputedScreen extends StatelessWidget {
               'Wrist heart-rate variability is not an ECG. The score says '
                   'how last night compares with your normal; it is not a '
                   'medical reading.',
+          today?.recovery,
         ),
         metric(
           l?.homeRingStrain ?? 'Strain',
@@ -353,6 +495,7 @@ class HowComputedScreen extends StatelessWidget {
               'It only sees cardiovascular effort, so lifting weights '
                   'scores low. Maximum heart rate comes from your age '
                   'unless a higher one has been observed.',
+          today?.strain,
         ),
         metric(
           l?.homeRingSleep ?? 'Sleep',
@@ -368,6 +511,7 @@ class HowComputedScreen extends StatelessWidget {
           l?.howSleepLimits ??
               'Stages from the wrist are rough, so they are shown as a '
                   'range. Lying still while awake can count as sleep.',
+          today?.sleep,
         ),
         metric(
           '${l?.homeDriverHrv ?? 'HRV'} · ${l?.homeDriverRhr ?? 'Resting heart rate'}',
@@ -383,6 +527,7 @@ class HowComputedScreen extends StatelessWidget {
           l?.howHrvLimits ??
               'Measured optically at the wrist, so movement and a loose '
                   'band add noise.',
+          today?.vitals,
         ),
         Text(
           l?.howComputedVersion(kAlgoVersion) ??

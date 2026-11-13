@@ -34,7 +34,8 @@ import 'home_screen.dart';
 import 'investigate.dart';
 import 'metric_detail.dart';
 import 'wellness_screen.dart';
-import 'home_guidance.dart' show dataFreshnessLine;
+import 'home_guidance.dart'
+    show GuideMetric, WeekTrendLine, dataFreshnessLine;
 
 /// A read this screen can live without. The wear block and the nap block are
 /// ADDITIONS to the repository interface, so an implementation written before
@@ -1037,7 +1038,10 @@ class _HealthScreenState extends State<HealthScreen> with RevisionReload {
     // series, so taking the envelope only implied a cross-check that was
     // never made.
     Widget trend(String key, String label, String unit, Color col,
-        {bool higherBetter = true, double? against, String? againstLabel}) {
+        {bool higherBetter = true,
+        double? against,
+        String? againstLabel,
+        GuideMetric? week}) {
       final pts = d.points(key);
       // Statistics off the STORED values; the painter gets the dense window.
       final s = valuesOf(pts);
@@ -1076,7 +1080,7 @@ class _HealthScreenState extends State<HealthScreen> with RevisionReload {
           ? asOf.substring(3)
           : '$small$asOf';
       final n = DateTime.now();
-      return TrendCard(
+      final card = TrendCard(
         label,
         fmt(s.last),
         key == 'sleep' ? '' : unit,
@@ -1097,23 +1101,34 @@ class _HealthScreenState extends State<HealthScreen> with RevisionReload {
             l),
         onTap: () => go(c, MetricDetail(metricKey)),
       );
+      // P-02: the card judges one reading; the line under it judges the
+      // week, and only against the minimal detectable change. Loaded on its
+      // own, so only on the live screen (an injected `data` reads no store).
+      if (week == null || widget.data != null) return card;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [card, WeekTrendLine(week)],
+      );
     }
 
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       trend('resting_hr', l?.healthRowRestingHr ?? 'Resting heart rate', 'bpm',
-          C.red, higherBetter: false),
+          C.red, higherBetter: false, week: GuideMetric.rhr),
       const SizedBox(height: S.x3),
-      trend('hrv', l?.healthRowHrv ?? 'HRV', 'ms', C.green),
+      trend('hrv', l?.healthRowHrv ?? 'HRV', 'ms', C.green,
+          week: GuideMetric.hrv),
       const SizedBox(height: S.x3),
       if (d.need.value == null)
-        trend('sleep', l?.healthTimeAsleep ?? 'Time asleep', '', C.blue)
+        trend('sleep', l?.healthTimeAsleep ?? 'Time asleep', '', C.blue,
+            week: GuideMetric.sleep)
       else
         // `need` here is `crossday.sleep_coach.need` — the COMPUTED need. It is
         // never `sleep.need_min`, which is a hardcoded 480.
         trend('sleep', l?.healthTimeAsleep ?? 'Time asleep', '', C.blue,
             against: d.need.value!.toDouble(),
             againstLabel: l?.healthVsNeed(hm(d.need.value)) ??
-                'vs your ${hm(d.need.value)} need'),
+                'vs your ${hm(d.need.value)} need',
+            week: GuideMetric.sleep),
 
       // Body clock (natural bedtime, weekend shift, consistency) moved to
       // the Sleep tab, beside the night it is about.

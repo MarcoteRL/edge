@@ -54,3 +54,38 @@ No medido en dispositivo en esta sesión. Señales estáticas:
 - `sessions.strain` vacío en la sesión con traza tras 2 días: confirmar que
   `strain_backfill.dart` la rellena cuando el nivel de reposo exista.
 - ALG‑C2: RR en 333/2400 ms exactos.
+
+## 5. Revisión de la iteración 6 (2026‑11‑13, estática, sin dispositivo ni profiler)
+
+Alcance real: barridos por patrón de AGENTS §4 sobre `lib/` y lectura del
+código del fork. **No** es una auditoría línea a línea de `app_state.dart`,
+`ble_engine.dart` ni `db.dart`; lo no mirado se dice abajo.
+
+**Barridos sin hallazgos [Comprobado con grep el 2026‑11‑13]:**
+- `metricSeries(limit:)` (§4.2, "los N más antiguos"): ningún llamador.
+- Llamadas directas a `NotificationService` fuera de `lib/notify/` (§4.6): ninguna.
+- Etiquetas de día en UTC `toUtc()…substring(0,10)` (invariante 7): ninguna.
+
+**Hallazgos:**
+
+| # | Qué | Causa | Propuesta | Impacto estimado | Riesgo | Estado |
+|---|---|---|---|---|---|---|
+| R6‑1 | La tarjeta "Cómo evolucionas" no se actualizaba tras una noche nueva | Leía solo en `initState`; Home vive en un `IndexedStack` | `RevisionReload` con token de lectura | Corrección, no velocidad | Bajo | **Hecho** |
+| R6‑2 | `TrendService.of` lee la serie entera de `metric_series` antes de mirar la caché | La clave de caché necesita la última fecha de la serie | Leer solo `MAX(date)` para la clave y la serie (≤ 125 días) al fallar la caché | [Hipótesis] irrelevante hoy (1 fila/día); medible con años de historia | Bajo | Pendiente, sin evidencia de que haga falta |
+| R6‑3 | El barrido de siestas lee hasta 3 `payload_json` (75–82 KB) por siesta pendiente, en el isolate principal, en cada derivación | Reutiliza `overlapsMainSleep` (una sola definición del solape) | Leer las ventanas de sueño de la semana una vez | [Hipótesis] nulo con 0–3 pendientes; marcado `ponytail:` | Bajo | Pendiente |
+| R6‑4 | Cinco pestañas vivas releen en cada derivación | `IndexedStack` + `RevisionReload` (marcador `ponytail:` de upstream) | Releer solo la pestaña visible | [Hipótesis] menos consultas tras cada sync; **a medir por el propietario** | Medio (pantallas obsoletas si se hace mal) | Pendiente; es código de upstream |
+| R6‑5 | `getToday` deserializa el payload completo en el hilo de UI (§3 de este documento) | Diseño del read seam | Medir con el profiler antes de tocar | Desconocido | Alto (zona caliente, 17 fixes) | Sin tocar |
+| R6‑6 | Home crece: 2 puertas más al final (laboratorio, informe) | Iteración 5 | Agrupar las 4 puertas en una sola fila "Más" si la pantalla se alarga | UX | Bajo | A decidir por el propietario |
+
+**No revisado (y por tanto sin opinión):** reconexión y escaneo BLE, latches
+booleanos sin `finally` (§4.3) más allá de los ya documentados, uso de
+`context` tras `await` (§4.5) fuera del código del fork, listas y gráficos
+largos, consumo de batería. Todo ello pide dispositivo o una lectura dedicada.
+
+**Seguridad:** SEC‑01…SEC‑09 de SECURITY.md sin cambios. El informe semanal
+añade una salida de datos nueva, solo manual (D‑21); no amplía lo que el
+coach envía fuera. **Accesibilidad:** las pantallas nuevas usan `Surface`,
+`SubTabs`, `BigButton` y `detailLinkRow` (ya cubiertos por los barridos de
+la galería); `PeriodLabScreen` y `WeeklyReportScreen` no están en la galería
+y no pasan por el barrido de desbordamiento a 3,1×.
+
