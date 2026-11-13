@@ -33,6 +33,16 @@
 - **Abierto con el propietario:** "días anteriores sin esfuerzo" (ver
   DATA_ANALYSIS.md §8): falta pantalla y día.
 
+## 2026-11-13 — Registro de recomendaciones (esquema 59)
+
+- **Qué:** PROGRESS.md (misma fecha), DECISIONS D‑23.
+- **Por qué así:** migración mínima (una tabla, sin índices, sin tocar
+  ninguna existente) siguiendo punto por punto cómo se añadió
+  `vendor_sleep_epoch` en la v58. La pantalla es una lista; juzgar si la
+  recomendación "acertó" queda para cuando haya semanas de filas.
+- **Hueco conocido:** la exportación por días no copia la tabla.
+- **Limitaciones:** escrito sin compilar; ningún dato real.
+
 ## 2026-11-13 — Cierre de la iteración 4, iteración 5 (parte posible) e iteración 6
 
 - **Qué:** PROGRESS.md (misma fecha), UI_UX_AUDIT.md §10, TECHNICAL_DEBT.md
