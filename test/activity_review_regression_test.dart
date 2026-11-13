@@ -62,6 +62,51 @@ void main() {
         }),
       );
 
+  test('a nap proposed mid-night is retired once the night is stored',
+      () async {
+    // 00:50 sync: the hours slept so far come out as a possible nap. The
+    // morning derive then stores the night over it and offers it no more, so
+    // nothing in reconcile() ever revisits the row.
+    final created = await store.reconcile(ActivityKind.nap, [candidate()]);
+    expect(created, hasLength(1));
+    // A real daytime nap, well clear of the night, must survive the sweep.
+    final real = {
+      'start': start + 6 * 3600,
+      'end': start + 6 * 3600 + 1800,
+      'duration_min': 24,
+    };
+    await store.reconcile(ActivityKind.nap, [real]);
+    expect(await store.retireNapsInsideSleep(), 0,
+        reason: 'no stored night yet: nothing to retire');
+    await LocalDb.putDayResult(
+      dayId: day,
+      algoVersion: kAlgoVersion,
+      windowJson: '{}',
+      finalized: true,
+      payloadJson: jsonEncode({
+        'sleep': {
+          'window': {
+            'value': {
+              'onset_ms': (start - 900) * 1000,
+              'offset_ms': (start + 4 * 3600) * 1000,
+            },
+          },
+        },
+      }),
+    );
+    expect(await store.retireNapsInsideSleep(), 1);
+    final left = await store.pending();
+    expect(left.map((s) => s.startTs), [start + 6 * 3600]);
+    expect(
+      (await store.get(created.single.id))!.status,
+      ActivityReviewStatus.superseded,
+    );
+    // The detector seeing the span again must not bring it back.
+    expect(await store.reconcile(ActivityKind.nap, [candidate()]), isEmpty);
+    expect(await store.pending(), hasLength(1));
+    expect(await store.retireNapsInsideSleep(), 0, reason: 'idempotent');
+  });
+
   test('a logged nap over the end of the main sleep is refused', () async {
     // The night ran 02:00 to 10:15; logging 10:00-10:30 as a nap would credit
     // the 15 minutes the night already counts a second time.

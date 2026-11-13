@@ -17048,5 +17048,182 @@
         "type": "int"
       }
     }
+  },
+  "trendWeekLine": "Last 7 days: {verdict}",
+  "@trendWeekLine": {
+    "description": "Under a Health trend card: the week-level verdict (stable / a signed change / not enough days).",
+    "placeholders": {
+      "verdict": {
+        "type": "String"
+      }
+    }
+  },
+  "howTodayScored": "Today: from your own data",
+  "@howTodayScored": {
+    "description": "How-it-is-computed page: today this number comes from the user own data."
+  },
+  "howTodayAbsent": "Today: nothing to compute it from",
+  "@howTodayAbsent": {
+    "description": "How-it-is-computed page: today there is no data for this number."
+  },
+  "howTodayEstimateOf": "Today: an estimate, {have} of {need} nights of your own",
+  "@howTodayEstimateOf": {
+    "description": "How-it-is-computed page: today this number is a calibration estimate; nights collected of nights needed.",
+    "placeholders": {
+      "have": {
+        "type": "int"
+      },
+      "need": {
+        "type": "int"
+      }
+    }
+  },
+  "howTodayEstimate": "Today: an estimate, your own baseline is still building",
+  "@howTodayEstimate": {
+    "description": "How-it-is-computed page: today this number is an estimate while the personal baseline builds."
+  },
+  "labTitle": "Compare two periods",
+  "@labTitle": {
+    "description": "Title of the screen that compares two periods of the user data."
+  },
+  "labSub": "Before and after a date",
+  "@labSub": {
+    "description": "Subtitle of the door to the period comparison screen."
+  },
+  "labIntro": "Pick a date. The days before it are compared with the same number of days from it on.",
+  "@labIntro": {
+    "description": "Period comparison: what the screen does."
+  },
+  "labDaysChip": "{n} days",
+  "@labDaysChip": {
+    "description": "Period comparison: length of each period.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "labSplitTitle": "Second period starts",
+  "@labSplitTitle": {
+    "description": "Period comparison: row that shows and changes the first day of the second period."
+  },
+  "labPickHelp": "First day of the second period",
+  "@labPickHelp": {
+    "description": "Date picker help text in the period comparison."
+  },
+  "labBefore": "Before",
+  "@labBefore": {
+    "description": "Period comparison: the earlier period."
+  },
+  "labAfter": "After",
+  "@labAfter": {
+    "description": "Period comparison: the later period."
+  },
+  "labTooFew": "{have} days with data, {need} needed",
+  "@labTooFew": {
+    "description": "A period or week with too few days of data to give a mean.",
+    "placeholders": {
+      "have": {
+        "type": "int"
+      },
+      "need": {
+        "type": "int"
+      }
+    }
+  },
+  "labDaysWith": "{have} of {days} days with data",
+  "@labDaysWith": {
+    "description": "Period comparison: how many days of the period have data.",
+    "placeholders": {
+      "have": {
+        "type": "int"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "labChanged": "{delta}: a difference beyond the night-to-night noise",
+  "@labChanged": {
+    "description": "Period comparison verdict: the periods differ beyond noise; delta is signed with its unit.",
+    "placeholders": {
+      "delta": {
+        "type": "String"
+      }
+    }
+  },
+  "labSame": "No difference beyond the noise ({delta})",
+  "@labSame": {
+    "description": "Period comparison verdict: no difference beyond noise; delta is signed with its unit.",
+    "placeholders": {
+      "delta": {
+        "type": "String"
+      }
+    }
+  },
+  "labFlat": "Both periods are flat: there is no noise to measure a difference against",
+  "@labFlat": {
+    "description": "Period comparison: both periods have identical values, so noise cannot be estimated."
+  },
+  "labNeedDays": "Not enough days in one of the periods",
+  "@labNeedDays": {
+    "description": "Period comparison: one of the periods has too few days."
+  },
+  "labFailedTitle": "The comparison could not be read",
+  "@labFailedTitle": {
+    "description": "Period comparison: reading failed."
+  },
+  "labFailedBody": "Close this screen and open it again.",
+  "@labFailedBody": {
+    "description": "What to do when a fork screen failed to read."
+  },
+  "labCaveat": "This compares two stretches of your own data. It can show that they differ, not why, and it is not a medical reading.",
+  "@labCaveat": {
+    "description": "Period comparison: what the comparison can and cannot say."
+  },
+  "reportTitle": "Weekly report",
+  "@reportTitle": {
+    "description": "Title of the weekly report screen and file."
+  },
+  "reportSub": "The last 7 days, to keep or share",
+  "@reportSub": {
+    "description": "Subtitle of the door to the weekly report."
+  },
+  "reportBedtimeSpread": "Bedtime, night to night",
+  "@reportBedtimeSpread": {
+    "description": "Weekly report row: how much bedtime varied night to night (a plus/minus duration follows)."
+  },
+  "reportLifted": "Lifted",
+  "@reportLifted": {
+    "description": "Weekly report row: total weight lifted in the week."
+  },
+  "reportSessionLoad": "Session load (effort × minutes)",
+  "@reportSessionLoad": {
+    "description": "Weekly report row: session-RPE load of the week."
+  },
+  "reportAtLeast": "at least {n}",
+  "@reportAtLeast": {
+    "description": "Weekly report: a value that is a floor because some sessions are unrated.",
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "reportShare": "Share as a file",
+  "@reportShare": {
+    "description": "Weekly report: button that shares the report as a file."
+  },
+  "reportShareFailed": "The report could not be shared",
+  "@reportShareFailed": {
+    "description": "Weekly report: sharing failed."
+  },
+  "reportFailedTitle": "The report could not be read",
+  "@reportFailedTitle": {
+    "description": "Weekly report: reading failed."
+  },
+  "reportFooter": "Computed on your phone from your own data. A description of the week, not medical advice.",
+  "@reportFooter": {
+    "description": "Weekly report footer, in the screen and in the shared file."
   }
 }

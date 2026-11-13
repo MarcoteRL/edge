@@ -270,6 +270,120 @@ Trend trendOf(List<TrendPoint> series, {required int today, int seed = 1}) {
   );
 }
 
+// ── ALG-P1 · two stretches of your own choosing ───────────────────────────
+
+/// [days] calendar days before a date against the [days] from it on.
+class PeriodChange {
+  const PeriodChange({
+    required this.before,
+    required this.after,
+    this.delta,
+    this.lo,
+    this.hi,
+    this.threshold,
+    this.relevant,
+    this.note,
+  });
+
+  /// Each period's mean; absent under its minimum of values.
+  final WindowMean before, after;
+
+  /// `after − before`; null when either mean is.
+  final double? delta;
+
+  /// 95 % percentile-bootstrap bounds of [delta] (both periods resampled).
+  final double? lo, hi;
+
+  /// The bar [delta] has to clear: the larger of 1.96 standard errors of a
+  /// difference of two means (pooled SD) and half the SD of the period
+  /// before. Null when it cannot be estimated.
+  final double? threshold;
+
+  /// TRUE only when [delta] clears [threshold] AND its interval excludes
+  /// zero. Null when it cannot be judged — which is not "no change".
+  final bool? relevant;
+
+  /// Why [relevant] is null: `need_baseline:have=H,need=N` for the thinner
+  /// period, or [kTrendNoDispersion]. Null when it was judged.
+  final String? note;
+}
+
+/// Values a period of [days] calendar days needs: 60 % of them, never under 4
+/// (the convention of [kTrendWindows]).
+int periodMinValues(int days) => math.max(4, (days * 0.6).round());
+
+/// The [days] calendar days ending the day before [split] against the [days]
+/// starting on [split]. A description of two stretches of one person's data:
+/// it says whether they differ beyond night-to-night noise, never why. Nights
+/// are treated as independent, which they are not quite; the bar is the
+/// larger of two rules for that reason.
+PeriodChange periodChange(
+  List<TrendPoint> series, {
+  required int split,
+  required int days,
+  int seed = 1,
+}) {
+  final byDay = <int, double>{
+    for (final p in series)
+      if (p.value.isFinite) p.day: p.value,
+  };
+  List<double> window(int from, int to) => [
+    for (var d = from; d <= to; d++) ?byDay[d],
+  ];
+  final need = periodMinValues(days);
+  final a = window(split - days, split - 1);
+  final b = window(split, split + days - 1);
+  WindowMean of(List<double> v) =>
+      WindowMean(days, need, v.length, v.length < need ? null : ana.mean(v));
+  final before = of(a), after = of(b);
+  final ma = before.mean, mb = after.mean;
+  if (ma == null || mb == null) {
+    final thin = ma == null ? a : b;
+    return PeriodChange(
+      before: before,
+      after: after,
+      note: ana.needBaselineNote(have: thin.length, need: need),
+    );
+  }
+  final delta = mb - ma;
+  final sa = ana.stddev(a) ?? 0, sb = ana.stddev(b) ?? 0;
+  final pooled = math.sqrt(
+    ((a.length - 1) * sa * sa + (b.length - 1) * sb * sb) /
+        (a.length + b.length - 2),
+  );
+  // Two flat stretches have no noise to measure a difference against.
+  if (!(pooled > 0)) {
+    return PeriodChange(
+      before: before,
+      after: after,
+      delta: delta,
+      note: kTrendNoDispersion,
+    );
+  }
+  final rng = math.Random(seed);
+  List<double> resample(List<double> v) =>
+      [for (var i = 0; i < v.length; i++) v[rng.nextInt(v.length)]];
+  final deltas = [
+    for (var i = 0; i < kTrendBootstrap; i++)
+      ana.mean(resample(b))! - ana.mean(resample(a))!,
+  ]..sort();
+  final lo = ana.percentileSorted(deltas, 2.5)!;
+  final hi = ana.percentileSorted(deltas, 97.5)!;
+  final bar = math.max(
+    1.96 * pooled * math.sqrt(1 / a.length + 1 / b.length),
+    0.5 * sa,
+  );
+  return PeriodChange(
+    before: before,
+    after: after,
+    delta: delta,
+    lo: lo,
+    hi: hi,
+    threshold: bar,
+    relevant: delta.abs() > bar && (lo > 0 || hi < 0),
+  );
+}
+
 // ── ALG-H1 · night-to-night HRV stability ─────────────────────────────────
 
 /// Coefficient of variation (%) of lnRMSSD across the last 7 nights:

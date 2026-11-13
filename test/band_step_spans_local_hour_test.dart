@@ -37,8 +37,12 @@ void _setProcessTz(String? tz) {
 
 void main() {
   final originalTz = Platform.environment['TZ'];
-  setUpAll(() => _setProcessTz('Asia/Kolkata'));
-  tearDownAll(() => _setProcessTz(originalTz));
+  // The Windows C runtime has no setenv/tzset: the lookup itself throws,
+  // and setUpAll runs even when every test below is skipped.
+  if (!Platform.isWindows) {
+    setUpAll(() => _setProcessTz('Asia/Kolkata'));
+    tearDownAll(() => _setProcessTz(originalTz));
+  }
 
   test('walks in two local hours of one UTC hour stay two spans', () {
     // 2026-06-15 10:30 IST = 05:00 UTC, a whole UTC hour.

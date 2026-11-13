@@ -59,8 +59,12 @@ bool _lutealOn(List<String> starts) {
 
 void main() {
   final originalTz = Platform.environment['TZ'];
-  setUpAll(() => _setProcessTz('America/New_York'));
-  tearDownAll(() => _setProcessTz(originalTz));
+  // The Windows C runtime has no setenv/tzset: the lookup itself throws,
+  // and setUpAll runs even when every test below is skipped.
+  if (!Platform.isWindows) {
+    setUpAll(() => _setProcessTz('America/New_York'));
+    tearDownAll(() => _setProcessTz(originalTz));
+  }
 
   test('a cycle spanning spring-forward keeps its full length', () {
     expect(
@@ -78,5 +82,5 @@ void main() {
     );
     // Same shape a day later: day 14 of 27 is the second half.
     expect(_lutealOn(const ['2023-02-26', '2023-03-25', '2024-01-16']), isTrue);
-  });
+  }, skip: Platform.isWindows ? 'POSIX setenv/tzset only' : null);
 }

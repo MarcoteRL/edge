@@ -31,8 +31,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:openstrap_edge/sync/reset_gate.dart';
 
 void main() {
-  final src = File('lib/state/app_state.dart').readAsStringSync();
-  final bg = File('lib/sync/background_sync.dart').readAsStringSync();
+  final src = File('lib/state/app_state.dart').readAsStringSync().replaceAll('\r\n', '\n');
+  final bg = File('lib/sync/background_sync.dart').readAsStringSync().replaceAll('\r\n', '\n');
 
   test('both ingest callbacks refuse while a reset is in flight', () {
     // The singles path.
@@ -170,7 +170,7 @@ void main() {
   });
 
   test('BandHost refuses every database write during a reset', () {
-    final host = File('lib/ble/adapters/host.dart').readAsStringSync();
+    final host = File('lib/ble/adapters/host.dart').readAsStringSync().replaceAll('\r\n', '\n');
     for (final write in [
       'LocalDb.commitSyncBatch(',
       'LocalDb.putObservations(',
@@ -300,7 +300,7 @@ void main() {
 
   test('a queued Oura sync re-checks the device and the reset once it gets '
       'the slot', () {
-    final oura = File('lib/ble/oura_link.dart').readAsStringSync();
+    final oura = File('lib/ble/oura_link.dart').readAsStringSync().replaceAll('\r\n', '\n');
     final slot = oura.indexOf('return await withSecondaryLinkSlot(() async {');
     expect(slot, greaterThanOrEqualTo(0));
     final head = oura.substring(slot, slot + 600);
@@ -312,7 +312,7 @@ void main() {
   });
 
   test('the wipe runs on the sync-commit gate', () {
-    final db = File('lib/data/db.dart').readAsStringSync();
+    final db = File('lib/data/db.dart').readAsStringSync().replaceAll('\r\n', '\n');
     expect(db.contains('static Future<int> wipeAll() =>\n'
         '      _withReaderInvalidated(() => _withCommitGate(_wipeAllLocked));'),
         isTrue);

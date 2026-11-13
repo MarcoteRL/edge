@@ -195,3 +195,18 @@ o fallará `ui2_tokens_test.dart`.
 | P‑07 Workout por carga | **Parcial.** La carga muscular de la semana (kg levantados, series sin carga, sRPE o su suelo) se muestra en el bloque de fuerza de Home, separada del strain. **La pestaña Workout no se ha reordenado** |
 | P‑08 frescura en todas las pestañas | **Hecha** en Health, Workout y Sueño (`dataFreshnessLine`); sin datos de banda no dibuja nada |
 | Ficha "Cómo se calcula" | **Hecha** como página (`HowComputedScreen`, puerta al final de Home): Recovery, Strain, Sueño, HRV/FC en reposo, con tipo, entradas, ventana y datos ausentes, límites y versión del algoritmo. Texto estático; **no** muestra todavía la suficiencia de los datos de hoy por métrica |
+
+## 10. Estado tras el 2026‑11‑13 (rama `iter5/lab-report`, sin analizador ni tests ejecutados)
+
+| Propuesta | Estado | Dónde |
+|---|---|---|
+| P‑02 banda + MDC | **Hecha de otra forma.** La tarjeta de Health sigue juzgando UNA lectura contra tu rango habitual; debajo, `WeekTrendLine` dice el veredicto de la semana ("Últimos 7 días: estable / Δ frente a tu normal / aún no hay días"), que solo llama cambio a lo que supera max(MDC, SWC). No se ha tocado `TrendCard` (componente de upstream con goldens) | `home_guidance.dart`, `health_screen.dart` |
+| P‑05 jerarquía de sueño | **Hecha (mínima).** "Frente a tu habitual" (duración y horario) va ahora antes de "Fases"; las fases ya eran rangos. La consistencia de horario sigue en "Reloj corporal" (no se duplica, AGENTS §4.10) | `sleep_detail.dart` |
+| P‑07 Workout por carga | **Hecha.** "Carga de entrenamiento" (cardiovascular, y kilos levantados en su propia tarjeta) sube justo debajo de los accesos rápidos; la tira semanal y las puertas de pasos/comida van después | `workout_screen.dart` |
+| Ficha "Cómo se calcula" | **Completada.** Cada métrica dice en qué se apoya el número de hoy: datos propios, estimación (con "H de N noches" cuando se sabe) o sin datos. Lo lee del día que Home ya tiene; no calcula nada | `howTodayOf`, `HowComputedScreen(today:)` |
+| Laboratorio de periodos | **Hecho** (ALG‑P1, D‑20). Puerta al final de Home | `lab_screen.dart` |
+| Informe semanal | **Hecho** (D‑21). Media de la semana y veredicto por métrica, dispersión de la hora de acostarse, kilos y carga de sesión si existen; botón de compartir como archivo `.md` | `lab_screen.dart` |
+| Tarjetas de evolución congeladas | **Corregido.** `HomeEvolution` y `WeekTrendLine` usan `RevisionReload`: antes solo leían al montarse y, como las pestañas viven en un `IndexedStack`, no veían una noche nueva hasta reiniciar la app | `home_guidance.dart` |
+
+**Sin hacer:** P‑04 no se ha vuelto a revisar; ningún golden ni captura (sin Flutter en la sesión); nada visto en dispositivo.
+

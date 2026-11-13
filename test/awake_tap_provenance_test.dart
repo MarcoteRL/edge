@@ -51,7 +51,7 @@ void main() {
   test('the tap path still stores "now" as the end of the night', () {
     // `markAwakeNow` is the only writer the rule recognises. If it stops
     // passing the current instant as the offset, the rule is void.
-    final src = File('lib/state/app_state.dart').readAsStringSync();
+    final src = File('lib/state/app_state.dart').readAsStringSync().replaceAll('\r\n', '\n');
     final start = src.indexOf('Future<bool> markAwakeNow()');
     expect(start, greaterThan(0));
     final body = src.substring(start, src.indexOf('\n  }\n', start));

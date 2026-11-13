@@ -6877,6 +6877,15 @@ class DerivationEngine {
     );
     // AFTER the row: retired only once the row that proves it is durable.
     if (quietSettled) await LocalDb.deleteComputeFreshness(quietKey);
+    // A possible nap proposed while this night was still running is inside
+    // the main sleep the row above now holds: it is not a nap. Never fatal.
+    try {
+      final gone =
+          await ActivityStore(await LocalDb.instance).retireNapsInsideSleep();
+      if (gone > 0) _log('retired $gone nap proposal(s) inside a main sleep');
+    } catch (e) {
+      _log('nap proposal sweep failed for ${day.date}: $e');
+    }
     // NOTE: the sweep's `history` snapshot is deliberately NOT updated here.
     // See _BaselineHistoryCache — mutating the shared snapshot mid-sweep is the
     // duplicate-day pollution bug, and each day already derives its own

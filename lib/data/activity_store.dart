@@ -358,6 +358,41 @@ class ActivityStore {
     return ns != null && ne != null && s * 1000 < ne && e * 1000 > ns;
   }
 
+  /// Retires the pending nap proposals that sit inside a main sleep the
+  /// derived history now holds. A sync in the middle of the night proposes
+  /// the hours slept so far as a nap; once the morning derive stores that
+  /// night's window the detector stops offering the span, so [reconcile]
+  /// never visits the row again and it stayed pending for a week. Same
+  /// any-overlap rule [overlapsMainSleep] refuses a logged nap with. Run
+  /// AFTER the day's row is written.
+  // ponytail: one stored-night lookup (up to three day_result payloads) per
+  // pending nap. A handful of rows at most; if proposals ever pile up, read
+  // the week's sleep windows once and test against that list.
+  Future<int> retireNapsInsideSleep({int? nowTs}) => db.transaction((tx) async {
+    var retired = 0;
+    for (final r in await tx.query(
+      'activity_suggestions',
+      columns: ['id', 'start_ts', 'end_ts'],
+      where: "kind = 'nap' AND status = 'pending' AND end_ts >= ?",
+      whereArgs: [_pendingFloorTs(nowTs)],
+    )) {
+      if (!await overlapsMainSleep(
+        tx,
+        r['start_ts'] as int,
+        r['end_ts'] as int,
+      )) {
+        continue;
+      }
+      retired += await tx.update(
+        'activity_suggestions',
+        {'status': 'superseded'},
+        where: "id = ? AND status = 'pending'",
+        whereArgs: [r['id']],
+      );
+    }
+    return retired;
+  });
+
   static Future<void> supersede(
     DatabaseExecutor tx,
     ActivityKind kind,

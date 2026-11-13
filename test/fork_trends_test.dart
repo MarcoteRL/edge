@@ -225,4 +225,74 @@ void main() {
       expect(edwardsShares([0, 0, 0, 0, 0]), isNull);
     });
   });
+
+  group('periodChange (ALG-P1)', () {
+    // 14 days before day 987 (973…986) against the 14 from it (987…1000).
+    test('a step at the split is a relevant change', () {
+      final c = periodChange(
+        _series(40, (ago) => ago < 14 ? 4.4 : 4.0),
+        split: 987,
+        days: 14,
+      );
+      expect(c.relevant, isTrue);
+      expect(c.delta, closeTo(0.4, 0.1));
+      expect(c.lo! > 0, isTrue);
+      expect(c.delta!.abs(), greaterThan(c.threshold!));
+      expect(c.before.have, 14);
+      expect(c.after.have, 14);
+      expect(c.note, isNull);
+    });
+
+    test('pure noise is rarely called a change', () {
+      var cried = 0;
+      for (var seed = 0; seed < 200; seed++) {
+        final c = periodChange(
+          _series(40, (_) => 4.0, seed: seed),
+          split: 987,
+          days: 14,
+        );
+        if (c.relevant == true) cried++;
+      }
+      // Two-sided 5 % by construction of both rules; allow sampling slack.
+      expect(cried, lessThan(30));
+    });
+
+    test('a thin period abstains and says how thin', () {
+      final all = _series(40, (_) => 4.0);
+      // Keep 3 of the 14 days after the split: under the minimum of 8.
+      final c = periodChange(
+        [for (final p in all) if (p.day < 987 || p.day > 997) p],
+        split: 987,
+        days: 14,
+      );
+      expect(c.relevant, isNull);
+      expect(c.delta, isNull);
+      expect(c.after.mean, isNull);
+      expect(c.before.mean, isNotNull);
+      expect(c.note, 'need_baseline:have=3,need=8');
+    });
+
+    test('two flat stretches have no noise to judge against', () {
+      final c = periodChange(
+        [for (var d = 960; d <= 1000; d++) (day: d, value: d < 987 ? 50 : 55)],
+        split: 987,
+        days: 14,
+      );
+      expect(c.relevant, isNull);
+      expect(c.delta, 5);
+      expect(c.note, kTrendNoDispersion);
+    });
+
+    test('days after the last stored one are simply absent', () {
+      final c = periodChange(_series(40, (_) => 4.0), split: 995, days: 14);
+      expect(c.after.have, 6);
+      expect(c.relevant, isNull);
+    });
+
+    test('minimum values per period', () {
+      expect(periodMinValues(7), 4);
+      expect(periodMinValues(14), 8);
+      expect(periodMinValues(28), 17);
+    });
+  });
 }
