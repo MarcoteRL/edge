@@ -10,7 +10,8 @@
 - **`main`:** iteraciones 2, 3 y 4 fusionadas por el propietario (PR #1,
   `6bf7cd7`); IPA de esa versión: run 43327489818.
 - **En rama `fix/naps-inside-sleep`:** BUG‑N01 y los arreglos de
-  portabilidad de tests, **sin evidencia de tests** todavía.
+  portabilidad de tests; prueba local del propietario en verde sobre los
+  15 archivos tocados (+172 ~12). Suite completa sin repetir.
 - **Siguiente:** prueba local del propietario (`flutter analyze` y los
   archivos tocados); si sale en verde, fusión a `main` (genera IPA, ≈ 130 min
   facturados; presupuesto de Actions casi agotado hasta el 2026‑12‑01).
