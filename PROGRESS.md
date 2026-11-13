@@ -56,6 +56,13 @@ Any failure outside this list after a change is a regression.
 
 ## Log
 
+### 2026-11-13 — PR #3 and PR #2 merged to `main` (`6adce27`), on the owner's instruction
+
+- PR #3 (`iter5/lab-report`) into `fix/naps-inside-sleep`, then PR #2 into `main`: one push, one IPA. Merge commits by the owner's account; no reset, no force-push.
+- ios-sideload **43523169294** launched by that push; **result pending at the time of writing**.
+- Basis for merging: the owner's local `flutter analyze` and touched-file tests (entries below). The full suite was **not** re-run after these two branches. Not hardware-validated.
+- The owner approved the new table for the recommendation log (ITER-5b). Not started: it is a schema migration (`schemaVersion` 58 → 59) and gets its own branch, migration test and review.
+
 ### 2026-11-13 — Iteration 4 leftovers, iteration 5 (lab, weekly report), iteration 6 (static review) — branch `iter5/lab-report`
 
 - Stacked on `fix/naps-inside-sleep` (PR #2). Written with no Flutter in the session: nothing below has been compiled. No CI run launched (Actions budget).

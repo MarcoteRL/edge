@@ -7,16 +7,13 @@
 
 ## Estado actual
 
-- **`main`:** iteraciones 2, 3 y 4 fusionadas por el propietario (PR #1,
-  `6bf7cd7`); IPA de esa versión: run 43327489818.
-- **PR #2 `fix/naps-inside-sleep`:** BUG‑N01 y portabilidad de tests; prueba
-  local del propietario en verde sobre los 15 archivos tocados (+172 ~12).
-- **Rama `iter5/lab-report`** (encima del PR #2): resto de la iteración 4,
-  laboratorio de periodos, informe semanal y revisión de la iteración 6.
-  **Sin analizador ni tests ejecutados.**
-- **Siguiente:** prueba local del propietario; después fusionar (cada fusión
-  a `main` genera IPA, ≈ 130 min facturados; presupuesto de Actions casi
-  agotado hasta el 2026‑12‑01).
+- **`main`:** `6adce27` (2026‑11‑13): iteraciones 2–4, BUG‑N01, tests
+  portables a Windows, resto de la iteración 4, laboratorio de periodos,
+  informe semanal y revisión de la iteración 6. IPA: run 43523169294
+  (lanzado; resultado pendiente al escribir esto).
+- **Siguiente:** registro de recomendaciones (tabla aprobada por el
+  propietario el 2026‑11‑13) en rama propia; comprobación en el teléfono de
+  BUG‑N01 y de las pantallas nuevas.
 - **Go/no‑go de la iteración 5 a 2026‑11‑13:** laboratorio e informe
   hechos; registro de recomendaciones pendiente de tu aprobación de la
   tabla; N‑of‑1 y validación frente a WHOOP siguen en no‑go por datos. La
