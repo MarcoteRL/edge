@@ -206,6 +206,10 @@ const _notComponents = {
   // its pure half, EvolutionCard, IS in the gallery; HowComputedScreen is a
   // Scaffold route of static text.
   'HomeEvolution', 'HowComputedScreen',
+  // Fork (iteration 5): WeekTrendLine loads a stored trend when it appears
+  // (its text is `weekVerdict`, pure and tested); the lab and the weekly
+  // report are Scaffold routes that read the database on open.
+  'WeekTrendLine', 'PeriodLabScreen', 'WeeklyReportScreen',
   // WHOOP MG ECG routes: the Heart Screener entry reads the database and
   // pushes; the capture screen owns a live BLE reading (a gallery case would
   // start one); the detail screen reads and deletes a reading and routes to

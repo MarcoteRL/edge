@@ -17,6 +17,7 @@ export 'day_steps.dart';
 export 'day_timeline.dart';
 export 'driver_breakdown.dart';
 export 'investigate.dart';
+export 'lab_screen.dart';
 export 'journal_compose.dart';
 export 'log_food.dart';
 export 'naps.dart';

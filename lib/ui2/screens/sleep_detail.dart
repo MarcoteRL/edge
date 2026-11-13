@@ -840,12 +840,15 @@ class _SleepDetailState extends State<SleepDetail> with RevisionReload {
       ...?_windowCard(c, p, d, n),
       ..._napsButton(c, l, d.day),
 
-      // ── 3 · WHAT IT WAS MADE OF ──
-      Section(l?.sleepDetailStagesSection ?? 'Stages', _stages(c, p, n)),
-
-      // ── 4 · AGAINST THE USER'S OWN NIGHTS ──
+      // ── 3 · AGAINST THE USER'S OWN NIGHTS ──
+      // P-05: how long and when, against your own nights, BEFORE the stages.
+      // Duration and timing are what the wrist measures well; the stages are
+      // a range and come after the facts they qualify.
       if (_versusUsual(c, p, d, n) case final versus?)
         Section(l?.sleepDetailVersusUsualSection ?? 'Against your usual', versus),
+
+      // ── 4 · WHAT IT WAS MADE OF ──
+      Section(l?.sleepDetailStagesSection ?? 'Stages', _stages(c, p, n)),
 
       // ── 5 · WHAT STOOD OUT ──
       // Named after the night the nav bar is already showing. "Unusual last

@@ -191,27 +191,37 @@ class _WorkoutScreenState extends State<WorkoutScreen> with RevisionReload {
           ],
         ],
       ),
-      // Steps and food, which used to be a Home tile and a tab of their own.
-      // Doors, not cards: the numbers live one tap down.
+      // P-07: load first. The week's cardiovascular and lifted load are what
+      // this tab is for; the week strip and the doors come after them.
       Section(
-        loc?.activityStepsFoodTitle ?? 'Steps and food',
+        loc?.workoutTrainingLoad ?? 'Training load',
         Column(children: [
-          detailLinkRow(
-              c,
-              LucideIcons.footprints,
-              loc?.homeSteps ?? 'Steps',
-              loc?.activityStepsSub ?? 'Today and every day before it',
-              () => Navigator.of(c).push(MaterialPageRoute<void>(
-                  builder: (_) => const MetricDetail('steps')))),
-          const SizedBox(height: S.x3),
-          detailLinkRow(
-              c,
-              LucideIcons.utensils,
-              loc?.nutritionTitle ?? 'Nutrition',
-              loc?.activityNutritionSub ?? 'Log food and see today\'s protein',
-              () => Navigator.of(c).push(MaterialPageRoute<void>(
-                  builder: (_) => const NutritionScreen(page: true)))),
+          _loadCard(c, p, d),
+          // TS-12 — two facts and no verb, directly under the card that holds
+          // one of them. Rendered only on the coincidence; there is no "all
+          // clear" variant, because the quiet state is the absence of a card
+          // and not a reassurance we can make.
+          if (d.overreach != null) ...[
+            const SizedBox(height: S.x3),
+            _overreachCard(c, d.overreach!),
+          ],
+          // TS-08 — a SECOND axis, beside the cardiovascular one and never
+          // inside it. Its own card because that is what "not fused" means:
+          // one bar is heartbeats over time, the other is kilos off the floor,
+          // and they do not add up to anything. Drawn only when the week has
+          // any, so a runner never sees an empty kilo chart.
+          if (d.tonnage7.any((v) => v != null)) ...[
+            const SizedBox(height: S.x3),
+            _tonnageCard(c, p, d),
+          ],
         ]),
+        // TS-02 — the door onto the day's own strain trace. `getDayStrain` and
+        // `series.strain_curve` were both fully implemented and read by no
+        // screen. A link, not a card: this tab is about the fortnight, and the
+        // shape of one day belongs behind a tap.
+        action: loc?.workoutTodaysStrainAction ?? "Today's strain",
+        onAction: () => Navigator.of(c)
+            .push(MaterialPageRoute(builder: (_) => const DayStrainDetail())),
       ),
       Section(
         loc?.workoutThisWeek ?? 'This week',
@@ -254,35 +264,27 @@ class _WorkoutScreenState extends State<WorkoutScreen> with RevisionReload {
           ),
         ),
       ),
+      // Steps and food, which used to be a Home tile and a tab of their own.
+      // Doors, not cards: the numbers live one tap down.
       Section(
-        loc?.workoutTrainingLoad ?? 'Training load',
+        loc?.activityStepsFoodTitle ?? 'Steps and food',
         Column(children: [
-          _loadCard(c, p, d),
-          // TS-12 — two facts and no verb, directly under the card that holds
-          // one of them. Rendered only on the coincidence; there is no "all
-          // clear" variant, because the quiet state is the absence of a card
-          // and not a reassurance we can make.
-          if (d.overreach != null) ...[
-            const SizedBox(height: S.x3),
-            _overreachCard(c, d.overreach!),
-          ],
-          // TS-08 — a SECOND axis, beside the cardiovascular one and never
-          // inside it. Its own card because that is what "not fused" means:
-          // one bar is heartbeats over time, the other is kilos off the floor,
-          // and they do not add up to anything. Drawn only when the week has
-          // any, so a runner never sees an empty kilo chart.
-          if (d.tonnage7.any((v) => v != null)) ...[
-            const SizedBox(height: S.x3),
-            _tonnageCard(c, p, d),
-          ],
+          detailLinkRow(
+              c,
+              LucideIcons.footprints,
+              loc?.homeSteps ?? 'Steps',
+              loc?.activityStepsSub ?? 'Today and every day before it',
+              () => Navigator.of(c).push(MaterialPageRoute<void>(
+                  builder: (_) => const MetricDetail('steps')))),
+          const SizedBox(height: S.x3),
+          detailLinkRow(
+              c,
+              LucideIcons.utensils,
+              loc?.nutritionTitle ?? 'Nutrition',
+              loc?.activityNutritionSub ?? 'Log food and see today\'s protein',
+              () => Navigator.of(c).push(MaterialPageRoute<void>(
+                  builder: (_) => const NutritionScreen(page: true)))),
         ]),
-        // TS-02 — the door onto the day's own strain trace. `getDayStrain` and
-        // `series.strain_curve` were both fully implemented and read by no
-        // screen. A link, not a card: this tab is about the fortnight, and the
-        // shape of one day belongs behind a tap.
-        action: loc?.workoutTodaysStrainAction ?? "Today's strain",
-        onAction: () => Navigator.of(c)
-            .push(MaterialPageRoute(builder: (_) => const DayStrainDetail())),
       ),
     ];
   }

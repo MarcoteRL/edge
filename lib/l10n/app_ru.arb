@@ -8292,5 +8292,102 @@
         "type": "int"
       }
     }
-  }
+  },
+  "trendWeekLine": "Последние 7 дней: {verdict}",
+  "@trendWeekLine": {
+    "placeholders": {
+      "verdict": {
+        "type": "String"
+      }
+    }
+  },
+  "howTodayScored": "Сегодня: по вашим собственным данным",
+  "howTodayAbsent": "Сегодня: нет данных для расчёта",
+  "howTodayEstimateOf": "Сегодня: оценка, {have} из {need} ваших ночей",
+  "@howTodayEstimateOf": {
+    "placeholders": {
+      "have": {
+        "type": "int"
+      },
+      "need": {
+        "type": "int"
+      }
+    }
+  },
+  "howTodayEstimate": "Сегодня: оценка, ваша базовая линия ещё формируется",
+  "labTitle": "Сравнить два периода",
+  "labSub": "До и после даты",
+  "labIntro": "Выберите дату. Дни до неё сравниваются с таким же числом дней начиная с неё.",
+  "labDaysChip": "{n} дн.",
+  "@labDaysChip": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "labSplitTitle": "Начало второго периода",
+  "labPickHelp": "Первый день второго периода",
+  "labBefore": "До",
+  "labAfter": "После",
+  "labTooFew": "Дней с данными: {have}, нужно {need}",
+  "@labTooFew": {
+    "placeholders": {
+      "have": {
+        "type": "int"
+      },
+      "need": {
+        "type": "int"
+      }
+    }
+  },
+  "labDaysWith": "Дней с данными: {have} из {days}",
+  "@labDaysWith": {
+    "placeholders": {
+      "have": {
+        "type": "int"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "labChanged": "{delta}: разница больше обычных колебаний от ночи к ночи",
+  "@labChanged": {
+    "placeholders": {
+      "delta": {
+        "type": "String"
+      }
+    }
+  },
+  "labSame": "Разница не превышает обычных колебаний ({delta})",
+  "@labSame": {
+    "placeholders": {
+      "delta": {
+        "type": "String"
+      }
+    }
+  },
+  "labFlat": "Оба периода без колебаний: не с чем сравнить разницу",
+  "labNeedDays": "В одном из периодов недостаточно дней",
+  "labFailedTitle": "Не удалось прочитать сравнение",
+  "labFailedBody": "Закройте этот экран и откройте его снова.",
+  "labCaveat": "Здесь сравниваются два отрезка ваших собственных данных. Это может показать, что они различаются, но не почему, и не является медицинским заключением.",
+  "reportTitle": "Недельный отчёт",
+  "reportSub": "Последние 7 дней: сохранить или поделиться",
+  "reportBedtimeSpread": "Время отхода ко сну, от ночи к ночи",
+  "reportLifted": "Поднято",
+  "reportSessionLoad": "Нагрузка сессий (усилие × минуты)",
+  "reportAtLeast": "не менее {n}",
+  "@reportAtLeast": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "reportShare": "Поделиться файлом",
+  "reportShareFailed": "Не удалось поделиться отчётом",
+  "reportFailedTitle": "Не удалось прочитать отчёт",
+  "reportFooter": "Рассчитано на вашем телефоне по вашим собственным данным. Это описание недели, а не медицинская рекомендация."
 }

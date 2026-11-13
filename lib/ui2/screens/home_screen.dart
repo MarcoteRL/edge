@@ -80,6 +80,7 @@ import 'day_timeline.dart' show DayTimelineScreen;
 import '../../coach/coach_config.dart' show CoachConfig;
 import '../../data/strength_summary.dart';
 import 'home_guidance.dart';
+import 'lab_screen.dart' show PeriodLabScreen, WeeklyReportScreen;
 import 'metric_detail.dart';
 import 'readiness_detail.dart';
 import 'sleep_detail.dart';
@@ -747,6 +748,28 @@ String prettyDay(String? dayId, [AppLocalizations? l]) {
     d,
     l?.localeName ?? LocaleController.displayLanguageCode,
     weekday: true,
+  );
+}
+
+/// What each of today's headline numbers stands on, for the "how it is
+/// computed" page: read off the day Home already holds, nothing recomputed.
+HowToday howTodayOf(HomeData d) {
+  HowStatus st(HowKind k, [int? have, int? need]) =>
+      (kind: k, have: have, need: need);
+  final cal = d.readinessCalibrating;
+  return (
+    recovery: d.readiness.value != null
+        ? st(HowKind.scored)
+        : cal != null
+            ? st(HowKind.estimate, cal.nights, cal.need)
+            : st(HowKind.absent),
+    strain: d.strain.value != null
+        ? st(HowKind.scored)
+        : d.strainCalibrating != null
+            ? st(HowKind.estimate)
+            : st(HowKind.absent),
+    sleep: st(d.sleepMin.value != null ? HowKind.scored : HowKind.absent),
+    vitals: st(d.rhr.value != null ? HowKind.scored : HowKind.absent),
   );
 }
 
@@ -3670,7 +3693,19 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
         detailLinkRow(c, LucideIcons.circleHelp,
             l?.howComputedTitle ?? 'How these numbers are computed',
             l?.howComputedSub ?? 'Measured, derived or estimated',
-            () => go(c, const HowComputedScreen())),
+            () => go(c, HowComputedScreen(today: howTodayOf(d)))),
+        // Iteration 5 — two more doors, same rule: a name and a place, no
+        // number. Both compute when they open, never on this screen's read.
+        const SizedBox(height: S.x3),
+        detailLinkRow(c, LucideIcons.flaskConical,
+            l?.labTitle ?? 'Compare two periods',
+            l?.labSub ?? 'Before and after a date',
+            () => go(c, const PeriodLabScreen())),
+        const SizedBox(height: S.x3),
+        detailLinkRow(c, LucideIcons.fileText,
+            l?.reportTitle ?? 'Weekly report',
+            l?.reportSub ?? 'The last 7 days, to keep or share',
+            () => go(c, const WeeklyReportScreen())),
       ],
 
       // ── the next alarm: a door, same as the one above ──

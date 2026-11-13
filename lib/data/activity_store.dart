@@ -365,6 +365,9 @@ class ActivityStore {
   /// never visits the row again and it stayed pending for a week. Same
   /// any-overlap rule [overlapsMainSleep] refuses a logged nap with. Run
   /// AFTER the day's row is written.
+  // ponytail: one stored-night lookup (up to three day_result payloads) per
+  // pending nap. A handful of rows at most; if proposals ever pile up, read
+  // the week's sleep windows once and test against that list.
   Future<int> retireNapsInsideSleep({int? nowTs}) => db.transaction((tx) async {
     var retired = 0;
     for (final r in await tx.query(
