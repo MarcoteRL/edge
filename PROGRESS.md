@@ -56,7 +56,7 @@ Any failure outside this list after a change is a regression.
 
 ## Log
 
-### 2026-11-13 — Iteration 4 leftovers, iteration 5 (lab, weekly report), iteration 6 (static review) — branch `iter5/lab-report`, **NOT analyzed and NOT run**
+### 2026-11-13 — Iteration 4 leftovers, iteration 5 (lab, weekly report), iteration 6 (static review) — branch `iter5/lab-report`
 
 - Stacked on `fix/naps-inside-sleep` (PR #2). Written with no Flutter in the session: nothing below has been compiled. No CI run launched (Actions budget).
 - **P-02:** `WeekTrendLine` under the three Health trend cards (live screen only): the week's verdict from `TrendService`, a change only beyond max(MDC, SWC). `TrendCard` untouched.
@@ -67,7 +67,7 @@ Any failure outside this list after a change is a regression.
 - No `day_result`/`metric_series` output changes, no schema change, no pin change: no `kAlgoVersion` bump. 32 new l10n keys in the 8 ARBs.
 - New tests (not run): `test/lab_report_test.dart`; `periodChange` group in `test/fork_trends_test.dart`; `_notComponents` in `test/ui2_tokens_test.dart` gains `WeekTrendLine`, `PeriodLabScreen`, `WeeklyReportScreen`.
 - **Known risks of writing blind:** analyzer infos; Home is two rows longer (tests that scroll to its end); the Health live screen now mounts a loader per trend card; the false-positive bound in the new `periodChange` noise test (< 30 of 200) is a calculation, not an observed count.
-- Owner's local check: `flutter gen-l10n` (or any `flutter test`, which runs it), `flutter analyze`, then `flutter test --concurrency=1 test/lab_report_test.dart test/fork_trends_test.dart test/home_guidance_test.dart test/ui2_tokens_test.dart test/spanish_l10n_test.dart test/russian_localization_test.dart test/thai_l10n_test.dart test/ui2_workout_first_load_test.dart` and the Home / Health / Sleep widget tests. Not hardware-validated.
+- **Evidence (owner's Windows PC, 2026-11-13):** after `flutter gen-l10n` (the generated l10n is not committed and `flutter test` does not regenerate it), first run of `lab_report_test`, `fork_trends_test`, `home_guidance_test`, `ui2_tokens_test`, the es/ru/th l10n tests, `ui2_workout_first_load_test` and `ui2_home_day_switcher_test`: +95 −6, the 6 all in `lab_report_test.dart` (test binding not initialised; fixed in `acdde83`). Re-run of `flutter analyze` and the tests after the fix: reported by the owner as all passing, **no counts received**. No CI run. Not hardware-validated; the new screens have not been seen on a phone.
 
 ### 2026-11-13 — BUG-N01 (naps inside the night), Windows test portability — branch `fix/naps-inside-sleep`, **not in `main`**
 

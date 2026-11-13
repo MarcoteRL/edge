@@ -28,8 +28,8 @@ done (with evidence) / blocked. Complexity: S / M / L.
 | ALG-T1/H1/S3/L2/L3 | Fork read-time modules (`lib/compute/fork/`) | ENH | P1 | M | D-15 | done on branch `iter3/fork-trends` (run 43305607581), synthetic only; not wired to UI; **not merged** |
 | ALG-R1 / ALG-S1 | Offline scripts written; wait for data (10 nights with readiness / 10 taps) | ENH | P1 | S | owner export | blocked on data |
 | ITER-2/3/4 merge | `iter2/rederive-off-ui`, `iter3/fork-trends`, `iter4/home-guidance` in `main` | — | P1 | — | — | done: owner merged PR #1 (`6bf7cd7`, 2026-11-12); IPA run 43327489818; owner's local full suite +7128 −28 (the 28: Windows portability, see BUG-N01 entry in PROGRESS.md) |
-| ITER-4b | P-02 (`WeekTrendLine` under Health trends), P-05 (sleep order), P-07 (Workout: load first), "how it is computed" says what today stands on | ENH (UX) | P1 | M | ITER-4 | written 2026-11-13 on `iter5/lab-report`; **not analyzed, not run** |
-| ITER-5a | Period lab (ALG-P1, D-20) and weekly report (D-21) | ENH | P1 | M | ALG-T1 in main | written 2026-11-13 on `iter5/lab-report`, synthetic tests added; **not analyzed, not run** |
+| ITER-4b | P-02 (`WeekTrendLine` under Health trends), P-05 (sleep order), P-07 (Workout: load first), "how it is computed" says what today stands on | ENH (UX) | P1 | M | ITER-4 | done on `iter5/lab-report` (owner's local analyze + touched tests, 2026-11-13, reported passing); not merged; device check pending |
+| ITER-5a | Period lab (ALG-P1, D-20) and weekly report (D-21) | ENH | P1 | M | ALG-T1 in main | done on `iter5/lab-report` (owner's local run, 2026-11-13, reported passing; synthetic data only); not merged; device check pending |
 | ITER-5b | Recommendation log | ENH | P2 | M | new table + `schemaVersion` | **blocked: needs the owner's approval of the migration** |
 | ITER-5c | N-of-1; validation against WHOOP | ENH | P2 | M | journal in use; official export ZIP | blocked on data (journal has 0 rows; no ZIP) |
 | ITER-6 | Static review (TECHNICAL_DEBT.md §5) and FINAL_PRODUCT_REPORT.md | DEBT | P2 | M | — | done as far as it goes without a device: pattern sweeps + fork code; BLE, latches and battery **not reviewed** |
