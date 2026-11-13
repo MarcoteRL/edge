@@ -9,12 +9,18 @@
 
 - **`main`:** iteraciones 2, 3 y 4 fusionadas por el propietario (PR #1,
   `6bf7cd7`); IPA de esa versión: run 43327489818.
-- **En rama `fix/naps-inside-sleep`:** BUG‑N01 y los arreglos de
-  portabilidad de tests; prueba local del propietario en verde sobre los
-  15 archivos tocados (+172 ~12). Suite completa sin repetir.
-- **Siguiente:** prueba local del propietario (`flutter analyze` y los
-  archivos tocados); si sale en verde, fusión a `main` (genera IPA, ≈ 130 min
-  facturados; presupuesto de Actions casi agotado hasta el 2026‑12‑01).
+- **PR #2 `fix/naps-inside-sleep`:** BUG‑N01 y portabilidad de tests; prueba
+  local del propietario en verde sobre los 15 archivos tocados (+172 ~12).
+- **Rama `iter5/lab-report`** (encima del PR #2): resto de la iteración 4,
+  laboratorio de periodos, informe semanal y revisión de la iteración 6.
+  **Sin analizador ni tests ejecutados.**
+- **Siguiente:** prueba local del propietario; después fusionar (cada fusión
+  a `main` genera IPA, ≈ 130 min facturados; presupuesto de Actions casi
+  agotado hasta el 2026‑12‑01).
+- **Go/no‑go de la iteración 5 a 2026‑11‑13:** laboratorio e informe
+  hechos; registro de recomendaciones pendiente de tu aprobación de la
+  tabla; N‑of‑1 y validación frente a WHOOP siguen en no‑go por datos. La
+  tabla de abajo es la foto del 2026‑11‑12.
 - **Iteración 5, go/no‑go (2026‑11‑12):**
 
   | Funcionalidad | Condición | Veredicto |
@@ -29,6 +35,23 @@
   el plan admite como resultado válido, hasta que haya fusión.
 - **Abierto con el propietario:** "días anteriores sin esfuerzo" (ver
   DATA_ANALYSIS.md §8): falta pantalla y día.
+
+## 2026-11-13 — Cierre de la iteración 4, iteración 5 (parte posible) e iteración 6
+
+- **Qué:** PROGRESS.md (misma fecha), UI_UX_AUDIT.md §10, TECHNICAL_DEBT.md
+  §5, DECISIONS D‑20…D‑22, ALGORITHM_EVALUATION (ALG‑P1),
+  FINAL_PRODUCT_REPORT.md.
+- **Por qué así:** P‑02 no toca `TrendCard` (componente de upstream con
+  goldens): una lectura y una semana son preguntas distintas y se responden
+  en líneas distintas. El laboratorio usa una fecha de corte y longitudes
+  fijas en vez de dos rangos libres: menos formas de comparar periodos de
+  tamaño distinto, que la regla no contempla. El informe no se guarda: una
+  tabla nueva exige permiso del propietario.
+- **No hecho y por qué:** registro de recomendaciones (migración sin
+  aprobar), N‑of‑1 (diario vacío), validación frente a WHOOP (sin ZIP),
+  ALG‑R1/ALG‑S1 (faltan noches), revisión de BLE/batería (pide dispositivo).
+- **Limitaciones:** todo escrito sin compilar. Ninguna pantalla nueva está
+  en la galería ni vista en un teléfono.
 
 ## 2026-11-13 — BUG‑N01 y portabilidad de tests en Windows
 

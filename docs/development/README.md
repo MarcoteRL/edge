@@ -26,6 +26,7 @@
 | Auditoría contrastada con el código | [AUDIT_VERIFICATION.md](AUDIT_VERIFICATION.md) |
 | Plan de iteraciones (pendiente de aprobación) | [ITERATION_PLAN.md](ITERATION_PLAN.md) |
 | Bitácora de implementación | [IMPLEMENTATION_LOG.md](IMPLEMENTATION_LOG.md) |
+| Informe final de producto (estado frente a la misión) | [FINAL_PRODUCT_REPORT.md](FINAL_PRODUCT_REPORT.md) |
 | Reglas para agentes | [AGENT_GUIDE.md](AGENT_GUIDE.md) |
 | Qué es y estado | [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md) |
 | Arquitectura y módulos | [ARCHITECTURE.md](ARCHITECTURE.md) |
