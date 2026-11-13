@@ -292,6 +292,8 @@ class LocalDb {
     'cycle_symptom',
     'sleep_override',
     'sleep_nap',
+    // What the user was told each day; first write wins, nothing regenerates it.
+    'recommendation_log',
     // A ring's own hypnogram. Nothing here can re-derive it.
     'vendor_sleep_epoch',
     'workout_suggestions',
@@ -654,7 +656,7 @@ class LocalDb {
   /// pass it: sqflite throws `ArgumentError('onCreate must be null if no
   /// version is specified')` BEFORE opening anything when `onCreate` is given
   /// without `version` (sqflite_common database_mixin.dart).
-  static const int schemaVersion = 58;
+  static const int schemaVersion = 59;
 
   /// SQLite caps host parameters per statement (`SQLITE_MAX_VARIABLE_NUMBER` —
   /// only 999 on the builds shipped with older Android/iOS). Any `IN (?, ?, …)`
@@ -784,6 +786,7 @@ class LocalDb {
         await _createSleepOverride(db);
         await _createSleepNap(db);
         await _createVendorSleepEpoch(db);
+        await _createRecommendationLog(db);
         await ActivityStore.create(db);
         await _createWorkoutRoute(db);
         await _createNotifFired(db);
@@ -1424,6 +1427,10 @@ class LocalDb {
           // A band's own hypnogram (`vendor_staged`). New table only.
           await _createVendorSleepEpoch(db);
         }
+        if (oldV < 59) {
+          // FORK: the day's training call as first shown. New table only.
+          await _createRecommendationLog(db);
+        }
       },
       onOpen: (db) async {
         await _repairOpenSchema(db);
@@ -1510,6 +1517,7 @@ class LocalDb {
     await _createSleepOverride(db);
     await _createSleepNap(db);
     await _createVendorSleepEpoch(db);
+    await _createRecommendationLog(db);
     await ActivityStore.create(db);
     await _createWorkoutRoute(db);
     await _ensureWorkoutRouteSpeed(db);
@@ -2917,6 +2925,50 @@ class LocalDb {
   /// `stages4` words. `night_onset_ts` chains an epoch onto the night of the
   /// same device's epoch that ended at most [_kVendorNightChainSec] before it.
   /// Read only by the `vendor_staged` sleep rung, after its plausibility gate.
+  /// FORK (owner-approved 2026-11-13) — what Home's training call said, one
+  /// row per local day, written the FIRST time that day's recovery is final
+  /// and never rewritten: it records what the user was told, so a later
+  /// re-derive must not move it. `tier` is `readinessBand().tier` (0–3) and
+  /// `readiness` the score it was read from; `algo_version` says which rules
+  /// produced that score. Nothing derives from this table and the coach's
+  /// views do not include it.
+  static Future<void> _createRecommendationLog(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS recommendation_log (
+        day_id TEXT PRIMARY KEY,
+        tier INTEGER NOT NULL,
+        readiness REAL NOT NULL,
+        algo_version INTEGER NOT NULL,
+        logged_at INTEGER NOT NULL
+      )
+    ''');
+  }
+
+  /// Records [dayId]'s training call unless one is already there.
+  static Future<void> logRecommendation({
+    required String dayId,
+    required int tier,
+    required double readiness,
+    required int algoVersion,
+  }) async {
+    final db = await instance;
+    await db.insert('recommendation_log', {
+      'day_id': dayId,
+      'tier': tier,
+      'readiness': readiness,
+      'algo_version': algoVersion,
+      'logged_at': DateTime.now().millisecondsSinceEpoch ~/ 1000,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+
+  /// The newest [limit] logged calls, newest day first.
+  static Future<List<Map<String, dynamic>>> recommendationLog({
+    int limit = 90,
+  }) async {
+    final db = await instance;
+    return db.query('recommendation_log', orderBy: 'day_id DESC', limit: limit);
+  }
+
   static Future<void> _createVendorSleepEpoch(Database db) async {
     await db.execute('''
       CREATE TABLE IF NOT EXISTS vendor_sleep_epoch (
@@ -11423,6 +11475,7 @@ class LocalDb {
       await deleteByIn(txn, 'sleep_nap', 'day_id', sorted);
       await deleteByIn(txn, 'activity_suggestions', 'day_id', sorted);
       await deleteByIn(txn, 'activity_review_days', 'day_id', sorted);
+      await deleteByIn(txn, 'recommendation_log', 'day_id', sorted);
       // The frozen readiness headline is a cursor, not a day row, so nothing
       // above reaches it. A pin that outlives its day is that day's readiness
       // still on disk, and it would come back on the chart, in the log and
@@ -11765,6 +11818,9 @@ class LocalDb {
       // and lose every one they logged.
       'sleep_override',
       'sleep_nap',
+      // What the user was told each day. INSERT OR REPLACE like the rest: on
+      // a restore the backup's row for a day wins over the local one.
+      'recommendation_log',
       // A ring's own hypnogram. Nothing here can re-derive it.
       'vendor_sleep_epoch',
       'workout_suggestions',

@@ -3676,5 +3676,9 @@
   "reportShare": "Compartir como archivo",
   "reportShareFailed": "No se ha podido compartir el informe",
   "reportFailedTitle": "No se ha podido leer el informe",
-  "reportFooter": "Calculado en tu teléfono a partir de tus propios datos. Describe la semana; no es un consejo médico."
+  "reportFooter": "Calculado en tu teléfono a partir de tus propios datos. Describe la semana; no es un consejo médico.",
+  "recLogTitle": "Lo que se te dijo",
+  "recLogSub": "La recomendación de cada día, tal como se mostró primero",
+  "recLogEmpty": "Aún no hay nada registrado. Cada día se añade la primera vez que su Recovery es definitivo.",
+  "recLogRecovery": "Recovery {n}"
 }

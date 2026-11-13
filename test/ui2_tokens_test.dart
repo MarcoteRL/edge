@@ -210,6 +210,8 @@ const _notComponents = {
   // (its text is `weekVerdict`, pure and tested); the lab and the weekly
   // report are Scaffold routes that read the database on open.
   'WeekTrendLine', 'PeriodLabScreen', 'WeeklyReportScreen',
+  // Fork: a Scaffold route that reads recommendation_log on open.
+  'RecommendationLogScreen',
   // WHOOP MG ECG routes: the Heart Screener entry reads the database and
   // pushes; the capture screen owns a live BLE reading (a gallery case would
   // start one); the detail screen reads and deletes a reading and routes to

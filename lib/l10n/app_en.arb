@@ -17225,5 +17225,26 @@
   "reportFooter": "Computed on your phone from your own data. A description of the week, not medical advice.",
   "@reportFooter": {
     "description": "Weekly report footer, in the screen and in the shared file."
+  },
+  "recLogTitle": "What you were told",
+  "@recLogTitle": {
+    "description": "Title of the log of past daily training calls."
+  },
+  "recLogSub": "Each day's training call, as first shown",
+  "@recLogSub": {
+    "description": "Subtitle of the door to the log of past training calls."
+  },
+  "recLogEmpty": "Nothing logged yet. A day is added the first time its recovery is final.",
+  "@recLogEmpty": {
+    "description": "Log of past training calls: nothing recorded yet."
+  },
+  "recLogRecovery": "Recovery {n}",
+  "@recLogRecovery": {
+    "description": "Log of past training calls: the recovery score the call was read from.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
   }
 }

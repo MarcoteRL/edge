@@ -39,6 +39,16 @@ import 'metric_detail.dart' show detailScaffold;
 
 // ── P-01 · the day's call ──────────────────────────────────────────────────
 
+/// The training call for a recovery band tier ([readinessBand]'s `tier`,
+/// 0–3). One place, so the line on Home and the log of past days use the
+/// same words.
+String decisionCall(int tier, AppLocalizations? l) => switch (tier) {
+      3 => l?.homeDecisionGood ?? 'A good day for intensity',
+      2 => l?.homeDecisionSteady ?? 'A normal day: train as planned',
+      1 => l?.homeDecisionEasy ?? 'Keep it light today',
+      _ => l?.homeDecisionRest ?? 'A day to recover',
+    };
+
 /// One deterministic sentence about today's training, read off the SAME band
 /// the recovery ring is in ([readinessBand]) so the two cannot disagree, and
 /// the inputs that pushed the score up or held it back.
@@ -84,12 +94,7 @@ class DecisionLine extends StatelessWidget {
       );
     }
     final band = readinessBand(v, l);
-    final call = switch (band.tier) {
-      3 => l?.homeDecisionGood ?? 'A good day for intensity',
-      2 => l?.homeDecisionSteady ?? 'A normal day: train as planned',
-      1 => l?.homeDecisionEasy ?? 'Keep it light today',
-      _ => l?.homeDecisionRest ?? 'A day to recover',
-    };
+    final call = decisionCall(band.tier, l);
     String names(bool up) => drivers
         .where((e) {
           final k = e['contribution'];
