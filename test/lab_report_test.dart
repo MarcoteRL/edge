@@ -44,6 +44,10 @@ StrengthSummary _strength({Tonnage? load, RpeLoad rpe = const RpeLoad(null, 0, 0
     (last: null, weekSets: const {}, daysSince: const {}, weekLoad: load, weekRpe: rpe);
 
 void main() {
+  // Number formatting asks LocaleController for the display language, which
+  // reads the platform locale off the binding.
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   test('shiftDay steps by calendar days, across both clock changes', () {
     expect(shiftDay('2026-10-26', -1), '2026-10-25');
     expect(shiftDay('2026-10-25', -1), '2026-10-24');
