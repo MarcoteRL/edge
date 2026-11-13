@@ -40,6 +40,9 @@ typedef _TzsetNative = Void Function();
 typedef _TzsetDart = void Function();
 
 void _setProcessTz(String? tz) {
+  // No setenv/tzset in the Windows C runtime (the tests below self-skip
+  // there, but setUpAll still runs): the lookup itself would throw.
+  if (Platform.isWindows) return;
   final lib = DynamicLibrary.process();
   final key = 'TZ'.toNativeUtf8();
   try {

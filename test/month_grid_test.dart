@@ -9,6 +9,16 @@ import 'package:openstrap_edge/ui2/screens/month_grid.dart';
 import 'package:openstrap_edge/ui2/trend.dart';
 import 'package:openstrap_edge/ui2/ui2.dart' show buildTheme;
 
+/// This time of day, [n] calendar days back. Not `now - 24 h * n`: the
+/// 25-hour autumn day holds two of those steps late in the evening, and a
+/// 30-day fixture came out as 29 dates.
+int _daysAgo(int n) {
+  final now = DateTime.now();
+  return DateTime(now.year, now.month, now.day - n, now.hour, now.minute)
+          .millisecondsSinceEpoch ~/
+      1000;
+}
+
 void main() {
   group('a cell is a place against your own usual range', () {
     // Dated backwards from NOW, because `denseDays` lays a window out ending
@@ -17,8 +27,7 @@ void main() {
     List<ChartPoint> pts(List<double> vs) => [
           for (var i = 0; i < vs.length; i++)
             (
-              t: DateTime.now().subtract(Duration(days: i)).millisecondsSinceEpoch ~/
-                  1000,
+              t: _daysAgo(i),
               v: vs[i],
             ),
         ];
@@ -88,10 +97,7 @@ void main() {
     List<ChartPoint> pts(List<double> vs, {int skip = 0}) => [
           for (var i = 0; i < vs.length; i++)
             (
-              t: DateTime.now()
-                      .subtract(Duration(days: i + skip))
-                      .millisecondsSinceEpoch ~/
-                  1000,
+              t: _daysAgo(i + skip),
               v: vs[i],
             ),
         ];

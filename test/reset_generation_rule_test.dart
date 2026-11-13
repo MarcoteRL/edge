@@ -24,7 +24,7 @@ import 'package:openstrap_edge/data/observation.dart';
 import 'package:openstrap_edge/compute/profile.dart';
 import 'package:openstrap_edge/sync/reset_gate.dart';
 
-String _read(String path) => File(path).readAsStringSync();
+String _read(String path) => File(path).readAsStringSync().replaceAll('\r\n', '\n');
 
 String _resetBody() {
   final src = _read('lib/state/app_state.dart');

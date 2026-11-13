@@ -57,7 +57,7 @@ void main() {
     });
 
     test('adoptWeighing re-checks the reset before every write', () {
-      final src = File('lib/state/app_state.dart').readAsStringSync();
+      final src = File('lib/state/app_state.dart').readAsStringSync().replaceAll('\r\n', '\n');
       final start = src.indexOf('Future<void> adoptWeighing() async');
       final body = src.substring(start, src.indexOf('\n  }\n', start));
       for (final write in [
@@ -79,7 +79,7 @@ void main() {
 
     test('updateProfile does not write over a reset that ran while it waited',
         () {
-      final src = File('lib/state/app_state.dart').readAsStringSync();
+      final src = File('lib/state/app_state.dart').readAsStringSync().replaceAll('\r\n', '\n');
       final start = src.indexOf('Future<Map<String, dynamic>> updateProfile(');
       final body = src.substring(start, src.indexOf('\n  }\n', start));
       final gen = body.indexOf('final resetGen = resetGeneration ?? '
@@ -127,7 +127,7 @@ void main() {
     });
 
     test('settings tells the user when a key may remain', () {
-      final src = File('lib/ui2/profile/settings.dart').readAsStringSync();
+      final src = File('lib/ui2/profile/settings.dart').readAsStringSync().replaceAll('\r\n', '\n');
       expect(src.contains('if (app.resetLeftPairingKeys'), isTrue);
       expect(src.contains('l?.settingsResetPairingKeyWarning ??'), isTrue,
           reason: 'the warning must follow the app language');

@@ -371,7 +371,7 @@ void main() {
   });
 
   test('a failed Garmin sync does not call the watch a ring', () {
-    final src = File('lib/ui2/profile/devices.dart').readAsStringSync();
+    final src = File('lib/ui2/profile/devices.dart').readAsStringSync().replaceAll('\r\n', '\n');
     final body = src.substring(src.indexOf('Future<void> _syncGarminWatch'));
     final fn = body.substring(0, body.indexOf('\n}\n'));
     expect(fn, isNot(contains('devicesCouldNotReachRing')));
