@@ -25,6 +25,7 @@
 // a driver is a term in a formula we control, and the footer says so.
 
 import 'package:flutter/material.dart';
+import '../../l10n/decimal_text.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../l10n/app_localizations.dart';
@@ -407,7 +408,7 @@ class _DriverTile extends StatelessWidget {
           const SizedBox(width: S.x3),
           Text(
             '${contribution >= 0 ? '+' : '−'}'
-            '${contribution.abs().toStringAsFixed(1)}',
+            '${displayFixed(contribution.abs(), 1)}',
             style: F.n17
                 .copyWith(color: p.on(contribution >= 0 ? C.green : C.orange)),
           ),

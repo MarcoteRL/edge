@@ -82,6 +82,18 @@ jobs:
 
       - run: flutter pub get
 
+      # CI-04: `pod install` was ~118 s of every IPA (run 43587926781), on a
+      # runner billed at 10x. The Pods are a pure function of Podfile.lock and
+      # the plugin versions in pubspec.lock, so either changing misses the
+      # cache and pod install runs in full, as before.
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: |
+            ios/Pods
+            ~/Library/Caches/CocoaPods
+          key: pods-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('ios/Podfile.lock', 'pubspec.lock') }}
+
       # Different home-screen name and icon colour so this build can't be
       # mistaken for upstream's. Applied to the CI checkout only, never
       # committed; the bundle id is untouched so installs keep their data.

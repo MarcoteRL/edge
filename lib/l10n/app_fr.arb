@@ -2948,5 +2948,6 @@
   "recLogTitle": "Ce qui vous a été indiqué",
   "recLogSub": "Le conseil d’entraînement de chaque jour, tel qu’affiché la première fois",
   "recLogEmpty": "Rien d’enregistré pour l’instant. Un jour est ajouté la première fois que sa récupération est définitive.",
-  "recLogRecovery": "Récupération {n}"
+  "recLogRecovery": "Récupération {n}",
+  "homeVitalRhrShort": "FC au repos"
 }

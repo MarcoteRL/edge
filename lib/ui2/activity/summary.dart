@@ -621,7 +621,7 @@ List<(String, String)> sessionStats(ActivityResult r, UnitsController? u) {
           'Breathing',
           r.breathsPerMin == null
               ? null
-              : '${r.breathsPerMin!.toStringAsFixed(1)} br/min');
+              : '${displayFixed(r.breathsPerMin!, 1)} br/min');
     case Arch.match:
       add('Sets', r.gameScore.isEmpty ? null : '${r.gameScore.length}');
       add('Hard minutes',
@@ -647,7 +647,7 @@ List<(String, String)> sessionStats(ActivityResult r, UnitsController? u) {
   // ESTIMATE from one completed km split of THIS session's own route + HR —
   // absent on almost every session (indoor, no GPS, no full km) by design.
   add('VO2max (est.)',
-      r.vo2max == null ? null : '${r.vo2max!.toStringAsFixed(1)} ml/kg/min');
+      r.vo2max == null ? null : '${displayFixed(r.vo2max!, 1)} ml/kg/min');
   add('Calories', r.calories == null ? null : '${grouped(r.calories!)} kcal');
   add('Strain', r.strain == null ? null : displayFixed(r.strain!, 1));
   // TS-09 — last, under the measurements, and named 'Your rating' rather than
@@ -1505,7 +1505,7 @@ class _ActivitySummaryState extends State<ActivitySummary> {
                 Text(
                   r.breathsPerMin == null
                       ? a.displayName(context)
-                      : '${r.breathsPerMin!.toStringAsFixed(1)} breaths/min',
+                      : '${displayFixed(r.breathsPerMin!, 1)} breaths/min',
                   style: F.over.copyWith(color: p.on(C.teal)),
                 ),
               ],
@@ -1916,7 +1916,7 @@ class _ActivitySummaryState extends State<ActivitySummary> {
     if (u == null) {
       return v == v.roundToDouble()
           ? '${v.round()} ${uiText(c, 'kg')}'
-          : '${v.toStringAsFixed(1)} ${uiText(c, 'kg')}';
+          : '${displayFixed(v, 1)} ${uiText(c, 'kg')}';
     }
     return '${u.weightField(v)} ${uiText(c, u.weightUnit)}';
   }
@@ -1988,7 +1988,7 @@ class _ActivitySummaryState extends State<ActivitySummary> {
                         child: Text(
                             r.splits[i].km >= .95
                                 ? '${i + 1}'
-                                : r.splits[i].km.toStringAsFixed(1),
+                                : displayFixed(r.splits[i].km, 1),
                             style: F.cap.copyWith(color: p.ink3))),
                     SizedBox(
                         width: 46,

@@ -7,6 +7,7 @@ import '../../l10n/presentation_text.dart';
 // if it decomposed the first would be a small lie that is very hard to catch.
 
 import 'package:flutter/material.dart';
+import '../../l10n/decimal_text.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:openstrap_analytics/onehz.dart' show readinessCompositeMinBaseline;
 
@@ -632,7 +633,7 @@ class _ReadinessDetailState extends State<ReadinessDetail> {
           const SizedBox(width: S.x3),
           Text(
             '${contribution >= 0 ? '+' : '−'}'
-            '${contribution.abs().toStringAsFixed(1)}',
+            '${displayFixed(contribution.abs(), 1)}',
             style: F.n17.copyWith(
                 color: p.on(contribution >= 0 ? C.green : C.orange)),
           ),

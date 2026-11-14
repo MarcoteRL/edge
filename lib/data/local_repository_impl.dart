@@ -21,6 +21,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart' show visibleForTesting;
 
 import '../compute/derivation_engine.dart';
+import '../models/metric.dart' show baselineCountsFromNote;
 import '../compute/findings.dart' show servedReadiness;
 import '../compute/calibration_estimate.dart';
 import '../compute/hr_max.dart';
@@ -623,10 +624,17 @@ class LocalRepositoryImpl extends LocalRepository {
         respHistory: respHist,
       );
       if (est != null) {
+        // The SAME count the gate wrote into the readiness note, which is what
+        // "Recovery starts in N nights" reads: counting the longer of the two
+        // histories here put "5 of 14" on the ring beside "starts in 10 nights"
+        // on the card below it. Own count only when the note has none.
+        final gate = baselineCountsFromNote(
+            (daily['readiness'] as Map?)?['note'] as String?);
         daily['readiness_calibrating'] = {
           'value': double.parse(est.toStringAsFixed(1)),
-          'nights': [rmssdHist.length, rhrHist.length].reduce(math.max),
-          'need': ana.readinessCompositeMinBaseline,
+          'nights':
+              gate?.have ?? [rmssdHist.length, rhrHist.length].reduce(math.max),
+          'need': gate?.need ?? ana.readinessCompositeMinBaseline,
         };
       }
     }

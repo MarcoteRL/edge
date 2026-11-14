@@ -2274,7 +2274,9 @@ class _VitalsStrip extends StatelessWidget {
         ),
       if (d.rhr.value case final v?)
         _Vital(
-          label: l?.homeDriverRhr ?? 'Resting heart rate',
+          // The short name: the tile is a third of the screen, and the long
+          // one ended in "…" in Spanish.
+          label: l?.homeVitalRhrShort ?? 'Resting HR',
           value: '${v.round()}',
           unit: 'bpm',
           usual: d.rhrUsual?.round().toString(),

@@ -3046,7 +3046,7 @@
   "activityEditWorkout": "Editar entrenamiento",
   "activityNapAlerts": "Siestas detectadas",
   "activityPushHint": "Solo avisos push. Las sugerencias siguen en Actividades detectadas.",
-  "activityCatalogueName": "{key, select, other{{name}}}",
+  "activityCatalogueName": "{key, select, krunning{Correr} kwalking{Caminar} khiking{Senderismo} kcycling{Ciclismo} kindoorbike{Bici estática} krowing{Remo} kswimming{Natación} kelliptical{Elíptica} kstairclimber{Escaladora} ktreadmill{Cinta de correr} kjumprope{Comba} kstrength{Fuerza} kweighttraining{Pesas} kbodyweight{Peso corporal} kcalisthenics{Calistenia} kcircuittraining{Circuito} kfunctional{Funcional} ksports{Deportes} kfootball{Fútbol} kbasketball{Baloncesto} kcricket{Críquet} ktennis{Tenis} kbadminton{Bádminton} ktabletennis{Tenis de mesa} kpadel{Pádel} kvolleyball{Voleibol} kbaseball{Béisbol} kbowling{Bolos} kboxing{Boxeo} kmartialarts{Artes marciales} kwrestling{Lucha} kclimbing{Escalada} kathletics{Atletismo} ksprinting{Velocidad} ktrackintervals{Series en pista} kcrosscountry{Campo a través} khurdles{Vallas} klongjump{Salto de longitud} kshotput{Lanzamiento de peso} kjavelin{Jabalina} kpolevault{Salto con pértiga} koutdoor{Aire libre} kmountainbiking{Bici de montaña} kkayaking{Kayak} ksurfing{Surf} kpaddleboard{Paddle surf} kskiing{Esquí} ksnowboarding{Snowboard} kskating{Patinaje} kskateboarding{Skate} khorseriding{Equitación} kmindbody{Mente y cuerpo} kstretching{Estiramientos} kmobility{Movilidad} ktaichi{Taichí} kbreathwork{Respiración} kmeditation{Meditación} keveryday{Día a día} khousework{Tareas de casa} kgardening{Jardinería} kdogwalking{Pasear al perro} kchildcare{Cuidar niños} kdiy{Bricolaje} kshopping{Compras} kstairs{Escaleras} kother{Otro} kgeneralworkout{Entrenamiento general} kdancing{Baile} kintimacy{Intimidad} kphysiotherapy{Fisioterapia} kcoldplunge{Baño de agua fría} other{{name}}}",
   "supplementSmartWindowMinutes": "{m} min antes de la hora de despertar",
   "supplementGoalValue": "Objetivo {target}",
   "supplementOfCountUnit": "de {n} {unit}",
@@ -3680,5 +3680,6 @@
   "recLogTitle": "Lo que se te dijo",
   "recLogSub": "La recomendación de cada día, tal como se mostró primero",
   "recLogEmpty": "Aún no hay nada registrado. Cada día se añade la primera vez que su Recovery es definitivo.",
-  "recLogRecovery": "Recovery {n}"
+  "recLogRecovery": "Recovery {n}",
+  "homeVitalRhrShort": "FC en reposo"
 }

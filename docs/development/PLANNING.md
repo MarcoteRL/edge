@@ -80,6 +80,7 @@ unit test where the logic is pure. Device check on the sideloaded build.
 | FP-GEM | Coach: Gemini preset (gemini-3.8-flash → gemini-3.5-flash-lite fallback), fallback model on 404/429/5xx, Gemini 3+ sampling stripped | ENH | P2 | S | done |
 | FP-HEVY | Hevy import: sets into strength_set, attached to the overlapping band session or logged as a band-scored weight-training session; v_strength_sets for the coach | ENH | P2 | M | done; needs a Hevy Pro key to verify |
 | UX-04 | Morning check: last night visible 15 min after waking (provisional), "I'm awake" button closes and scores the night at once | ENH (UX) | P1 | S | done (run 42779064344: analyze + 70 files, 617 passed); device check pending |
+| UI-R01 | Screenshot review: activity names untranslated, decimal point in Spanish, calibration counts disagreeing, empty "Your sleep plan" heading, scrub values touching, truncated RHR tile label | BUG (UI) | P2 | M | written 2026-11-14 on `fix/screenshot-review`; **not analyzed, not run** |
 | BUG-T02 | Sleep scrub card printed the relative skin-temp curve in raw stored units ("+61,2" = +0.61 °C on gen5); now °C for gen5, no number otherwise | BUG (honesty) | P1 | S | done, in `main` (PR #6; owner's local analyze + touched tests 2026-11-14, reported passing); device check pending |
 | BUG-C01 | Morning coach card stays stale until pull-to-refresh; "Write one now" keeps loading (briefing tried only on foreground, Home not told, duplicate request) | BUG | P1 | S | done, in `main` (PR #5; owner's local analyze + touched tests 2026-11-14, reported passing); device check pending |
 | BUG-N01 | A possible nap proposed mid-night stays pending after the night is stored over it (3 phantom naps inside the main sleep); `ActivityStore.retireNapsInsideSleep` after `putDayResult` | BUG | P1 | S | done, in `main` (`6adce27`; owner's local run 2026-11-13: 15 touched files, +172 ~12, 0 failures); device check pending |
@@ -87,7 +88,7 @@ unit test where the logic is pure. Device check on the sideloaded build.
 | UX-02 | Home redesign, part 1: day-order hero rings (reading inside, strain target band, sweep-in), vitals row vs 28-day usual, staggered entrance, compact header, haptics | ENH (UX) | P1 | M | done (runs 42708664184: 574 tests; 42709538906: home_redesign_test); device check pending |
 | UX-03 | Home redesign, part 2: Activities list, recovery-tinted heroes, shared entrance on every detail screen (detailScaffold + Sleep tab), Recovery ring sweep | ENH (UX) | P2 | M | done (run 42712259267: analyze + 156 ui2/l10n files, 1767 passed); device check pending |
 | ES-01 | Translate the 621 missing Spanish strings + coverage guard | ENH | P1 | M | done (run 42677830073) |
-| CI-04 | Cache CocoaPods in `ios-sideload.yml` once the first run shows build time | ENH | P3 | S | todo |
+| CI-04 | Cache CocoaPods in `ios-sideload.yml` (`pod install` was ~118 s of a ~9 min IPA build, run 43587926781) | CI | P2 | S | written 2026-11-14 (`actions/cache` on `ios/Pods` + CocoaPods cache, keyed on Podfile.lock + pubspec.lock); first run fills the cache, the effect shows from the second IPA |
 
 ## Phase D — iOS / Android
 

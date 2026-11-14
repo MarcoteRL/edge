@@ -42,6 +42,13 @@ void main() {
     expect(es.homeFirstWeekSoFar(4), '4 días grabados hasta ahora');
     expect(es.homeRecoveryStartsIn(3),
         'La recuperación empieza dentro de 3 noches');
+    // The activity catalogue had a select with no Spanish case at all, so
+    // every quick-start tile read in English.
+    expect(es.activityCatalogueName('krunning', 'Running'), 'Correr');
+    expect(es.activityCatalogueName('kweighttraining', 'Weight training'),
+        'Pesas');
+    expect(es.activityCatalogueName('kunknownsport', 'Unknown sport'),
+        'Unknown sport');
     expect(es.whoopFirmwareWarningTitle,
         'Si tienes una WHOOP: no vuelvas a conectarla a la app de WHOOP');
   });

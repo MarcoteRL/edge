@@ -56,6 +56,24 @@ Any failure outside this list after a change is a regression.
 
 ## Log
 
+### 2026-11-14 — Screenshot review fixes (owner: "fix everything you saw") — branch `fix/screenshot-review`, **NOT analyzed and NOT run**
+
+From the owner's 14 screenshots of `759a19a`. Fixed:
+- **Activity names in English** ("Running", "Weight training", "Cycling"): `activityCatalogueName` had a `select` with no case in ANY language. Spanish cases for the 71 catalogue names that differ (`app_es.arb`); other languages keep the English fallback as before. Pinned in `spanish_l10n_test.dart`.
+- **Decimal point in Spanish** ("12.8 resp/min" in Health): 19 display sites under `lib/ui2` used `toStringAsFixed(1)`; now `displayFixed(…, 1)` (locale separator). Input fields and parsing untouched.
+- **Three calibration counts** ("5 de 14" on the ring, "starts in 10 nights" on the card): `readiness_calibrating` counted the longer of two histories; it now takes `have`/`need` from the readiness gate's own `need_baseline` note, the same one the card reads, and falls back to its own count only without one.
+- **"Your sleep plan" heading with nothing under it**: the Sleep tab wrapped sections that carry their own headings; the outer title is gone.
+- **Scrub-card values touching** ("13,5 resp/min+61,2"): `InlineMetrics` had no gutter between slots; `S.x3` added (design-system widget, every caller benefits).
+- **"FRECUENCIA CARDÍACA EN …" cut off** on the Home vitals tile: new short key `homeVitalRhrShort` ("FC en reposo"), 8 ARBs; the long name stays everywhere it fits.
+
+Looked at and left, with the reason:
+- "Breakdown of your day" next to "Your day, hour by hour": not a pure duplicate — the strip hides itself on a day with no heart rate, and then the door is the only way in.
+- Mechanical-load chart starting on Sunday while "This week" starts on Monday: the chart is the rolling last 7 days ending today (same slots as the TRIMP chart), the strip is the calendar week. Intentional.
+- Coach text "HRV fue de 61.1" with a point: model-written text, not app formatting.
+- "Training load: 9 more days" vs "Strain: from day 4 ✓": two different metrics with two different gates.
+
+No derived output, schema or pin change: no `kAlgoVersion` bump. Owner's local check: `flutter gen-l10n`, `flutter analyze`, `flutter test --concurrency=1 test/spanish_l10n_test.dart test/russian_localization_test.dart test/thai_l10n_test.dart test/ui2_tokens_test.dart test/ui2_sleep_detail_test.dart test/home_redesign_test.dart test/ui2_home_day_switcher_test.dart test/ui2_activity_test.dart test/strain_decimal_separator_test.dart`. Not hardware-validated.
+
 ### 2026-11-14 — PR #5 and PR #6 merged to `main` together, on the owner's instruction
 
 - Basis: the owner's local `flutter analyze` and the touched-file tests of both PRs, reported as passing (no counts received). Full suite not re-run. PR #6 was merged into PR #5's branch first so `main` takes one push and builds one IPA.

@@ -15,6 +15,7 @@
 // same thirty-minute basis the picker's rows use, so the two screens compare.
 
 import 'package:flutter/material.dart';
+import '../../l10n/decimal_text.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../l10n/app_localizations.dart';
@@ -249,8 +250,8 @@ class _ActivitySetupState extends State<ActivitySetup> {
                                   : (l?.activitySetupCalorieEstimate(
                                           est,
                                           _estimateMin,
-                                          a.met!.toStringAsFixed(1)) ??
-                                      'About $est kcal per $_estimateMin min, from the activity\'s effort level (${a.met!.toStringAsFixed(1)}× resting) and your weight.'),
+                                          displayFixed(a.met!, 1)) ??
+                                      'About $est kcal per $_estimateMin min, from the activity\'s effort level (${displayFixed(a.met!, 1)}× resting) and your weight.'),
                           style: F.cap.copyWith(color: p.ink3, height: 1.5)),
                     ),
                   ]),

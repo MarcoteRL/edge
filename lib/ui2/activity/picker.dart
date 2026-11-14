@@ -7,6 +7,7 @@ import '../../l10n/display_text.dart';
 // screen, so there is one path to a live session, not two.
 
 import 'package:flutter/material.dart';
+import '../../l10n/decimal_text.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../l10n/app_localizations.dart';
@@ -270,7 +271,7 @@ class ActivityRow extends StatelessWidget {
     final l = AppLocalizations.of(c);
     final kcal = a.kcal(weightKg, 30);
     final met = a.met;
-    final metStr = met?.toStringAsFixed(1);
+    final metStr = met == null ? null : displayFixed(met, 1);
     // An unpriced row (the catch-all, Padel) has neither: no weight means no
     // kcal, and there is no MET to fall back to. It gets no trailing number
     // rather than a placeholder standing in for one.
