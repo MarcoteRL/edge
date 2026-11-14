@@ -109,7 +109,7 @@ beat-to-beat export to Apple Health (overlaps BUG-558).
 | ID | Task | Type | Pri | Cx | Status |
 |---|---|---|---|---|---|
 | REL-01 | Tag a known-good build (`fork-stable-YYYYMMDD`) after a week of daily use | DEBT | P2 | S | todo |
-| REL-02 | Monthly `git fetch upstream` + merge, re-run CI | DEBT | P2 | S | recurring |
+| REL-02 | Monthly `git fetch upstream` + merge, re-run CI | DEBT | P2 | S | 2026-11-14: merged on `sync/upstream-2026-11-14` (D-24), **not compiled**; waits for the owner's full local suite; recurring |
 
 ## Fork strategy
 

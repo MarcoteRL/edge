@@ -28,7 +28,9 @@ import '../../l10n/date_text.dart';
 // only three of them and they are read together.
 
 import 'dart:async';
+import 'dart:ui' as ui show TextDirection;
 
+import 'package:clock/clock.dart' as pc;
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
@@ -529,7 +531,12 @@ String axisDay(int? epochSec,
   final behind = daysBehind(epochSec);
   if (behind == null) return '';
   if (behind <= 0) return todayWord;
-  return '$behind $unitWord ago';
+  // "1 days ago" read as a typo on the card that says "as of ...". The words
+  // passed in are English plurals ("days", "nights"), so one drops the s.
+  final unit = behind == 1 && unitWord.endsWith('s')
+      ? unitWord.substring(0, unitWord.length - 1)
+      : unitWord;
+  return '$behind $unit ago';
 }
 
 /// Whole calendar days between a stored point and today, or null when there is
@@ -538,7 +545,7 @@ String axisDay(int? epochSec,
 int? daysBehind(int? epochSec) {
   if (epochSec == null) return null;
   return calendarDaysBetween(
-      DateTime.fromMillisecondsSinceEpoch(epochSec * 1000), DateTime.now());
+      DateTime.fromMillisecondsSinceEpoch(epochSec * 1000), pc.clock.now());
 }
 
 /// The withheld-rollup reason inside a `getInsights()` result, or null when the
@@ -573,7 +580,7 @@ StatusCard? dbRebuiltCard(DbRebuild? r, [AppLocalizations? l]) {
   final savedList = saved.map((e) => '${e.key} ${thousands(e.value)}').join(' · ');
   final lostList = lost.map((e) => e.key).join(' · ');
   return StatusCard(
-    l?.homeDbRebuiltTitle ?? 'Your database was rebuilt to start the app',
+    l?.homeDbRebuiltTitle ?? 'Your database was rebuilt',
     '${r.cause}\n\n'
         '${saved.isEmpty ? (l?.homeDbRebuiltNothingRecovered ?? 'Nothing could be read back.') : (l?.homeDbRebuiltRecovered(savedList) ?? 'Recovered: $savedList.')}'
         '${lost.isEmpty ? '' : ' ${l?.homeDbRebuiltEmpty(lostList) ?? 'Empty: $lostList.'}'}'
@@ -592,7 +599,7 @@ StatusCard? dbRebuiltCard(DbRebuild? r, [AppLocalizations? l]) {
 StatusCard workoutHoldCard([AppLocalizations? l]) => StatusCard(
       l?.homeWorkoutHoldTitle ?? 'A workout is still running',
       l?.homeWorkoutHoldBody ??
-          'Today is paused while a workout runs. The band keeps recording; finish the workout from the bar below and today fills in.',
+          'Today fills in when you finish the workout.',
       icon: LucideIcons.timer,
     );
 
@@ -602,10 +609,10 @@ StatusCard? staleInsightsCard(
   if (s == null) return null;
   final built = s['built_for_day']?.toString();
   return StatusCard(
-    l?.homeInsightsRebuildingTitle ?? 'Your cross-day insights are being rebuilt',
+    l?.homeInsightsRebuildingTitle ?? 'Updating your trends',
     switch (s['kind']) {
       'algo_version' => l?.homeInsightsRebuildingAlgoVersion ??
-          'How these are computed changed with the last update.',
+          'Updating after the latest app update.',
       'stale' => built == null || built.isEmpty
           ? (l?.homeInsightsStaleOverWeek ??
               'Your trends were last updated over a week ago. Sync the band to bring them up to date.')
@@ -633,6 +640,15 @@ String hm(num? minutes) {
           '${m ~/ 60}',
           (m % 60).toString().padLeft(2, '0'),
         );
+}
+
+/// "8h" for a whole number of hours, else [hm]: the caption's compact forms.
+String _compactHm(num? minutes, AppLocalizations? l) {
+  if (minutes == null) return '';
+  final value = minutes.round();
+  return value % 60 == 0
+      ? l?.supplementHoursValue('${value ~/ 60}') ?? '${value ~/ 60}h'
+      : hm(value);
 }
 
 String thousands(num? v) => v == null
@@ -692,6 +708,17 @@ String clock(num? minOfDay) =>
     minOfDay == null ? '' : formatMinuteOfDay(minOfDay.round());
 
 /// Epoch seconds → "11:08 PM" / "23:08" in the device zone.
+/// When a carried wear figure was last computed (#450), as seen from the day
+/// on screen ([shownDay], a local label): a clock alone when it fell on that
+/// day, otherwise the date too. A past day's carried wear can date from a
+/// later day's sync, and "08:00" under that past day would name the wrong one.
+String asOfText(num ts, String shownDay, [AppLocalizations? l]) {
+  final day = dayLabelOf(DateTime.fromMillisecondsSinceEpoch(ts.round() * 1000));
+  return day == shownDay
+      ? clockOfTs(ts)
+      : '${prettyDay(day, l)} ${clockOfTs(ts)}';
+}
+
 String clockOfTs(num? ts) {
   if (ts == null) return '';
   return formatClockOf(DateTime.fromMillisecondsSinceEpoch(ts.round() * 1000));
@@ -1185,16 +1212,25 @@ _RingState _ringOf(HomeRingKind k, HomeData d, AppLocalizations? l) {
               d.sleepMin, l?.homeRingNoSleep ?? 'No sleep', l,
               fallbackWhy: l?.homeSleepGapFallback ??
                   'No night long enough to score was recorded.')
-          : _RingState(k, l?.homeRingSleep ?? 'Sleep', LucideIcons.moon, C.blue,
-              value: hm(v),
-              // No computed need means no denominator. The hardcoded 480 in
-              // the sleep bundle is not this user's need and must never be
-              // shown as one, so the ring stays open and says so.
-              sub: need == null
-                  ? (l?.homeSleepNoTarget ?? 'No target yet')
-                  : (l?.homeOfSpan(hm(need)) ?? 'of ${hm(need)}'),
-              frac: need == null || need <= 0 ? null : v / need);
+          : _sleepState(k, l, v, need);
   }
+}
+
+/// A slept night as a bar. Before a need is learned the bar is measured
+/// against upstream's 8 h default (`sleepRingModel`) and the caption SAYS it is
+/// the default — it is never passed off as this user's need. It used to stay
+/// empty with "No target yet" beside 8 h 50 min of sleep.
+_RingState _sleepState(
+    HomeRingKind k, AppLocalizations? l, num asleepMin, num? needMin) {
+  final m = sleepRingModel(durationMin: asleepMin, needMin: needMin);
+  final target = hm(m.targetMin);
+  return _RingState(k, l?.homeRingSleep ?? 'Sleep', LucideIcons.moon, C.blue,
+      value: hm(asleepMin),
+      sub: m.targetIsDefault
+          ? (l?.homeSleepPctOfDefault(m.pct, target) ??
+              '${m.pct}% of $target (default)')
+          : (l?.homeOfSpan(target) ?? 'of $target'),
+      frac: asleepMin / m.targetMin);
 }
 
 /// The absent half: calibrating when the note says the gate is a baseline
@@ -2538,13 +2574,25 @@ Future<List<Map<String, dynamic>>> sessionsOfDay(
   } catch (_) {
     return const [];
   }
+/// The night's stage totals off a `getDaySleepV2` map, or null when it carries
+/// none of them. Individual stages stay null when the pipeline had no figure —
+/// the ring splits only when Deep, REM and Light are all there.
+SleepStageMin? sleepStagesOf(Map<String, dynamic> night) {
+  int? m(String k) => (night[k] as num?)?.round();
+  final s = SleepStageMin(
+      deep: m('deep_min'),
+      rem: m('rem_min'),
+      light: m('light_min'),
+      awake: m('awake_min'));
+  return s.deep == null && s.rem == null && s.light == null && s.awake == null
+      ? null
+      : s;
 }
 
 class HomeData {
   final String? name;
   final String? dayId;
   final Metric readiness;
-  final List<Map<String, dynamic>> drivers;
   final Metric sleepMin, rhr, steps, calories, caloriesTotal;
 
   /// The day's 0–21 strain, read from the same `getToday` bundle the Workout
@@ -2620,12 +2668,16 @@ class HomeData {
   /// one (null under three of them) — the headline's "▲ 9 vs yesterday" and
   /// "best this week". Read from the stored series, never estimated.
   final double? readinessYesterday, readinessWeekMax;
+  /// The scored night's stage totals (`getDaySleepV2`): the sleep ring splits
+  /// into Deep / REM / Light / Awake arcs when all of the first three are
+  /// there. Null for a night that did not score, and never borrowed from
+  /// another night.
+  final SleepStageMin? sleepStages;
 
   const HomeData({
     this.name,
     this.dayId,
     this.readiness = Metric.empty,
-    this.drivers = const [],
     this.sleepMin = Metric.empty,
     this.rhr = Metric.empty,
     this.steps = Metric.empty,
@@ -2654,6 +2706,7 @@ class HomeData {
     this.strainCalibrating,
     this.readinessYesterday,
     this.readinessWeekMax,
+    this.sleepStages,
   });
 
   /// The three illness fields, replaced together. Test-facing sugar, and they
@@ -2663,7 +2716,6 @@ class HomeData {
         name: name,
         dayId: dayId,
         readiness: readiness,
-        drivers: drivers,
         sleepMin: sleepMin,
         rhr: rhr,
         steps: steps,
@@ -2674,6 +2726,7 @@ class HomeData {
         sleepNeedMin: sleepNeedMin,
         bedtime: bedtime,
         strainTarget: strainTarget,
+        sleepStages: sleepStages,
         heldOverNight: heldOverNight,
         illnessState: state,
         illnessDay: day,
@@ -2698,7 +2751,7 @@ class HomeData {
   ///
   /// Deliberately thin next to [load]: everything [load] does beyond the six
   /// headline numbers below (frozen-morning-headline pin, the illness watch,
-  /// sleep coach need/bedtime, readiness drivers, the stale-rollup notice) is
+  /// sleep coach need/bedtime, the stale-rollup notice) is
   /// about the ambiguity of an in-progress "today" — a past day already
   /// settled, so there is nothing there to resolve. Reuses the same
   /// date-parameterized getters the strain/sleep detail screens already read
@@ -2721,6 +2774,11 @@ class HomeData {
     final absentDiag = readiness.value != null
         ? null
         : await LocalDb.readinessAbsentDiag(date);
+    // The need comes with the night: today's is the live estimate, a past
+    // night's is the one stored for that day, and absent when none was (see
+    // getDaySleepV2). Absent stays absent: the ring shows the labelled
+    // default, and never measures an old night against today's need.
+    final need = metricOf(sleep['need_min']);
     return HomeData(
       name: profile['name']?.toString(),
       dayId: date,
@@ -2734,16 +2792,39 @@ class HomeData {
       calories: metricOf(strain['calories']),
       caloriesTotal: metricOf(strain['calories_total']),
       sleepMin: metricOf(sleep['duration_min']),
-      // The learned need `getDaySleepV2` already carries (absent until one is
-      // learned). Left unset, the ring told a user who has a need that there
-      // was "No target yet" on every day but today.
-      sleepNeedMin: metricOf(sleep['need_min']),
+      // Left unset, the ring told a user who has a need that there was "No
+      // target yet" on every day but today.
+      sleepNeedMin: need,
+      sleepStages: sleepStagesOf(sleep),
       stepGoal: (profile['step_goal'] as num?)?.toInt() ?? kDefaultStepGoal,
     );
   }
 
   static Future<HomeData> load(LocalRepository repo, [AppLocalizations? l]) async {
-    final today = await repo.getToday();
+    // getToday and the night's stage read decode the same stored day bundle:
+    // read both in one scope, so the UI isolate decodes it once per reload.
+    final (today, stages) = await repo.sharingDayReads(() async {
+      final t = await repo.getToday();
+      final sl = t['sleep'];
+      final night = (overnightMetric(
+                      t, sl is Map ? sl['duration_min'] : null, l)
+                  .value ==
+              null)
+          ? null
+          // Stage totals of TODAY'S OWN night only: a held-over night is
+          // refused by overnightMetric, and its stages must not turn up under
+          // today's ring.
+          : ((t['status'] as Map?)?['overnight_day'] ??
+                  (t['status'] as Map?)?['today_day'])
+              ?.toString();
+      SleepStageMin? st;
+      if (night != null) {
+        try {
+          st = sleepStagesOf(await repo.getDaySleepV2(night));
+        } catch (_) {}
+      }
+      return (t, st);
+    });
     final cd = await repo.getInsights();
     final profile = await repo.getProfile();
 
@@ -2751,9 +2832,6 @@ class HomeData {
     final sleep = today['sleep'];
     Object? d(String k) => daily is Map ? daily[k] : null;
     Object? s(String k) => sleep is Map ? sleep[k] : null;
-
-    final gb = cd['readiness_glassbox'];
-    final gbDrivers = gb is Map ? gb['drivers'] : null;
 
     final coach = cd['sleep_coach'];
     final needEnv = coach is Map ? coach['need'] : null;
@@ -2764,6 +2842,7 @@ class HomeData {
 
     final heldOver = heldOverNightOf(today);
 
+    final sleepMin = overnightMetric(today, s('duration_min'), l);
     // Same envelope Health reads. The watch runs on NOCTURNAL RESTING HEART
     // RATE ALONE — it has never been given a temperature series — so nothing
     // here may imply a second signal.
@@ -2813,12 +2892,9 @@ class HomeData {
       absentDiag: absentDiag,
       recoveryState: recoveryState,
       readinessUpdate: (head['recovery_update'] as Map?)?.cast<String, dynamic>(),
-      drivers: [
-        for (final e in (gbDrivers is List ? gbDrivers : const []))
-          if (e is Map) e.cast<String, dynamic>(),
-      ],
       strain: metricOf(d('strain')),
       sleepMin: sleepMin,
+      sleepStages: stages,
       rhr: overnightMetric(today, d('resting_hr'), l),
       hrv: hrv,
       resp: resp,
@@ -3275,8 +3351,7 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
       d.heldOverNight == null
           ? (l?.homeNothingDerivedBody ?? 'Wear the band tonight and open the app in the morning.')
           : (l?.homeNothingTodayBody(prettyDay(d.heldOverNight, l)) ??
-              'The last night this app scored was '
-                  '${prettyDay(d.heldOverNight, l)}. Nothing has reached it since.'),
+              'Last scored night: ${prettyDay(d.heldOverNight, l)}.'),
       fix: sync == null ? '' : (l?.homeSyncBand ?? 'Sync the band'),
       icon: LucideIcons.watch,
       onFix: sync == null ? null : () => _tapSync(sync),
@@ -3577,7 +3652,7 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
                   // is what actually answers it.
                   : shortfall ??
                       whyFromNote(d.readiness.note) ??
-                      (l?.homeReadinessNoReason ?? 'Nothing recorded says why.'),
+                      (l?.homeReadinessNoReason ?? 'No reason recorded.'),
               fix: l?.homeSeeWhatWasMissing ?? 'See what was missing',
               icon: LucideIcons.batteryCharging,
               onFix: () =>
@@ -3777,7 +3852,6 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
 
     final sameNight = day == today;
     final z = d.illnessZ;
-    final zAbs = z == null ? '' : z.abs().toStringAsFixed(1);
 
     return [
       Observation(
@@ -3789,12 +3863,12 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
                     '${prettyDay(d.illnessDay, l)} sat outside your normal range'),
         z == null
             ? (l?.homeIllnessBodyNoZ ??
-                'Your resting heart rate has run above your usual over recent nights. This tracks one signal, so it shows a pattern, not a cause.')
+                'Your resting heart rate has been above your usual over recent nights. A pattern, not a cause.')
             : (z >= 0
-                ? (l?.homeIllnessBodyAbove(zAbs) ??
-                    'Recent nights put your resting heart rate above your usual. That night was $zAbs× your normal night-to-night swing above it. A pattern, not a cause.')
-                : (l?.homeIllnessBodyBelow(zAbs) ??
-                    'Recent nights together put your resting heart rate above your usual, even though that night on its own was $zAbs× your normal night-to-night swing below it. A pattern, not a cause.')),
+                ? (l?.homeIllnessBodyAbove ??
+                    'Recent nights put your resting heart rate above your usual. That night was above it too. A pattern, not a cause.')
+                : (l?.homeIllnessBodyBelow ??
+                    'Recent nights together put your resting heart rate above your usual, though that night alone was below it. A pattern, not a cause.')),
         advice: l?.homeIllnessAdvice ?? 'Worth noting if it continues past a couple of days.',
         onTap: () => go(c, const MetricDetail('resting_hr')),
       ),
@@ -4192,7 +4266,7 @@ Widget coachChip(BuildContext c) {
   final ready = coachReady(c);
   final text = ready
       ? (l?.homeAskCoach ?? 'Ask the coach')
-      : (l?.homeCoachSetUpChip ?? 'Ask questions about your data: set up the coach');
+      : (l?.homeCoachSetUpChip ?? 'Set up the coach');
   return Align(
     alignment: Alignment.centerLeft,
     child: Pressable(

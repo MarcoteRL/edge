@@ -1589,10 +1589,10 @@ void main() {
   );
 
   test(
-    'v59 adds recommendation_log; the first call of a day is kept, a deleted '
+    'v61 adds recommendation_log; the first call of a day is kept, a deleted '
     'day takes its row, idempotent reopen',
     () async {
-      const name = 'migrate_v59_recommendation_log_test.db';
+      const name = 'migrate_v61_recommendation_log_test.db';
       created.add(name);
       await _seedOldDb(name, 50, _v5DerivedDdl);
       expect(await _openThroughLocalDb(name), LocalDb.schemaVersion);
@@ -1620,6 +1620,45 @@ void main() {
       expect(await LocalDb.recommendationLog(), hasLength(1));
       final health = await LocalDb.schemaHealth();
       expect(health['ok'], isTrue, reason: '$health');
+    },
+  );
+
+  test(
+    "a phone on the fork's old v59 (recommendation_log, no triathlon) gets "
+    'upstream 59 and 60 without losing its log',
+    () async {
+      const name = 'migrate_fork59_test.db';
+      created.add(name);
+      // Build a current database, then rewind it to what the owner's phone
+      // holds: the fork's v59 had recommendation_log and none of upstream's
+      // v59 (triathlon) or v60 (HYROX) tables.
+      await _openThroughLocalDb(name);
+      await LocalDb.logRecommendation(
+          dayId: '2026-11-13', tier: 2, readiness: 55, algoVersion: 121);
+      await LocalDb.close();
+      final raw = await databaseFactory.openDatabase(await _dbPath(name));
+      for (final t in [
+        'triathlon_segment',
+        'triathlon_session',
+        'hyrox_segment',
+        'hyrox_session',
+      ]) {
+        await raw.execute('DROP TABLE IF EXISTS $t');
+      }
+      await raw.execute('PRAGMA user_version = 59');
+      await raw.close();
+
+      expect(await _openThroughLocalDb(name), LocalDb.schemaVersion);
+      final tables = await LocalDb.tableNames();
+      expect(
+          tables,
+          containsAll([
+            'triathlon_session',
+            'hyrox_session',
+            'recommendation_log',
+          ]));
+      expect(await LocalDb.recommendationLog(), hasLength(1),
+          reason: 'what the phone was told survives the renumbering');
     },
   );
 }

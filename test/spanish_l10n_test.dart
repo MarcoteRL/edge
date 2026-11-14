@@ -43,10 +43,11 @@ void main() {
     expect(es.homeRecoveryStartsIn(3),
         'La recuperación empieza dentro de 3 noches');
     // The activity catalogue had a select with no Spanish case at all, so
-    // every quick-start tile read in English.
-    expect(es.activityCatalogueName('krunning', 'Running'), 'Correr');
+    // every quick-start tile read in English. Upstream's wording since the
+    // 2026-11-14 merge (spanish_coverage_test pins the same).
+    expect(es.activityCatalogueName('krunning', 'Running'), 'Carrera');
     expect(es.activityCatalogueName('kweighttraining', 'Weight training'),
-        'Pesas');
+        'Entrenamiento con pesas');
     expect(es.activityCatalogueName('kunknownsport', 'Unknown sport'),
         'Unknown sport');
     expect(es.whoopFirmwareWarningTitle,
