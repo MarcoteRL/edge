@@ -3681,5 +3681,6 @@
   "recLogSub": "La recomendación de cada día, tal como se mostró primero",
   "recLogEmpty": "Aún no hay nada registrado. Cada día se añade la primera vez que su Recovery es definitivo.",
   "recLogRecovery": "Recovery {n}",
-  "homeVitalRhrShort": "FC en reposo"
+  "homeVitalRhrShort": "FC en reposo",
+  "journalTagNoAlarm": "sin alarma"
 }

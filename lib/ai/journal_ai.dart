@@ -15,6 +15,9 @@ const List<String> kJournalPresetTags = <String>[
   'caffeine', 'alcohol', 'late meal', 'stress', 'poor sleep', 'travel',
   'screens late', 'meds', 'sick', 'sauna', 'cold plunge', 'social',
   'workout', 'rest day',
+  // FI-B4: a morning without an alarm, so a natural wake can be compared
+  // with an alarmed one through the same tag correlations as the rest.
+  'no alarm',
 ];
 
 /// One assistant turn: the conversational reply + the CUMULATIVE proposed log.

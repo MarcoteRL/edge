@@ -19,7 +19,7 @@ done (with evidence) / blocked. Complexity: S / M / L.
 | ALG-L1 | CTL/ATL abstain until 80 % of last 42 days have a measured TRIMP (`_loadWithCoverage`); kAlgoVersion 121 | BUG | P0 | M | — | in `main` (runs 43231936403, 43232851823; full suite 43233915353 + 43250024942, no failure) |
 | ALG-C1 | irregular_rhythm_flag needs the sleep-window screen to agree (`irregularRhythmFlag`); same bump 121 | BUG | P1 | S | — | in `main` (same runs) |
 | DATA-06 | Dropped: an I'm-awake tap is already recognisable (offset_ts ≈ created_at) | — | — | — | — | won't do |
-| FI-B4 | Morning ratings already exist in the journal; only a "no alarm" night flag is missing | ENH | P2 | S | — | todo |
+| FI-B4 | "No alarm" journal tag (`no alarm` in `kJournalPresetTags`, 8 languages), so mornings without an alarm can be compared through the existing tag correlations | ENH | P2 | S | — | written 2026-11-14 on `feat/no-alarm-night`; **not run** |
 | ITER-1 | Audit contrasted with the code; iteration plan (AUDIT_VERIFICATION.md, ITERATION_PLAN.md) | DEBT | P1 | M | — | done; plan approved by the owner 2026-11-12 |
 | DATA-02 | Re-derive pruned days from `substrate_archive` (read-only, oldest first, no bump) | ENH | P0 | L | — | done (runs 43255670024, 43255676974; full suite 43260273913 + 43260295892); device check pending |
 | T-02 | `payload_json` contract test | DEBT | P2 | S | — | done (run 43255670024) |

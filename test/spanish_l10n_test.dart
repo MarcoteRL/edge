@@ -6,6 +6,7 @@ import 'dart:io';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:openstrap_edge/l10n/display_text.dart';
 
 import 'package:openstrap_edge/l10n/app_localizations.dart';
 
@@ -49,6 +50,7 @@ void main() {
         'Pesas');
     expect(es.activityCatalogueName('kunknownsport', 'Unknown sport'),
         'Unknown sport');
+    expect(localizedJournalTag(es, 'no alarm'), 'sin alarma');
     expect(es.whoopFirmwareWarningTitle,
         'Si tienes una WHOOP: no vuelvas a conectarla a la app de WHOOP');
   });

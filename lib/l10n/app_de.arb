@@ -3640,5 +3640,6 @@
   "recLogSub": "Die Trainingsempfehlung jedes Tages, wie sie zuerst angezeigt wurde",
   "recLogEmpty": "Noch nichts aufgezeichnet. Ein Tag wird hinzugefügt, sobald seine Erholung zum ersten Mal endgültig ist.",
   "recLogRecovery": "Erholung {n}",
-  "homeVitalRhrShort": "Ruhepuls"
+  "homeVitalRhrShort": "Ruhepuls",
+  "journalTagNoAlarm": "ohne Wecker"
 }

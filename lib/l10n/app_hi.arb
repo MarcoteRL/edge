@@ -2949,5 +2949,6 @@
   "recLogSub": "हर दिन की प्रशिक्षण सलाह, जैसी पहली बार दिखाई गई",
   "recLogEmpty": "अभी कुछ दर्ज नहीं है। कोई दिन तब जुड़ता है जब उसकी रिकवरी पहली बार अंतिम होती है।",
   "recLogRecovery": "रिकवरी {n}",
-  "homeVitalRhrShort": "विश्राम HR"
+  "homeVitalRhrShort": "विश्राम HR",
+  "journalTagNoAlarm": "बिना अलार्म"
 }

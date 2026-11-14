@@ -56,6 +56,10 @@ Any failure outside this list after a change is a regression.
 
 ## Log
 
+### 2026-11-14 — FI-B4: "no alarm" journal tag — branch `feat/no-alarm-night`, **NOT run**
+
+- `no alarm` added to `kJournalPresetTags` (the one vocabulary shared by the journal chips, the AI journal extractor and the tag correlations), `journalTagNoAlarm` in 8 ARBs, mapped in `localizedJournalTag`. No storage change: tags are already free strings in `journal.tags_json`. Test: `spanish_l10n_test.dart`. Owner's check: `flutter gen-l10n`, `flutter analyze`, `flutter test --concurrency=1 test/spanish_l10n_test.dart test/russian_localization_test.dart test/local_persistence_test.dart`.
+
 ### 2026-11-14 — PR #7 merged to `main` (`00e76c5`), with CI-04
 
 - Basis: the owner's local `flutter gen-l10n`, `flutter analyze` and the PR's touched-file tests, reported as passing (no counts received). Full suite not re-run.

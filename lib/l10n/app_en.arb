@@ -17250,5 +17250,9 @@
   "homeVitalRhrShort": "Resting HR",
   "@homeVitalRhrShort": {
     "description": "Short label for the resting heart rate tile in the row of three vitals on Home; must fit a third of the screen."
+  },
+  "journalTagNoAlarm": "no alarm",
+  "@journalTagNoAlarm": {
+    "description": "Journal tag: the user woke up without an alarm that morning. Lowercase like the other tags."
   }
 }

@@ -38,6 +38,7 @@ String localizedJournalTag(AppLocalizations? l, String tag) {
     'social' => l.journalTagSocial,
     'workout' => l.journalTagWorkout,
     'rest day' => l.journalTagRestDay,
+    'no alarm' => l.journalTagNoAlarm,
     _ => tag,
   };
 }

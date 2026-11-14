@@ -8401,5 +8401,6 @@
       }
     }
   },
-  "homeVitalRhrShort": "Пульс в покое"
+  "homeVitalRhrShort": "Пульс в покое",
+  "journalTagNoAlarm": "без будильника"
 }
