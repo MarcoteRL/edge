@@ -1304,7 +1304,9 @@ class LocalRepositoryImpl extends LocalRepository {
       // Sleep cycles — Rosenblum 2024 "fractal cycles" (HRV-adapted): peak-to-
       // peak of the smoothed per-minute RMSSD series (REM peaks / NREM troughs).
       'cycles': _sub(b, 'sleep')?['cycles'] ?? const [],
-      'cycle_count': (_sub(b, 'sleep')?['cycle_count'] as num?)?.toInt() ?? 0,
+      // Null when the night carries no count (an older bundle, or the cycle
+      // estimator abstained): "—" downstream, never a measured "0 cycles".
+      'cycle_count': (_sub(b, 'sleep')?['cycle_count'] as num?)?.toInt(),
       'cycles_mean_min': _cyclesMeanMin(b),
       // The graph plots the continuous z-RMSSD wave [{t,z}] — NOT the cycle spans.
       'cycle_series': _sub(b, 'sleep')?['cycle_series'] ?? const [],

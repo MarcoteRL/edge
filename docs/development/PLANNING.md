@@ -12,7 +12,7 @@ done (with evidence) / blocked. Complexity: S / M / L.
 | CI-01 | Secretless unsigned-IPA workflow `ios-sideload.yml` | BUG (F-01) | P1 | S | — | done on CI (run 42655280078, IPA built); device install pending |
 | CI-02 | Create your GitHub repo, push, disable star-history/soak/pr-agent | DEBT (F-05) | P1 | S | SETUP-01 | done (2026-11-09): MarcoteRL/edge |
 | AUD-01 | Record test/analyze baseline from first `test.yml` run | DEBT | P1 | S | CI-02 | done (2026-11-09): run 42655279966, 8 pre-existing l10n/gallery failures (PROGRESS.md) |
-| AUD-02 | Deep bug sweep of hotspots (db, derivation, ble_engine, app_state) | DEBT | P2 | L | AUD-01 | todo |
+| AUD-02 | Deep bug sweep of hotspots (db, derivation, ble_engine, app_state) | DEBT | P2 | L | AUD-01 | 2026-11-14: done on the merged code (TECHNICAL_DEBT §6): no P0/P1; `cycle_count` fix on `fix/aud-02`; 6 minor findings documented |
 | AUD-03 | `flutter pub outdated` + advisory check, no upgrades | DEBT | P2 | S | toolchain | todo |
 | AUD-04 | Full audit: code + real DB export + algorithms + UX + roadmap (docs/development/AUDIT_SUMMARY.md) | DEBT | P1 | L | — | done (2026-11-12): docs only, no code change |
 | SEC-09 | `*.db`/`*.db-wal`/`*.db-shm`/`*.sqlite` in .gitignore | DEBT | P0 | S | — | done (`git check-ignore` verified) |

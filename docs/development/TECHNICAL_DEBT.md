@@ -89,3 +89,23 @@ coach envía fuera. **Accesibilidad:** las pantallas nuevas usan `Surface`,
 la galería); `PeriodLabScreen` y `WeeklyReportScreen` no están en la galería
 y no pasan por el barrido de desbordamiento a 3,1×.
 
+## 6. AUD-02 — barrido de los archivos calientes (2026‑11‑14, sobre la fusión con upstream)
+
+Dos revisiones de solo lectura, sin compilar: `app_state.dart` + `ble_engine.dart`
+(+ `sync_controller`, puerta headless) y `db.dart` + `derivation_engine.dart`
+(+ capa de lectura). **Sin P0 ni P1.** Comprobado y correcto: commit antes del
+ACK, INSERT‑OR‑REPLACE de 1 Hz con sus latidos, poda que respeta días sin
+finalizar, migraciones aditivas, serialización headless, opcodes peligrosos,
+flags limpiados en `finally`, etiquetas de día locales, cómputo fuera del hilo
+de UI. Hallazgos menores:
+
+| # | Qué | Estado |
+|---|---|---|
+| A2‑1 | `cycle_count` servido como `0` cuando la noche no trae cuenta (§4.1) | **Arreglado** en `fix/aud-02` (null ⇒ "—") |
+| A2‑2 | La cuenta "faltan N noches" de la temperatura de piel cuenta días importados o de otra familia que la línea base excluye | Documentado: igualarla exige recorrer los bundles al leer; no afecta a una sola banda gen5 sin importaciones |
+| A2‑3 | `total: dayTotal ?? 0` en el detalle de pasos | Documentado: sin camino alcanzable hoy |
+| A2‑4 | gen4: un HISTORY_END con déficit de paquetes se confirma (aviso, no puerta) | Concesión deliberada de upstream para gen4; no aplica a la banda del propietario (gen5) |
+| A2‑5 | Puerta headless: el techo de 15 min libera la puerta sin parar el motor huérfano | Plausible, sin confirmar; candidato a issue de upstream |
+| A2‑6 | Tras sustituir la banda no se entrega un "buzz" de Tasker pendiente (Android) | Confirmado, solo Android; no aplica al propietario |
+| A2‑7 | Evento de alarma con `clockRef` nulo usa deriva 0 | Plausible; ventana pequeña (SET_CLOCK precede a INIT). **Pista para BUG‑186** si la alarma vuelve a fallar |
+
