@@ -56,6 +56,26 @@ Any failure outside this list after a change is a regression.
 
 ## Log
 
+### 2026-11-14 — PR #5 and PR #6 merged to `main` together, on the owner's instruction
+
+- Basis: the owner's local `flutter analyze` and the touched-file tests of both PRs, reported as passing (no counts received). Full suite not re-run. PR #6 was merged into PR #5's branch first so `main` takes one push and builds one IPA.
+- Not hardware-validated: the coach card is checked the next morning; the scrub card on the next night.
+
+### 2026-11-14 — BUG-T02: "Temp. (rel.) +61,2" in the sleep scrub card — PR #6
+
+- Seen in the owner's screenshots (`759a19a`): the scrub card printed the skin-temperature curve's raw number bare. [Comprobado en el código y en la exportación, agregados] `series.skin_temp_day` is the day's skin-temperature array minus its median, in the strap's stored unit; on this gen5 band every 1 Hz row has `skin_temp_c` and none `skin_temp_raw`, so the array is centi-°C (`_skinTempFor`). "+61,2" was +0.61 °C shown as if it were 61.
+- Fix (read side only): `getDayTimeline` says the curve's unit (`skin_temp_unit`: `centi_c` when the day's `device_family` is gen5, else null). The scrub card prints the deviation in °C for centi-°C and **no number** for any other unit (a gen4 ADC count has no honest conversion; the curve keeps its shape). Nothing derived changes: no `kAlgoVersion` bump.
+- Test (not run): `ui2_sleep_detail_test.dart` group `sleepScrubTempText`.
+- Owner's local check: `flutter analyze`; `flutter test --concurrency=1 test/ui2_sleep_detail_test.dart test/ui2_sleep_detail_load_failure_test.dart`. Not hardware-validated.
+
+### 2026-11-14 — BUG-C01: the morning coach card waits for a pull-to-refresh — PR #5
+
+- Owner's report (device, `759a19a`): on waking the coach card on Home stays on the old state until he pulls to refresh; opening the briefing and tapping "Write one now" keeps loading.
+- Root causes [Comprobado en el código]: (1) `_maybeGenerateBriefing` ran only from `runCadenceChecks` (foreground). On waking, the app comes to the front before the night has synced, finds `overnight_state != 'ready'` and returns; nothing asked again in that session. (2) After writing, it called `notifyListeners`, but Home rebuilds on `insightsRevision`, so the card kept the old read until a pull-to-refresh. (3) The screen's "Write one now" started a second model request racing the app's own.
+- Fix: the briefing check also runs after every foreground derive pass (beside the recovery-ready check); a written briefing bumps `insightsRevision`; `BriefingEngine.generate` joins a request already running for the same period; `AiBriefingScreen` re-reads the store on a revision.
+- Test (not run): `ai_briefing_test.dart` "a second request while one is running joins it, not a new call". No metric output changes, no schema change, no bump.
+- Owner's local check: `flutter analyze`; `flutter test --concurrency=1 test/ai_briefing_test.dart test/ui2_home_day_switcher_test.dart test/ui2_tokens_test.dart`. Then check on the phone the next morning. Not hardware-validated.
+
 ### 2026-11-14 — PR #4 merged to `main` (`759a19a`), on the owner's instruction
 
 - Basis: the owner's local `flutter gen-l10n`, `flutter analyze` and the PR's touched-file tests, reported as all passing (no counts received). Full suite not re-run. No CI test run.

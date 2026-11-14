@@ -322,7 +322,14 @@ class AppState extends ChangeNotifier {
     log: _log,
     notify: notifyListeners,
     refreshPhoneStepsToday: _refreshPhoneStepsToday,
-    maybeNotifyRecoveryReady: _maybeNotifyRecoveryReady,
+    // After every derive pass, not only on the next foreground: on waking
+    // the app comes to the front BEFORE the night has synced, the briefing
+    // check finds the night still building and returns, and nothing asked
+    // again until the user left and came back.
+    maybeNotifyRecoveryReady: () async {
+      await _maybeNotifyRecoveryReady();
+      if (!_background) await _maybeGenerateBriefing();
+    },
     runHealthExport: _runHealthExport,
     healthSyncEnabled: () => healthSyncEnabled,
     telemetryConsent: () => telemetryConsent,
@@ -2451,7 +2458,11 @@ class AppState extends ChangeNotifier {
       _lastBriefingAttemptMs = at.millisecondsSinceEpoch;
       await BriefingEngine(config: cfg, repo: r).generate(want, now: at);
       _log('[ai] ${want.id} briefing generated');
-      notifyListeners(); // Today card reads the store synchronously
+      // Home's coach card reads the store when Home rebuilds, and Home
+      // rebuilds on the insights revision, not on notifyListeners: without
+      // this the new briefing waited for a pull-to-refresh.
+      bumpInsights();
+      notifyListeners();
     } catch (e) {
       _log('[ai] briefing generation skipped: $e');
     }

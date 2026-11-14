@@ -2,6 +2,7 @@
 // pure prompt building + response parsing, and the day+period cache round-trip.
 // The LLM is mocked (BriefingComplete injected) — no network.
 
+import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -436,6 +437,31 @@ void main() {
       expect(seenUser, contains('resting heart rate 68 bpm'));
       expect(seenUser, isNot(contains('strain')));
       expect(b.calledModel, isTrue);
+    });
+
+    test('a second request while one is running joins it, not a new call',
+        () async {
+      var calls = 0;
+      final gate = Completer<void>();
+      BriefingEngine engine() => BriefingEngine(
+            config: CoachConfig(),
+            repo: _FakeRepo(today: _sampleToday()),
+            complete: ({required system, required user}) async {
+              calls++;
+              await gate.future;
+              return 'Recovered and ready.\n---\n- Readiness 74';
+            },
+          );
+      // The app's own morning pass, then "Write one now" from the screen.
+      final first = engine().generate(BriefingPeriod.morning);
+      final second = engine().generate(BriefingPeriod.morning);
+      gate.complete();
+      final (a, b) = await (first, second).wait;
+      expect(calls, 1);
+      expect(identical(a, b), isTrue);
+      // Once it is done, asking again writes again.
+      await engine().generate(BriefingPeriod.morning);
+      expect(calls, 2);
     });
 
     test('cache read is scoped to the day (stale day → null)', () {
