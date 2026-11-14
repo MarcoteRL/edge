@@ -46,6 +46,7 @@ import '../../platform/provisioning.dart'
     show Provisioning, sideloadExpiryNotice;
 import '../../compute/onehz_pipeline.dart'
     show readinessInputShortfallNote, readinessUnstableBaselineNote;
+import '../../compute/derivation_engine.dart' show kAlgoVersion;
 import '../../data/db.dart' show DbRebuild, LocalDb;
 import '../../data/journal_fields.dart' show formatMinuteOfDay;
 import '../../data/local_repository.dart';
@@ -3082,10 +3083,32 @@ class _HomeScreenState extends State<HomeScreen> with RevisionReload {
       if (stillNewest(#home, t)) {
         setState(() => (_d = d, _days = days, _loading = false, _failed = false));
       }
+      // The day's call, kept as first shown (recommendation_log). Only the
+      // live screen, only today, only on a final score — the same condition
+      // DecisionLine speaks under (D-19). Never awaited: a log that cannot be
+      // written must not cost the screen its data.
+      if (widget.data == null) unawaited(_logCall(d));
     } catch (_) {
       if (stillNewest(#home, t)) {
         setState(() => (_loading = false, _failed = true));
       }
+    }
+  }
+
+  static Future<void> _logCall(HomeData d) async {
+    final v = d.readiness.value;
+    if (v == null || d.recoveryState != 'final' || d.dayId != todayLabel()) {
+      return;
+    }
+    try {
+      await LocalDb.logRecommendation(
+        dayId: d.dayId!,
+        tier: readinessBand(v, null).tier,
+        readiness: v.toDouble(),
+        algoVersion: kAlgoVersion,
+      );
+    } catch (_) {
+      // No store (a test host) or a locked one: nothing to record.
     }
   }
 

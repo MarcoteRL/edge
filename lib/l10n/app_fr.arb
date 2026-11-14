@@ -2944,5 +2944,9 @@
   "reportShare": "Partager en fichier",
   "reportShareFailed": "Impossible de partager le rapport",
   "reportFailedTitle": "Impossible de lire le rapport",
-  "reportFooter": "Calculé sur votre téléphone à partir de vos propres données. Une description de la semaine, pas un avis médical."
+  "reportFooter": "Calculé sur votre téléphone à partir de vos propres données. Une description de la semaine, pas un avis médical.",
+  "recLogTitle": "Ce qui vous a été indiqué",
+  "recLogSub": "Le conseil d’entraînement de chaque jour, tel qu’affiché la première fois",
+  "recLogEmpty": "Rien d’enregistré pour l’instant. Un jour est ajouté la première fois que sa récupération est définitive.",
+  "recLogRecovery": "Récupération {n}"
 }

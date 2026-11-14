@@ -26,12 +26,13 @@ import 'package:share_plus/share_plus.dart';
 import '../../compute/fork/trend_service.dart';
 import '../../compute/fork/trends.dart' as fork;
 import '../../data/day_label.dart';
+import '../../data/db.dart' show LocalDb;
 import '../../data/strength_summary.dart';
 import '../../l10n/app_localizations.dart';
 import '../activity/share.dart' show shareOrigin;
 import '../ui2.dart';
 import 'home_guidance.dart';
-import 'home_screen.dart' show hm, prettyDay, thousands;
+import 'home_screen.dart' show go, hm, prettyDay, thousands;
 import 'metric_detail.dart' show detailLinkRow, detailScaffold;
 
 /// The local day [days] calendar days from [label] (negative = earlier).
@@ -466,7 +467,106 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
                     'of the week, not medical advice.',
             style: F.cap.copyWith(color: p.ink3),
           ),
+          const SizedBox(height: S.x4),
+          detailLinkRow(
+            c,
+            LucideIcons.listChecks,
+            l?.recLogTitle ?? 'What you were told',
+            l?.recLogSub ?? "Each day's training call, as first shown",
+            () => go(c, const RecommendationLogScreen()),
+          ),
         ],
+      ],
+    );
+  }
+}
+
+// ── the log of past calls ──────────────────────────────────────────────────
+
+/// One line of the log: the day, the call it was given and the score the
+/// call was read from. Pure.
+ReportRow recommendationRow(Map<String, dynamic> r, AppLocalizations? l) {
+  final score = (r['readiness'] as num).round();
+  return (
+    label: prettyDay(r['day_id'] as String?, l),
+    value: '${decisionCall((r['tier'] as num).toInt(), l)} · '
+        '${l?.recLogRecovery(score) ?? 'Recovery $score'}',
+  );
+}
+
+/// What Home's training call said on each past day (`recommendation_log`),
+/// newest first. A record of what was shown, not a judgement of it: a row is
+/// written the first time a day's recovery is final and never changes.
+class RecommendationLogScreen extends StatefulWidget {
+  const RecommendationLogScreen({super.key});
+
+  @override
+  State<RecommendationLogScreen> createState() =>
+      _RecommendationLogScreenState();
+}
+
+class _RecommendationLogScreenState extends State<RecommendationLogScreen> {
+  List<Map<String, dynamic>>? _rows;
+  bool _failed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final rows = await LocalDb.recommendationLog();
+      if (mounted) setState(() => _rows = rows);
+    } catch (_) {
+      if (mounted) setState(() => _failed = true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext c) {
+    final p = P.of(c);
+    final l = AppLocalizations.of(c);
+    final rows = _rows;
+    return detailScaffold(
+      c,
+      l?.recLogTitle ?? 'What you were told',
+      [
+        if (_failed)
+          StatusCard(
+            l?.reportFailedTitle ?? 'The report could not be read',
+            l?.labFailedBody ?? 'Close this screen and open it again.',
+            icon: LucideIcons.triangleAlert,
+          )
+        else if (rows == null)
+          const Padding(
+            padding: EdgeInsets.all(S.x5),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (rows.isEmpty)
+          Text(
+            l?.recLogEmpty ??
+                'Nothing logged yet. A day is added the first time its '
+                    'recovery is final.',
+            style: F.body.copyWith(color: p.ink3),
+          )
+        else
+          Surface(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final (i, r) in rows.indexed) ...[
+                  if (i > 0) const SizedBox(height: S.x3),
+                  Text(recommendationRow(r, l).label,
+                      style: F.cap.copyWith(color: p.ink3)),
+                  const SizedBox(height: S.x1),
+                  Text(recommendationRow(r, l).value,
+                      style: F.body.copyWith(color: p.ink)),
+                ],
+              ],
+            ),
+          ),
       ],
     );
   }

@@ -36,6 +36,7 @@ Future<void> _clear() async {
     'med_def',
     'food_entry',
     'step_calibration',
+    'recommendation_log',
   ]) {
     await db.delete(t);
   }
@@ -78,6 +79,7 @@ void main() {
       'schedule.db',
       'calib.db',
       'calib_new.db',
+      'told.db',
     ]) {
       try {
         File(p.join(dir, f)).deleteSync();
@@ -257,5 +259,31 @@ void main() {
 
     final row = (await db.query('step_calibration')).single;
     expect(row['factor'], 0.97);
+  });
+
+  test('a backup never rewrites what this phone showed, only adds days',
+      () async {
+    await _clear();
+    final db = await LocalDb.instance;
+    await LocalDb.logRecommendation(
+        dayId: _day, tier: 3, readiness: 80, algoVersion: 121);
+    await LocalDb.logRecommendation(
+        dayId: _other, tier: 2, readiness: 55, algoVersion: 121);
+    final backup = await _snapshot('told.db');
+
+    // Since the backup: the log was cleared and the day shown again with a
+    // different call (another phone, a wipe) — the local row is the one seen.
+    await db.delete('recommendation_log');
+    await LocalDb.logRecommendation(
+        dayId: _day, tier: 1, readiness: 30, algoVersion: 122);
+
+    await LocalDb.importFromDbFile(backup);
+
+    final rows = {
+      for (final r in await db.query('recommendation_log')) r['day_id']: r,
+    };
+    expect(rows[_day]!['tier'], 1, reason: 'local row wins');
+    expect(rows[_day]!['algo_version'], 122);
+    expect(rows[_other]!['tier'], 2, reason: 'a day only the backup has is added');
   });
 }

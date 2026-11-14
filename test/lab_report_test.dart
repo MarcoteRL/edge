@@ -149,6 +149,17 @@ void main() {
     expect(text, '# Weekly report\n\nA – B\n\n- HRV: 55 ms · Stable\n\nFooter.\n');
   });
 
+  test('a logged call reads with the same words as the line on Home', () {
+    final row = recommendationRow(
+      const {'day_id': '2026-11-10', 'tier': 1, 'readiness': 30.6},
+      null,
+    );
+    expect(row.value, 'Keep it light today · Recovery 31');
+    expect(row.label, isNotEmpty);
+    expect(decisionCall(3, null), 'A good day for intensity');
+    expect(decisionCall(0, null), 'A day to recover');
+  });
+
   test('how-it-is-computed: what today stands on', () {
     expect(howTodayText((kind: HowKind.scored, have: null, need: null), null),
         'Today: from your own data');

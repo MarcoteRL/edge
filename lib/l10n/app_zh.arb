@@ -2944,5 +2944,9 @@
   "reportShare": "以文件形式分享",
   "reportShareFailed": "无法分享报告",
   "reportFailedTitle": "无法读取报告",
-  "reportFooter": "在你的手机上根据你自己的数据计算得出。这是对本周的描述，并非医疗建议。"
+  "reportFooter": "在你的手机上根据你自己的数据计算得出。这是对本周的描述，并非医疗建议。",
+  "recLogTitle": "你收到过的建议",
+  "recLogSub": "每天首次显示的训练建议",
+  "recLogEmpty": "暂无记录。某天的恢复度首次确定后，会添加该天。",
+  "recLogRecovery": "恢复度 {n}"
 }

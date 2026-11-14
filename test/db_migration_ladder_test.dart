@@ -1587,4 +1587,39 @@ void main() {
       expect(health['ok'], isTrue, reason: '$health');
     },
   );
+
+  test(
+    'v59 adds recommendation_log; the first call of a day is kept, a deleted '
+    'day takes its row, idempotent reopen',
+    () async {
+      const name = 'migrate_v59_recommendation_log_test.db';
+      created.add(name);
+      await _seedOldDb(name, 50, _v5DerivedDdl);
+      expect(await _openThroughLocalDb(name), LocalDb.schemaVersion);
+      expect(await LocalDb.tableNames(), contains('recommendation_log'));
+
+      await LocalDb.logRecommendation(
+          dayId: '2026-11-10', tier: 1, readiness: 30, algoVersion: 121);
+      // A later re-derive moved the score: what was shown first stays.
+      await LocalDb.logRecommendation(
+          dayId: '2026-11-10', tier: 3, readiness: 80, algoVersion: 122);
+      await LocalDb.logRecommendation(
+          dayId: '2026-11-11', tier: 2, readiness: 50, algoVersion: 121);
+      var log = await LocalDb.recommendationLog();
+      expect(log.map((r) => r['day_id']), ['2026-11-11', '2026-11-10']);
+      expect(log.last['tier'], 1);
+      expect(log.last['readiness'], 30);
+      expect(log.last['algo_version'], 121);
+
+      await LocalDb.deleteDays({'2026-11-10'});
+      log = await LocalDb.recommendationLog();
+      expect(log.map((r) => r['day_id']), ['2026-11-11']);
+
+      await LocalDb.close();
+      expect(await _openThroughLocalDb(name), LocalDb.schemaVersion);
+      expect(await LocalDb.recommendationLog(), hasLength(1));
+      final health = await LocalDb.schemaHealth();
+      expect(health['ok'], isTrue, reason: '$health');
+    },
+  );
 }

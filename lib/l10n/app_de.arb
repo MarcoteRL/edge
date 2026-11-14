@@ -3635,5 +3635,9 @@
   "reportShare": "Als Datei teilen",
   "reportShareFailed": "Der Bericht konnte nicht geteilt werden",
   "reportFailedTitle": "Der Bericht konnte nicht gelesen werden",
-  "reportFooter": "Auf deinem Telefon aus deinen eigenen Daten berechnet. Eine Beschreibung der Woche, kein medizinischer Rat."
+  "reportFooter": "Auf deinem Telefon aus deinen eigenen Daten berechnet. Eine Beschreibung der Woche, kein medizinischer Rat.",
+  "recLogTitle": "Was dir gesagt wurde",
+  "recLogSub": "Die Trainingsempfehlung jedes Tages, wie sie zuerst angezeigt wurde",
+  "recLogEmpty": "Noch nichts aufgezeichnet. Ein Tag wird hinzugefügt, sobald seine Erholung zum ersten Mal endgültig ist.",
+  "recLogRecovery": "Erholung {n}"
 }
