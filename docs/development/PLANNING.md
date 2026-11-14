@@ -88,7 +88,7 @@ unit test where the logic is pure. Device check on the sideloaded build.
 | UX-02 | Home redesign, part 1: day-order hero rings (reading inside, strain target band, sweep-in), vitals row vs 28-day usual, staggered entrance, compact header, haptics | ENH (UX) | P1 | M | done (runs 42708664184: 574 tests; 42709538906: home_redesign_test); device check pending |
 | UX-03 | Home redesign, part 2: Activities list, recovery-tinted heroes, shared entrance on every detail screen (detailScaffold + Sleep tab), Recovery ring sweep | ENH (UX) | P2 | M | done (run 42712259267: analyze + 156 ui2/l10n files, 1767 passed); device check pending |
 | ES-01 | Translate the 621 missing Spanish strings + coverage guard | ENH | P1 | M | done (run 42677830073) |
-| CI-04 | Cache CocoaPods in `ios-sideload.yml` (`pod install` was ~118 s of a ~9 min IPA build, run 43587926781) | CI | P2 | S | — | written 2026-11-14 (`actions/cache` on `ios/Pods` + CocoaPods cache, keyed on Podfile.lock + pubspec.lock); first run fills the cache, the effect shows from the second IPA |
+| CI-04 | Cache CocoaPods in `ios-sideload.yml` (`pod install` was ~118 s of a ~9 min IPA build, run 43587926781) | CI | P2 | S | written 2026-11-14 (`actions/cache` on `ios/Pods` + CocoaPods cache, keyed on Podfile.lock + pubspec.lock); first run fills the cache, the effect shows from the second IPA |
 
 ## Phase D — iOS / Android
 
