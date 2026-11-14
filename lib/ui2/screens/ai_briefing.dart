@@ -34,7 +34,8 @@ class AiBriefingScreen extends StatefulWidget {
   State<AiBriefingScreen> createState() => _AiBriefingScreenState();
 }
 
-class _AiBriefingScreenState extends State<AiBriefingScreen> {
+class _AiBriefingScreenState extends State<AiBriefingScreen>
+    with RevisionReload {
   Briefing? _b;
   bool _busy = false;
   String? _error;
@@ -43,6 +44,14 @@ class _AiBriefingScreenState extends State<AiBriefingScreen> {
   void initState() {
     super.initState();
     _b = BriefingStore.read(widget.period);
+  }
+
+  // A briefing the app finishes writing while this screen is open lands
+  // here too, instead of waiting for the screen to be reopened.
+  @override
+  void reload() {
+    final b = BriefingStore.read(widget.period);
+    if (b != null && mounted) setState(() => _b = b);
   }
 
   Future<void> _generate() async {

@@ -56,6 +56,14 @@ Any failure outside this list after a change is a regression.
 
 ## Log
 
+### 2026-11-14 — BUG-C01: the morning coach card waits for a pull-to-refresh — branch `fix/coach-morning-refresh`, **NOT analyzed and NOT run**
+
+- Owner's report (device, `759a19a`): on waking the coach card on Home stays on the old state until he pulls to refresh; opening the briefing and tapping "Write one now" keeps loading.
+- Root causes [Comprobado en el código]: (1) `_maybeGenerateBriefing` ran only from `runCadenceChecks` (foreground). On waking, the app comes to the front before the night has synced, finds `overnight_state != 'ready'` and returns; nothing asked again in that session. (2) After writing, it called `notifyListeners`, but Home rebuilds on `insightsRevision`, so the card kept the old read until a pull-to-refresh. (3) The screen's "Write one now" started a second model request racing the app's own.
+- Fix: the briefing check also runs after every foreground derive pass (beside the recovery-ready check); a written briefing bumps `insightsRevision`; `BriefingEngine.generate` joins a request already running for the same period; `AiBriefingScreen` re-reads the store on a revision.
+- Test (not run): `ai_briefing_test.dart` "a second request while one is running joins it, not a new call". No metric output changes, no schema change, no bump.
+- Owner's local check: `flutter analyze`; `flutter test --concurrency=1 test/ai_briefing_test.dart test/ui2_home_day_switcher_test.dart test/ui2_tokens_test.dart`. Then check on the phone the next morning. Not hardware-validated.
+
 ### 2026-11-14 — PR #4 merged to `main` (`759a19a`), on the owner's instruction
 
 - Basis: the owner's local `flutter gen-l10n`, `flutter analyze` and the PR's touched-file tests, reported as all passing (no counts received). Full suite not re-run. No CI test run.

@@ -545,6 +545,23 @@ class BriefingEngine {
   /// Generate (or re-generate) the briefing for [period] today, cache it, and
   /// return it. Throws [CoachException] on provider errors / missing key.
   Future<Briefing> generate(BriefingPeriod period,
+      {DateTime? now, DateTime? wallNow}) {
+    // One request per period at a time: "Write one now" tapped while the app
+    // is already writing this morning's briefing joins that request instead
+    // of sending a second one and racing it to the store.
+    final running = _inFlight[period];
+    if (running != null) return running;
+    final f = _generate(period, now: now, wallNow: wallNow);
+    _inFlight[period] = f;
+    f.whenComplete(() {
+      if (identical(_inFlight[period], f)) _inFlight.remove(period);
+    }).ignore();
+    return f;
+  }
+
+  static final Map<BriefingPeriod, Future<Briefing>> _inFlight = {};
+
+  Future<Briefing> _generate(BriefingPeriod period,
       {DateTime? now, DateTime? wallNow}) async {
     if (!configured) {
       throw CoachException('Add your AI key to enable briefings.');
