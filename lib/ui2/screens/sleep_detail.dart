@@ -425,6 +425,14 @@ String? sleepDayAfterOverride(
 /// past the precision it actually has, with the display locale's decimal mark
 /// like the readings beside it.
 @visibleForTesting
+/// The scrub card's skin-temperature line: the curve's deviation from the
+/// day's median in °C, or null when the curve is not in a unit that converts
+/// to degrees (a gen4 ADC count). It used to print the stored number bare, so
+/// a gen5 night read "+61,2" — sixty-one hundredths of a degree that looked
+/// like sixty-one degrees.
+String? sleepScrubTempText(num v, String? unit) =>
+    unit == 'centi_c' ? '${sleepScrubTempDelta(v / 100)} °C' : null;
+
 String sleepScrubTempDelta(num v) {
   final s = displayFixed(v.abs(), 1);
   if ((v.abs() * 10).round() == 0) return '±$s';
@@ -1560,9 +1568,10 @@ class _SleepDetailState extends State<SleepDetail> with RevisionReload {
       if (at('resp') != null)
         (l?.sleepDetailBreathing ?? 'Breathing',
             sleepReadingText(l, at('resp')!, 1, 'br/min'), C.teal),
-      if (at('skin_temp') != null)
-        (l?.sleepDetailTempRelative ?? 'Temp (rel.)',
-            sleepScrubTempDelta(at('skin_temp')!), C.orange),
+      if (at('skin_temp') case final v?)
+        if (sleepScrubTempText(v, d.timeline['skin_temp_unit'] as String?)
+            case final text?)
+          (l?.sleepDetailTempRelative ?? 'Temp (rel.)', text, C.orange),
     ];
 
     return Padding(
