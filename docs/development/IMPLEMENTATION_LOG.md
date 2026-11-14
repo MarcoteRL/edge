@@ -7,7 +7,9 @@
 
 ## Estado actual
 
-- **`main`:** `6adce27` (2026‑11‑13): iteraciones 2–4, BUG‑N01, tests
+- **`main`:** `759a19a` (2026‑11‑14): todo lo de abajo más el registro
+  de recomendaciones (esquema 59). IPA: run 43587926781.
+- **Antes:** `6adce27` (2026‑11‑13): iteraciones 2–4, BUG‑N01, tests
   portables a Windows, resto de la iteración 4, laboratorio de periodos,
   informe semanal y revisión de la iteración 6. IPA: run 43523169294
   (lanzado; resultado pendiente al escribir esto).

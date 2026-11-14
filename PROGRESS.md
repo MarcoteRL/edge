@@ -56,7 +56,12 @@ Any failure outside this list after a change is a regression.
 
 ## Log
 
-### 2026-11-13 — ITER-5b: recommendation log (`schemaVersion` 58 → 59) — branch `feat/recommendation-log` (PR #4), **NOT analyzed and NOT run**
+### 2026-11-14 — PR #4 merged to `main` (`759a19a`), on the owner's instruction
+
+- Basis: the owner's local `flutter gen-l10n`, `flutter analyze` and the PR's touched-file tests, reported as all passing (no counts received). Full suite not re-run. No CI test run.
+- ios-sideload **43587926781** launched by the merge; result pending at the time of writing. Not hardware-validated.
+
+### 2026-11-13 — ITER-5b: recommendation log (`schemaVersion` 58 → 59) — PR #4
 
 - Owner-approved table `recommendation_log` (`day_id` PK, `tier`, `readiness`, `algo_version`, `logged_at`): the day's training call as first shown. Written by the live Home (`_logCall`, unawaited, today + final recovery only — DecisionLine's own condition, D-19), INSERT OR IGNORE so a later re-derive never moves it (D-23).
 - AGENTS §3 invariant 11: additive, `CREATE TABLE IF NOT EXISTS`, one `if (oldV < 59)` step, same creator on fresh install and in `_repairOpenSchema`. Wired into `_salvageTables`, `_restoreTables`, `deleteDays`, the per-day export (whose file gets the table from `_repairOpenSchema`) and `kSliceTables`.
