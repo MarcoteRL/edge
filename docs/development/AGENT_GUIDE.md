@@ -66,6 +66,13 @@ evidencias: PROGRESS.md.
 
 ## 6. Trabajar con datos biométricos
 
+**El propietario usa una WHOOP 5.0 (`gen5`), no una 4.0.** [Decidido,
+2026‑11‑14] Lo que se valide, se pruebe con datos o se priorice es la ruta
+gen5: temperatura de piel en `skin_temp_c` (la curva del día va en
+centésimas de grado), contador de pasos de la banda y su familia de zonas.
+La ruta gen4 sigue siendo de upstream y no se rompe, pero no es la que el
+propietario puede comprobar en su teléfono.
+
 - **Nunca inventes** un valor: ausente ⇒ `null`/"—" (invariante 3). La única
   excepción aceptada es FP‑CAL (gris, solo lectura, D‑08).
 - PRV ≠ ECG; piel de muñeca ≠ temperatura corporal; fases ≠ PSG; "steps" de
