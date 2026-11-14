@@ -100,7 +100,24 @@ executed.** The first push of your repo with `test.yml` enabled establishes it.
   An invalid `GOOGLE_APP_ID` can raise a native exception on iOS, so this needs
   a device test. Worth an upstream issue rather than a silent fork change.
 
-### F-04 — Stale reason in `test.yml` for the Flutter pin · Confirmed · P3 · Open
+- **Status 2026-11-14 (PRIV-01):** still the same project id on upstream
+  `main`. Fork mitigation stands: `telemetryConsent` defaults to `false`
+  (`AppState`), so nothing is collected unless the owner turns diagnostics on
+  in a self-built app — leave it off. No code change in the fork without a
+  device test (an invalid app id can throw natively on iOS).
+- **Draft for an upstream issue (not posted; the owner decides):**
+  > *Self-built apps ship working-looking Firebase options.*
+  > `lib/firebase_options.dart` says "dummy" but carries well-formed keys and
+  > app ids for project `portofliowebsite-387909`. Release CI replaces the
+  > file; anyone building from source (sideload IPA, debug APK) does not, and
+  > `Firebase.initializeApp` likely succeeds against that project. Collection
+  > is off until consent, so nothing leaks by default, but a self-builder who
+  > enables diagnostics would send crash/analytics data to a project they do
+  > not control. Proposal: ship options that make `initializeApp` fail
+  > gracefully (already handled in `main()`), verified on an iOS device, or
+  > gate the bridge on a build-time define that self-builds leave unset.
+
+### F-04 — Stale reason in `test.yml` for the Flutter pin · Confirmed · P3 · Fixed in the fork 2026-11-14 (CI-03)
 
 `test.yml` says the repo can't move past 3.41.x because `phosphor_flutter`
 extends `IconData`. `pubspec.yaml` no longer depends on phosphor (lib/ui2 uses

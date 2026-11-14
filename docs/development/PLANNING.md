@@ -49,7 +49,7 @@ syncs. *Testing:* actionlint (done), then the run itself, then the device.
 | BUG-566 | WHOOP 5 "Not sleep" correction lost after reanalysis | BUG (upstream) | P1 | M | AUD-01, triage | likely fixed upstream after 0.10.0 (edit now waits for a running derive); verify on device |
 | BUG-558 | HR not exported to Apple Health | BUG (upstream) | P1 | M | CI-01 (device) | todo: reproduce first |
 | BUG-186 | Smart alarm not firing | BUG (upstream) | P2 | M | device | todo |
-| PRIV-01 | Inert Firebase options for self-builds (F-03), propose upstream | DEBT | P2 | S | device test | todo |
+| PRIV-01 | Inert Firebase options for self-builds (F-03), propose upstream | DEBT | P2 | S | device test | 2026-11-14: unchanged upstream; fork mitigation = telemetry off by default; upstream issue drafted in TECHNICAL_AUDIT F-03, **not posted** (owner decides); code change needs a device test |
 
 **BUG-601.** *Motivation:* permanent stuck sync on revived gen4 bands.
 *Acceptance:* a burst whose every record is below `kMinPlausibleUnix` is
@@ -68,7 +68,7 @@ unit test where the logic is pure. Device check on the sideloaded build.
 
 | ID | Task | Type | Pri | Cx | Status |
 |---|---|---|---|---|---|
-| CI-03 | Fix stale phosphor reason in `test.yml` comment (F-04), upstream PR | DEBT | P3 | S | todo |
+| CI-03 | Fix stale phosphor reason in `test.yml` comment (F-04), upstream PR | DEBT | P3 | S | written 2026-11-14 on `chore/ci-03-priv-01` (comment-only commit, upstream-ready); PR to upstream **not opened** (owner decides) |
 | CI-06 | Run tests locally on Windows (Flutter 3.41.6); confirm the local baseline matches AUD-01 | DEBT | P1 | S | todo (owner) |
 | CI-05 | Fix the 8 pre-existing l10n/gallery test failures (upstream main), upstream PR | BUG | P2 | S | done (runs 42676487905, 42677071191); upstream PR: todo |
 | FP-01 | Sideload expiry warning (card + notification) | ENH | P2 | S | done (runs 42686340140, 42686373738); device check pending |
