@@ -9,6 +9,7 @@ import '../../l10n/display_text.dart';
 // app that are absolute.
 
 import 'package:flutter/material.dart';
+import '../../l10n/decimal_text.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
@@ -817,7 +818,7 @@ class _HealthScreenState extends State<HealthScreen> with RevisionReload {
     final respMetric = d.resp;
     row(respMetric, LucideIcons.wind, C.teal, l?.healthRowRespRate ?? 'Respiratory rate',
         ofNight(l?.healthSubAsleep ?? 'Asleep'),
-        respMetric.value == null ? '' : respMetric.value!.toStringAsFixed(1),
+        respMetric.value == null ? '' : displayFixed(respMetric.value!, 1),
         'br/min',
         d.spark('resp_rate', 24), 'resp_rate',
         // DELIBERATELY UNJUDGED. Readiness scores a rise as a cost, but that
@@ -879,13 +880,13 @@ class _HealthScreenState extends State<HealthScreen> with RevisionReload {
                 ? (l?.healthIllnessBodyNoZ ??
                     'Your resting heart rate has run above your usual over recent nights. This tracks one signal, so it shows a pattern, not a cause.')
                 : (l?.healthIllnessBodyWithZ(
-                        illnessZ.abs().toStringAsFixed(1),
+                        displayFixed(illnessZ.abs(), 1),
                         illnessZ >= 0
                             ? (l.healthDirectionAbove)
                             : (l.healthDirectionBelow)) ??
                     'Recent nights together put your resting heart rate above '
                         'your usual. On its own, that night was '
-                        '${illnessZ.abs().toStringAsFixed(1)}× your normal '
+                        '${displayFixed(illnessZ.abs(), 1)}× your normal '
                         'night-to-night swing ${illnessZ >= 0 ? 'above' : 'below'} '
                         'it. A pattern, not a cause.'),
             advice: l?.healthIllnessAdvice ??
@@ -1213,7 +1214,7 @@ class _HealthScreenState extends State<HealthScreen> with RevisionReload {
             sub: dayWord, unit: 'bpm'),
       if (resp != null)
         MetricRow(LucideIcons.wind, C.teal, l?.healthRowRespRate ?? 'Respiratory rate',
-            resp.toStringAsFixed(1),
+            displayFixed(resp, 1),
             sub: l?.healthSubAsleep ?? 'Asleep', unit: 'br/min'),
       if (skinTemp.value != null || tempDevC != null)
         // NAME THE QUANTITY. This is `skin_temp_z` — standard deviations from
@@ -1226,7 +1227,7 @@ class _HealthScreenState extends State<HealthScreen> with RevisionReload {
           C.orange,
           l?.healthRowSkinTemp ?? 'Skin temperature',
           tempDevC != null
-              ? '${tempDevC >= 0 ? '+' : '−'}${tempDevC.abs().toStringAsFixed(1)}'
+              ? '${tempDevC >= 0 ? '+' : '−'}${displayFixed(tempDevC.abs(), 1)}'
               : '${skinTemp.value! >= 0 ? '+' : '−'}'
                   '${skinTemp.value!.abs().toStringAsFixed(2)}',
           sub: [

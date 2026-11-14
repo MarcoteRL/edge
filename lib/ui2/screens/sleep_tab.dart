@@ -25,12 +25,11 @@ class SleepTab extends StatelessWidget {
     final l = AppLocalizations.of(c);
     return SleepDetail(
       embedded: true,
-      todayFooter: [
-        Section(
-          l?.sleepTabPlanTitle ?? 'Your sleep plan',
-          const WellnessScreen(sleepPlanOnly: true),
-        ),
-      ],
+      // No title of its own: the plan is a turn-in card (only when a debt is
+      // real) and sections that carry their own headings. Wrapped in "Your
+      // sleep plan", a night with no debt showed that heading with nothing
+      // under it but the next heading.
+      todayFooter: const [WellnessScreen(sleepPlanOnly: true)],
       footer: [
         Section(
           l?.sleepTabMoreTitle ?? 'Alarm and body clock',

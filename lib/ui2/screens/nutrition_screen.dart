@@ -15,6 +15,7 @@
 // (`lib/data/journal_fields.dart`), read and written through the repo.
 
 import 'package:flutter/material.dart';
+import '../../l10n/decimal_text.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
@@ -1038,7 +1039,7 @@ class _WaterRow extends StatelessWidget {
             // shrug the reader has to interpret, and the suite pins this.
             ml == null
                 ? (l?.nutritionNoneYet ?? 'None yet')
-                : '${(ml! / 1000).toStringAsFixed(1)} L',
+                : '${displayFixed((ml! / 1000), 1)} L',
             textAlign: TextAlign.center,
             style: ml == null
                 ? F.cap.copyWith(color: p.ink3)

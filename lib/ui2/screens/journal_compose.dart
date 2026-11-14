@@ -10,6 +10,7 @@
 // every correlation that field appears in for months.
 
 import '../../l10n/display_text.dart';
+import '../../l10n/decimal_text.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -793,8 +794,8 @@ class _WeightRow extends StatelessWidget {
                       v == null
                           ? (l?.journalComposeNotEntered ?? 'Not entered')
                           : (l?.journalComposeEnteredNotMeasured(
-                                  u == null ? '${v.toStringAsFixed(1)} kg' : u.weight(v)) ??
-                              '${u == null ? '${v.toStringAsFixed(1)} kg' : u.weight(v)} · entered, not measured'),
+                                  u == null ? '${displayFixed(v, 1)} kg' : u.weight(v)) ??
+                              '${u == null ? '${displayFixed(v, 1)} kg' : u.weight(v)} · entered, not measured'),
                       style: F.over.copyWith(color: p.ink3),
                     ),
                   ],

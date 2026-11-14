@@ -10,6 +10,7 @@
 // the old UI ended up with forty different opinions about what a chart is.
 
 import '../../l10n/display_text.dart';
+import '../../l10n/decimal_text.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -1782,7 +1783,7 @@ class _MetricDetailState extends State<MetricDetail> {
 
   String _signed(num? v, String? unit) {
     if (v == null) return '';
-    final s = v.abs() >= 10 ? v.abs().round().toString() : v.abs().toStringAsFixed(1);
+    final s = v.abs() >= 10 ? v.abs().round().toString() : displayFixed(v.abs(), 1);
     return '${v >= 0 ? '+' : '−'}$s${unit == null || unit.isEmpty ? '' : ' $unit'}';
   }
 

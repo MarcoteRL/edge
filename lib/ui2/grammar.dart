@@ -1556,7 +1556,11 @@ class InlineMetrics extends StatelessWidget {
     final p = P.of(c);
     return Row(
       children: [
-        for (final e in items)
+        for (final (i, e) in items.indexed) ...[
+          // A gutter between slots: a value shrunk to fit its third (or
+          // quarter) of the card otherwise ran into the next one, and
+          // "13,5 resp/min" and "+0,6 °C" read as one string.
+          if (i > 0) const SizedBox(width: S.x3),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1582,6 +1586,7 @@ class InlineMetrics extends StatelessWidget {
               ],
             ),
           ),
+        ],
       ],
     );
   }

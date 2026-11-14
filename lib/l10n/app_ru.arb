@@ -8400,5 +8400,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "homeVitalRhrShort": "Пульс в покое"
 }

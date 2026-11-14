@@ -50,6 +50,7 @@
 //   carry the null era, which is most of this database.
 
 import 'package:flutter/material.dart';
+import '../../l10n/decimal_text.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../data/journal_fields.dart' show formatMinuteOfDay;
@@ -528,7 +529,7 @@ class _BeatsState extends State<Beats> {
                   thousands(d.dcAnchors), C.indigo),
             if (d.cleanFraction > 0)
               (l?.beatsCleanBeats ?? 'Clean beats',
-                  '${(d.cleanFraction * 100).toStringAsFixed(1)}%', C.indigo),
+                  '${displayFixed((d.cleanFraction * 100), 1)}%', C.indigo),
           ]),
           const SizedBox(height: S.x4),
           _note(

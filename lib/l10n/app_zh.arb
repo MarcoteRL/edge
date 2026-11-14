@@ -2948,5 +2948,6 @@
   "recLogTitle": "你收到过的建议",
   "recLogSub": "每天首次显示的训练建议",
   "recLogEmpty": "暂无记录。某天的恢复度首次确定后，会添加该天。",
-  "recLogRecovery": "恢复度 {n}"
+  "recLogRecovery": "恢复度 {n}",
+  "homeVitalRhrShort": "静息心率"
 }
