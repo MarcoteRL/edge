@@ -59,7 +59,7 @@ Any failure outside this list after a change is a regression.
 ### 2026-11-14 — PR #4 merged to `main` (`759a19a`), on the owner's instruction
 
 - Basis: the owner's local `flutter gen-l10n`, `flutter analyze` and the PR's touched-file tests, reported as all passing (no counts received). Full suite not re-run. No CI test run.
-- ios-sideload **43587926781** launched by the merge; result pending at the time of writing. Not hardware-validated.
+- ios-sideload **43587926781** launched by the merge: **success** (finished 2026-11-14T11:09Z). Unsigned IPA of `759a19a` available as the run's artifact. Not hardware-validated.
 
 ### 2026-11-13 — ITER-5b: recommendation log (`schemaVersion` 58 → 59) — PR #4
 
