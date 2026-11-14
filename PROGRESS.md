@@ -56,7 +56,12 @@ Any failure outside this list after a change is a regression.
 
 ## Log
 
-### 2026-11-14 — Screenshot review fixes (owner: "fix everything you saw") — branch `fix/screenshot-review`, **NOT analyzed and NOT run**
+### 2026-11-14 — PR #7 merged to `main` (`00e76c5`), with CI-04
+
+- Basis: the owner's local `flutter gen-l10n`, `flutter analyze` and the PR's touched-file tests, reported as passing (no counts received). Full suite not re-run.
+- PR #7 also carries CI-04 (CocoaPods cache in `ios-sideload.yml`), so this merge is one push and one IPA (run 43591109836), the first to fill the cache. The still-running IPA of `3d47d58` (43590452666) is superseded by it under the workflow's `cancel-in-progress`.
+
+### 2026-11-14 — Screenshot review fixes (owner: "fix everything you saw") — PR #7
 
 From the owner's 14 screenshots of `759a19a`. Fixed:
 - **Activity names in English** ("Running", "Weight training", "Cycling"): `activityCatalogueName` had a `select` with no case in ANY language. Spanish cases for the 71 catalogue names that differ (`app_es.arb`); other languages keep the English fallback as before. Pinned in `spanish_l10n_test.dart`.
