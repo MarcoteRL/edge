@@ -13,7 +13,7 @@ done (with evidence) / blocked. Complexity: S / M / L.
 | CI-02 | Create your GitHub repo, push, disable star-history/soak/pr-agent | DEBT (F-05) | P1 | S | SETUP-01 | done (2026-11-09): MarcoteRL/edge |
 | AUD-01 | Record test/analyze baseline from first `test.yml` run | DEBT | P1 | S | CI-02 | done (2026-11-09): run 42655279966, 8 pre-existing l10n/gallery failures (PROGRESS.md) |
 | AUD-02 | Deep bug sweep of hotspots (db, derivation, ble_engine, app_state) | DEBT | P2 | L | AUD-01 | todo |
-| AUD-03 | `flutter pub outdated` + advisory check, no upgrades | DEBT | P2 | S | toolchain | todo |
+| AUD-03 | `flutter pub outdated` + advisory check, no upgrades | DEBT | P2 | S | toolchain | 2026-11-14: **not doable from the session** — OSV and the GitHub advisory DB are unreachable here, and Dependabot alerts are disabled on the repo (enabling them is a settings change: owner's call; free, Settings → Code security). Locally: `flutter pub outdated` |
 | AUD-04 | Full audit: code + real DB export + algorithms + UX + roadmap (docs/development/AUDIT_SUMMARY.md) | DEBT | P1 | L | — | done (2026-11-12): docs only, no code change |
 | SEC-09 | `*.db`/`*.db-wal`/`*.db-shm`/`*.sqlite` in .gitignore | DEBT | P0 | S | — | done (`git check-ignore` verified) |
 | ALG-L1 | CTL/ATL abstain until 80 % of last 42 days have a measured TRIMP (`_loadWithCoverage`); kAlgoVersion 121 | BUG | P0 | M | — | in `main` (runs 43231936403, 43232851823; full suite 43233915353 + 43250024942, no failure) |
@@ -69,7 +69,7 @@ unit test where the logic is pure. Device check on the sideloaded build.
 | ID | Task | Type | Pri | Cx | Status |
 |---|---|---|---|---|---|
 | CI-03 | Fix stale phosphor reason in `test.yml` comment (F-04), upstream PR | DEBT | P3 | S | written 2026-11-14 on `chore/ci-03-priv-01` (comment-only commit, upstream-ready); PR to upstream **not opened** (owner decides) |
-| CI-06 | Run tests locally on Windows (Flutter 3.41.6); confirm the local baseline matches AUD-01 | DEBT | P1 | S | todo (owner) |
+| CI-06 | Run tests locally on Windows (Flutter 3.41.6); confirm the local baseline matches AUD-01 | DEBT | P1 | S | done: owner's full local run on Windows (Flutter 3.41.6), +7128 −28; the 28 were Windows portability (CRLF, `\\` paths, `setenv`, a DST fixture), fixed in PR #2 and re-run green on the touched files (+172 ~12) |
 | CI-05 | Fix the 8 pre-existing l10n/gallery test failures (upstream main), upstream PR | BUG | P2 | S | done (runs 42676487905, 42677071191); upstream PR: todo |
 | FP-01 | Sideload expiry warning (card + notification) | ENH | P2 | S | done (runs 42686340140, 42686373738); device check pending |
 | FP-HS | Estimated physiological age (fork module) | ENH | P2 | M | done (run 42688204660) |
