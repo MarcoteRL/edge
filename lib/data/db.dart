@@ -11823,8 +11823,8 @@ class LocalDb {
       // and lose every one they logged.
       'sleep_override',
       'sleep_nap',
-      // What the user was told each day. INSERT OR REPLACE like the rest: on
-      // a restore the backup's row for a day wins over the local one.
+      // What the user was told each day. The local row wins (see
+      // [_restoreEditedKeys]); a backup only adds days this phone lacks.
       'recommendation_log',
       // A ring's own hypnogram. Nothing here can re-derive it.
       'vendor_sleep_epoch',
@@ -11922,6 +11922,9 @@ class LocalDb {
     'cycle_log': (['date'], null),
     'sessions': (['id'], null),
     'strength_set': (['session_id'], null),
+    // What this phone showed is a fact here, not an edit to merge: the local
+    // row wins, so a backup taken after a re-derive cannot rewrite it (D-23).
+    'recommendation_log': (['day_id'], null),
   };
 
   /// `raw_archive` out of a backup, whichever layout wrote it: the frame
@@ -13176,6 +13179,7 @@ class LocalDb {
       'device_coverage',
       'signal_priority',
       'vendor_sleep_epoch',
+      'recommendation_log',
       'substrate_archive',
     ];
 

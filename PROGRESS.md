@@ -63,7 +63,7 @@ Any failure outside this list after a change is a regression.
 - No derived output changes: no `kAlgoVersion` bump, no pin change. The coach's `v_*` views do not include the table (invariant 13 untouched).
 - UI: `RecommendationLogScreen` behind a door at the foot of the weekly report; `decisionCall(tier)` is now the one source of the call's words. 4 l10n keys × 8 ARBs.
 - Tests (not run): migration + first-write-wins + delete-with-day + idempotent reopen in `db_migration_ladder_test.dart`; `recommendationRow` in `lab_report_test.dart`.
-- Independent review pass (CLAUDE.md, invariant-touching change): see the entry's follow-up line once it reports.
+- Independent review pass (CLAUDE.md, invariant-touching change), read-only, nothing compiled: no blocking finding. Its two minor findings fixed: a restore no longer lets the backup's row overwrite the local one (`_restoreEditedKeys`, local wins), and `schemaHealth` now requires the table.
 - Owner's local check: `flutter gen-l10n`, `flutter analyze`, `flutter test --concurrency=1 test/db_migration_ladder_test.dart test/startup_and_rebuild_recovery_test.dart test/issue_report_test.dart test/lab_report_test.dart test/ui2_tokens_test.dart test/home_guidance_test.dart test/ui2_home_day_switcher_test.dart`. Not hardware-validated.
 
 ### 2026-11-13 — PR #3 and PR #2 merged to `main` (`6adce27`), on the owner's instruction
