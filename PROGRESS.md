@@ -56,7 +56,7 @@ Any failure outside this list after a change is a regression.
 
 ## Log
 
-### 2026-11-13 — ITER-5b: recommendation log (`schemaVersion` 58 → 59) — branch `feat/recommendation-log`, **NOT analyzed and NOT run**
+### 2026-11-13 — ITER-5b: recommendation log (`schemaVersion` 58 → 59) — branch `feat/recommendation-log` (PR #4), **NOT analyzed and NOT run**
 
 - Owner-approved table `recommendation_log` (`day_id` PK, `tier`, `readiness`, `algo_version`, `logged_at`): the day's training call as first shown. Written by the live Home (`_logCall`, unawaited, today + final recovery only — DecisionLine's own condition, D-19), INSERT OR IGNORE so a later re-derive never moves it (D-23).
 - AGENTS §3 invariant 11: additive, `CREATE TABLE IF NOT EXISTS`, one `if (oldV < 59)` step, same creator on fresh install and in `_repairOpenSchema`. Wired into `_salvageTables`, `_restoreTables`, `deleteDays`, the per-day export (whose file gets the table from `_repairOpenSchema`) and `kSliceTables`.
@@ -64,7 +64,7 @@ Any failure outside this list after a change is a regression.
 - UI: `RecommendationLogScreen` behind a door at the foot of the weekly report; `decisionCall(tier)` is now the one source of the call's words. 4 l10n keys × 8 ARBs.
 - Tests (not run): migration + first-write-wins + delete-with-day + idempotent reopen in `db_migration_ladder_test.dart`; `recommendationRow` in `lab_report_test.dart`.
 - Independent review pass (CLAUDE.md, invariant-touching change), read-only, nothing compiled: no blocking finding. Its two minor findings fixed: a restore no longer lets the backup's row overwrite the local one (`_restoreEditedKeys`, local wins), and `schemaHealth` now requires the table.
-- Owner's local check: `flutter gen-l10n`, `flutter analyze`, `flutter test --concurrency=1 test/db_migration_ladder_test.dart test/startup_and_rebuild_recovery_test.dart test/issue_report_test.dart test/lab_report_test.dart test/ui2_tokens_test.dart test/home_guidance_test.dart test/ui2_home_day_switcher_test.dart`. Not hardware-validated.
+- Owner's local check: `flutter gen-l10n`, `flutter analyze`, `flutter test --concurrency=1 test/restore_keeps_newer_edits_test.dart test/db_migration_ladder_test.dart test/startup_and_rebuild_recovery_test.dart test/issue_report_test.dart test/lab_report_test.dart test/ui2_tokens_test.dart test/home_guidance_test.dart test/ui2_home_day_switcher_test.dart`. Not hardware-validated.
 
 ### 2026-11-13 — PR #3 and PR #2 merged to `main` (`6adce27`), on the owner's instruction
 
