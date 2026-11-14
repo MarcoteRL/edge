@@ -59,7 +59,7 @@ Any failure outside this list after a change is a regression.
 ### 2026-11-13 — ITER-5b: recommendation log (`schemaVersion` 58 → 59) — branch `feat/recommendation-log`, **NOT analyzed and NOT run**
 
 - Owner-approved table `recommendation_log` (`day_id` PK, `tier`, `readiness`, `algo_version`, `logged_at`): the day's training call as first shown. Written by the live Home (`_logCall`, unawaited, today + final recovery only — DecisionLine's own condition, D-19), INSERT OR IGNORE so a later re-derive never moves it (D-23).
-- AGENTS §3 invariant 11: additive, `CREATE TABLE IF NOT EXISTS`, one `if (oldV < 59)` step, same creator on fresh install and in `_repairOpenSchema`. Wired into `_salvageTables`, `_restoreTables`, `deleteDays` and `kSliceTables`. **Not** wired into the per-day export (`copyRows` list): known gap, recorded in DATABASE_AUDIT-level debt below.
+- AGENTS §3 invariant 11: additive, `CREATE TABLE IF NOT EXISTS`, one `if (oldV < 59)` step, same creator on fresh install and in `_repairOpenSchema`. Wired into `_salvageTables`, `_restoreTables`, `deleteDays`, the per-day export (whose file gets the table from `_repairOpenSchema`) and `kSliceTables`.
 - No derived output changes: no `kAlgoVersion` bump, no pin change. The coach's `v_*` views do not include the table (invariant 13 untouched).
 - UI: `RecommendationLogScreen` behind a door at the foot of the weekly report; `decisionCall(tier)` is now the one source of the call's words. 4 l10n keys × 8 ARBs.
 - Tests (not run): migration + first-write-wins + delete-with-day + idempotent reopen in `db_migration_ladder_test.dart`; `recommendationRow` in `lab_report_test.dart`.

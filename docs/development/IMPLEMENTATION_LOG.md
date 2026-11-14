@@ -40,7 +40,9 @@
   ninguna existente) siguiendo punto por punto cómo se añadió
   `vendor_sleep_epoch` en la v58. La pantalla es una lista; juzgar si la
   recomendación "acertó" queda para cuando haya semanas de filas.
-- **Hueco conocido:** la exportación por días no copia la tabla.
+- **Dónde está registrada:** creación, escalera, reparación al abrir,
+  rescate, restauración, borrado de días, exportación por días y recorte de
+  diagnóstico.
 - **Limitaciones:** escrito sin compilar; ningún dato real.
 
 ## 2026-11-13 — Cierre de la iteración 4, iteración 5 (parte posible) e iteración 6

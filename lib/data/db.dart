@@ -11277,7 +11277,12 @@ class LocalDb {
         final (startSec, endSec) = _localDayWindow(dayId);
         await copyRawRange(startSec, endSec);
         await copyRows('day_result', where: 'day_id = ?', whereArgs: [dayId]);
-        for (final table in ['sleep_nap', 'activity_suggestions', 'activity_review_days']) {
+        for (final table in [
+          'sleep_nap',
+          'activity_suggestions',
+          'activity_review_days',
+          'recommendation_log',
+        ]) {
           await copyRows(table, where: 'day_id = ?', whereArgs: [dayId]);
         }
         await copyRows('metric_series', where: 'date = ?', whereArgs: [dayId]);
