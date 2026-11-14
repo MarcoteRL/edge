@@ -22,6 +22,8 @@
 import '../data/activity_store.dart';
 import '../sync/reset_gate.dart';
 import '../models/activity_suggestion.dart';
+import '../state/prefs.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Platform;
@@ -1860,7 +1862,12 @@ import 'vendor_sleep.dart';
 // more than the windowed live/phone sources, instead of only when they counted
 // nothing, so a short tracked walk no longer hides the day's chip total.
 // gen4 (no counter) is unchanged. Edge-only.
-// 120 → 121 (fork, edge-only; ALG-L1 + ALG-C1 in
+// 120 → 121 (nap cap 3 h): naps are capped at kMaxNapSec on every path —
+// detected bouts via dropOversizedNaps AND stored edits replayed through
+// applyNapEdits — so a pre-cap manual nap longer than 3 h no longer counts
+// into naps/nap_min. Days derived at v120 keep their stale naps without this
+// bump.
+// 120 → 121, FORK in parallel with the line above (edge-only; ALG-L1 + ALG-C1 in
 // docs/development/ALGORITHM_EVALUATION.md): (1) CTL/ATL/TSB abstains with
 // `need_baseline` until 80 % of the last 42 calendar days (and at least
 // `ctlAtlMinDays`) carry a MEASURED TRIMP — a day with no TRIMP is unmeasured,
@@ -1871,7 +1878,13 @@ import 'vendor_sleep.dart';
 // gen5 export flagged 3/3 daytime-only days and 0/4 days with a night). Both
 // can only move a number towards abstaining or 0, never manufacture one.
 // Analytics and protocol pins unchanged.
-const int kAlgoVersion = 121;
+// 121 → 122 (fork, merge of upstream into the fork, 2026-11-14): both
+// lines above shipped as 121, each without the other. A phone on either 121
+// lacks one of the two changes (the 3 h nap cap, or ALG-L1 + ALG-C1), so
+// every day still on disk re-derives once. No new output change of its own.
+// Analytics pin unchanged (3a7ca34d); the protocol pin moves to upstream's
+// fbadb5bd with this merge (decode only).
+const int kAlgoVersion = 122;
 /// The sibling SHAs this version was derived against, asserted against
 /// pubspec.yaml in test/db_serve_version_and_reads_test.dart.
 ///
@@ -2103,7 +2116,10 @@ const String kAnalyticsPin = '3a7ca34d30233ff11e6c2877083f319a907ccb31';
 // REPIN: protocol main @ b4fde6a (#81 Mi scale 7-byte history count, on top
 // of #82 decoder hardening). NO kAlgoVersion bump: decode runs at ingest, so a
 // bump re-derives nothing differently; WHOOP output unchanged (freeze goldens).
-const String kProtocolPin = 'b4fde6ab5589e53154b808f8b2bbb4d01d9c15b5';
+// REPIN: protocol main @ fbadb5b (#84 realtime packet decoder, #85 image
+// update payload builders). NO kAlgoVersion bump: neither is read by any
+// derivation; WHOOP output unchanged (freeze goldens).
+const String kProtocolPin = 'fbadb5bd055965d9400e266d6cf42748992ba950';
 
 // Fold idempotency, the minimum-nights warm-up, and legacy-payload handling
 // all live in SleepProfilePolicy (pure, unit-tested) — see
@@ -3329,6 +3345,18 @@ class DerivationEngine {
   /// are decided before the write transaction, so the slower one's PARTIAL row
   /// could land on top of the faster one's complete row.
   static bool _running = false;
+
+  static int _autoLoggedNaps = 0;
+
+  /// How many naps the opt-in auto-log confirmed since the last call. Logging
+  /// one queues a durable review job for its day; the day's nap credit only
+  /// lands once that job runs, so the caller kicks it off after the pass
+  /// instead of leaving it for the next app resume.
+  static int takeAutoLoggedNaps() {
+    final n = _autoLoggedNaps;
+    _autoLoggedNaps = 0;
+    return n;
+  }
   bool get running => _running;
 
   /// Hold or release the process-wide latch, as another pass would.
@@ -6589,9 +6617,31 @@ class DerivationEngine {
               ...await activityStore.reconcile(
                   ActivityKind.nap, blocks.napSuggestions),
             ];
+      // Opt-in (#625): a clear, settled nap is logged without asking. Never
+      // on an import pass, which has no user at the other end of "just now".
+      // Inside its own try, like the prompts below: an optional convenience
+      // must not mark the day partial.
+      // Nor on an archive re-derive: a weeks-old day has no one to log for.
+      if (!forceFinalize && _rehydrated == null) {
+        try {
+          final since = (await SharedPreferences.getInstance())
+              .getInt(Prefs.napAutoLogSinceSec);
+          _autoLoggedNaps += await activityStore.autoLogNaps(
+            // 0 is the switch turned back off.
+            sinceSec: (since ?? 0) > 0 ? since : null,
+            dataEdgeSec: dataNowSec,
+            settleSec: ana.napBridgeSec,
+            current: blocks.napSuggestions,
+          );
+        } catch (e) {
+          _log('nap auto-log failed for ${day.date}: $e');
+        }
+      }
       for (final suggestion in newSuggestions) {
         // The rows are already banked; a failed prompt must not mark the day partial.
         try {
+          // A nap logged just above is no longer pending, so [mayNotifyNew]
+          // already declines it. One that could not be logged yet still asks.
           if (forceFinalize || !await activityStore.mayNotifyNew(suggestion)) continue;
           final nap = suggestion.kind == ActivityKind.nap;
           await NotificationCenter.instance.emit(NotificationEvent(
@@ -7099,12 +7149,17 @@ class DerivationEngine {
     bool carrySleep = true,
   }) {
     var carried = false;
+    var wearCarried = false;
     for (final e in prev.entries) {
       if (e.key == 'scalars' || e.key == 'series') continue;
+      // Row metadata, not detail: the persist stamps the fresh edge, and the
+      // wear edge is stamped below only when wear itself came across.
+      if (e.key == 'data_edge_sec' || e.key == 'wear_edge_sec') continue;
       if (!carrySleep && kSleepOwnedDetailKeys.contains(e.key)) continue;
       if (next.containsKey(e.key) || e.value == null) continue;
       next[e.key] = e.value;
       carried = true;
+      if (e.key == 'wear') wearCarried = true;
     }
     // `scalars` and `series` are flat maps the second half patches INTO rather
     // than owning, so they merge per key instead of wholesale.
@@ -7134,6 +7189,17 @@ class DerivationEngine {
         carried = true;
       }
       if (merged != null) next[sub] = merged;
+    }
+    // #450. A carried wear block was computed against the PREVIOUS row's
+    // edge, not this one's, and a second half that keeps failing would
+    // otherwise pass that morning off as the current day. Stamped only when
+    // WEAR was carried: a second half can fail after writing fresh wear (a
+    // later step throws) while other detail is carried, and fresh wear must
+    // not be labelled old. A chain of failures keeps the oldest edge: that is
+    // when wear was last actually computed.
+    if (wearCarried) {
+      final edge = prev['wear_edge_sec'] ?? prev['data_edge_sec'];
+      if (edge is num) next['wear_edge_sec'] = edge.toInt();
     }
     return carried;
   }
@@ -7465,7 +7531,7 @@ class DerivationEngine {
       // one layer up on the output.
       final builtForDay = LocalDb.localDayLabelNow();
       final builtAtEpoch = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-      final (bundleJson, dropped) = await _runIsolateCancellable(
+      final (bundleJson, dropped, needMin) = await _runIsolateCancellable(
         () {
           final bundle =
               buildCrossDayBundle(
@@ -7484,7 +7550,9 @@ class DerivationEngine {
           final paths = <String>[];
           final safe = sanitizeForJson(bundle, paths) as Map<String, dynamic>;
           if (paths.isNotEmpty) safe['encode_dropped_fields'] = paths;
-          return (jsonEncode(safe), paths);
+          // Read here, not by re-decoding bundleJson on the main isolate (the
+          // hang the comment above is about).
+          return (jsonEncode(safe), paths, crossDayNeedMin(safe));
         },
         _crossDayTimeout,
         label: 'crossday',
@@ -7495,7 +7563,15 @@ class DerivationEngine {
         _log('crossday: zone changed during the build; not stored');
         return false;
       }
-      if (!await LocalDb.putReviewedBaseline('crossday', bundleJson, reviewRevision)) {
+      // `series`: the need this build computed, kept per day: the artifact
+      // only ever holds the latest one, so without this every past night was
+      // read against TODAY's need (#619). Same transaction as the artifact,
+      // so the day's row always matches the artifact that day last served; a
+      // later build the same day replaces both. null when the need abstained,
+      // so a past day reads "—", never a stale value. No backfill: an earlier
+      // day's need was never stored anywhere.
+      if (!await LocalDb.putReviewedBaseline('crossday', bundleJson, reviewRevision,
+          series: (date: builtForDay, key: 'sleep_need_min', value: needMin))) {
         _log('crossday: newer activity review; leaving its refresh queued');
         return false;
       }
@@ -7555,6 +7631,16 @@ class DerivationEngine {
     }
     return out;
   }
+
+  /// The learned sleep need in a crossday bundle, in whole minutes, or null
+  /// when `sleep_coach.need` abstained or is missing — the same field and
+  /// rounding `LocalRepositoryImpl._sleepNeedMin` reads.
+  static double? crossDayNeedMin(Map<String, dynamic> bundle) =>
+      switch (bundle['sleep_coach']) {
+        {'need': {'value': {'need_sec': final num s}}} =>
+          (s / 60).roundToDouble(),
+        _ => null,
+      };
 
   /// The phone zone a `crossday_input` artifact was built in. Its records are
   /// zone-RELATIVE (`clock_shift_sec` is "this night's clock minus the zone the
@@ -10528,7 +10614,9 @@ class DerivationEngine {
     List<NapEdit> napEdits,
     String note,
   ) {
-    final merged = applyNapEdits(const [], napEdits);
+    // Cap stored edits too: a manual nap logged before the 3 h cap must not
+    // survive a re-derive as a counted nap.
+    final merged = dropOversizedNaps(applyNapEdits(const [], napEdits));
     if (merged.isEmpty) {
       _writeUnknownNaps(bundle, note);
       return null;
@@ -10715,9 +10803,17 @@ class DerivationEngine {
             'confidence': nap.confidence,
           },
       ];
-      candidates?.addAll(detected.where((n) => !napEdits.any((e) =>
+      // A nap longer than kMaxNapSec (3 h) is a sleep, not a nap — drop it
+      // before it can reach the suggestions, `nap_min`, sleep need or the
+      // timeline. Entry-time paths share the same constant via
+      // manualNapWindowIsValid; stored edits are capped again at the merge
+      // below so pre-cap rows cannot survive a re-derive.
+      final capped = dropOversizedNaps(detected);
+      candidates?.addAll(capped.where((n) => !napEdits.any((e) =>
         e.overlaps(n['start'] as int, n['end'] as int))));
-      final merged = applyNapEdits(const [], napEdits);
+      // Cap stored edits too: a manual nap logged before the 3 h cap must not
+      // survive a re-derive as a counted nap.
+      final merged = dropOversizedNaps(applyNapEdits(const [], napEdits));
 
       bundle['naps'] = <String, dynamic>{
         'value': merged,

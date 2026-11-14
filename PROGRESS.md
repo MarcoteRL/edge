@@ -56,6 +56,13 @@ Any failure outside this list after a change is a regression.
 
 ## Log
 
+### 2026-11-14 — REL-02: upstream merged into `sync/upstream-2026-11-14`, **NOT compiled, NOT run**
+
+- Upstream was 3,206 commits ahead (2,381 without merges) of the fork's base (9 Nov). 17 files in conflict, 61 hunks, all resolved; decisions in DECISIONS D-24 (schema renumbered to 61, `kAlgoVersion` 122, fork Home header kept by the owner's choice, key-by-key l10n merge, protocol pin to upstream's `fbadb5bd`).
+- Static checks done here (no Dart SDK reachable from the session): every `LocalDb` member, shared UI helper and l10n key the fork's code uses exists after the merge; two keys upstream had deleted as dead (`homeOfSpan`, `homeWhyLabel`) are back because the kept header uses them; all 8 ARBs parse and carry no key missing from English; pins in `pubspec.yaml`, `pubspec.lock` and `kProtocolPin`/`kAnalyticsPin` agree.
+- Tests changed with the merge: `home_ring_card_test.dart` removed and the widget half of `home_sleep_ring_widget_test.dart` removed (they test upstream's ring header, not shipped); `hyrox_model_storage_test` pins schema 61; `spanish_l10n_test` takes upstream's activity names; new `db_migration_ladder_test` case for a phone on the fork's old v59.
+- **Owner's check before this goes to `main` (the full suite, not the touched files: it is a 44k-line merge)**: `flutter pub get`, `flutter gen-l10n`, `flutter analyze`, `flutter test --concurrency=1`. The WHOOP freeze goldens only run under TZ=UTC / Asia/Kolkata / America/New_York and skip on the owner's PC. Not hardware-validated.
+
 ### 2026-11-14 — PR #7 merged to `main` (`00e76c5`), with CI-04
 
 - Basis: the owner's local `flutter gen-l10n`, `flutter analyze` and the PR's touched-file tests, reported as passing (no counts received). Full suite not re-run.

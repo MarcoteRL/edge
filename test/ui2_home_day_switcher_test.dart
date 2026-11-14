@@ -410,9 +410,10 @@ void main() {
       final tile = find.text(label);
       await t.scrollUntilVisible(tile, 300,
           scrollable: find.byType(Scrollable).first);
-      // scrollUntilVisible stops once any part shows; tap needs the centre.
+      // The card above is taller now (inset rows), so the scroll can stop with
+      // the tile at the very edge of the viewport.
       await t.ensureVisible(tile);
-      await t.pumpAndSettle();
+      await t.pump();
       await t.tap(tile);
       await _settle(t);
 

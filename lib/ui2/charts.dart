@@ -41,6 +41,7 @@
 import '../l10n/app_localizations.dart';
 import '../l10n/decimal_text.dart';
 import '../state/locale_controller.dart';
+import 'spiral_ring.dart';
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' show PointMode;
@@ -611,66 +612,51 @@ class Ring extends CustomPainter {
   /// calibrating" and "this is missing" into one look.
   final bool solid;
 
-  /// An optional target zone, 0…1 of the full circle, laid on the track under
-  /// the arc (Home's strain ring draws the day's strain target here). Both or
-  /// neither; nothing is drawn unless `bandTo > bandFrom`.
+  /// The surface the ring sits on: the 1.5 px separator between laps.
+  final Color? background;
+
+  /// FORK — an optional target zone, 0…1 of the full circle (Home's strain
+  /// ring draws the day's strain target here). Both or neither; nothing is
+  /// drawn unless `bandTo > bandFrom`.
   final double? bandFrom, bandTo;
 
   Ring(this.v, this.color, this.track,
       {this.stroke = 10,
       this.t = 1,
       this.solid = false,
+      this.background,
       this.bandFrom,
       this.bandTo});
 
   @override
   void paint(Canvas cv, Size s) {
-    final c = Offset(s.width / 2, s.height / 2);
-    final r = min(s.width, s.height) / 2 - stroke / 2;
-    if (r <= 0) return;
-    cv.drawCircle(
-      c,
-      r,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = stroke
-        ..color = track,
-    );
+    paintSpiral(cv, s, stroke: stroke, track: track, colors: [color],
+        fractions: [v], t: t, solid: solid, background: background);
+    // The target zone on the track, from where the arc has got to: the spiral
+    // paints its own track first, so a band drawn before it would be covered,
+    // and the part under the arc is not visible either way. First lap only —
+    // a target past one full turn is not a zone anyone aims at.
     final bf = bandFrom, bt = bandTo;
     if (bf != null && bt != null && bt > bf) {
-      final from = bf.clamp(0.0, 1.0), to = bt.clamp(0.0, 1.0);
-      cv.drawArc(
-        Rect.fromCircle(center: c, radius: r),
-        -pi / 2 + 2 * pi * from,
-        2 * pi * (to - from) * t.clamp(0, 1),
-        false,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = stroke
-          ..color = color.withValues(alpha: .25),
-      );
+      final reached = (v * t.clamp(0.0, 1.0)).clamp(0.0, 1.0);
+      final from = max(bf.clamp(0.0, 1.0), reached), to = bt.clamp(0.0, 1.0);
+      if (to > from) {
+        final c = Offset(s.width / 2, s.height / 2);
+        final r = min(s.width, s.height) / 2 - stroke / 2;
+        if (r > 0) {
+          cv.drawArc(
+            Rect.fromCircle(center: c, radius: r),
+            -pi / 2 + 2 * pi * from,
+            2 * pi * (to - from),
+            false,
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = stroke
+              ..color = color.withValues(alpha: .25),
+          );
+        }
+      }
     }
-    final sweep = 2 * pi * v.clamp(0, 1) * t.clamp(0, 1);
-    if (sweep <= 0) return;
-    cv.drawArc(
-      Rect.fromCircle(center: c, radius: r),
-      -pi / 2,
-      sweep,
-      false,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = stroke
-        ..strokeCap = StrokeCap.round
-        ..color = solid ? color : const Color(0x00000000)
-        ..shader = solid
-            ? null
-            : SweepGradient(
-                startAngle: -pi / 2,
-                endAngle: 3 * pi / 2,
-                colors: [color.withValues(alpha: .55), color],
-                transform: const GradientRotation(-pi / 2),
-              ).createShader(Rect.fromCircle(center: c, radius: r)),
-    );
   }
 
   @override
@@ -679,8 +665,64 @@ class Ring extends CustomPainter {
       o.t != t ||
       o.solid != solid ||
       o.color != color ||
+      o.track != track ||
+      o.stroke != stroke ||
+      o.background != background ||
       o.bandFrom != bandFrom ||
       o.bandTo != bandTo;
+}
+
+/// One coloured arc of a [StageRing]: [fraction] of the FULL circle.
+class RingArc {
+  final Color color;
+  final double fraction;
+  const RingArc(this.color, this.fraction);
+
+  @override
+  bool operator ==(Object other) =>
+      other is RingArc && other.color == color && other.fraction == fraction;
+
+  @override
+  int get hashCode => Object.hash(color, fraction);
+}
+
+/// The sleep dial once a night is scored, with one shared spiral geometry.
+class StageRing extends CustomPainter {
+  final List<RingArc> arcs;
+  final Color track;
+  final double stroke, t;
+
+  final Color? background;
+
+  StageRing(this.arcs, this.track,
+      {this.stroke = 10, this.t = 1, this.background});
+
+  @override
+  void paint(Canvas cv, Size s) {
+    paintSpiral(cv, s,
+        stroke: stroke,
+        track: track,
+        colors: arcs.map((a) => a.color).toList(),
+        fractions: arcs.map((a) => a.fraction).toList(),
+        t: t,
+        background: background);
+  }
+
+  @override
+  bool shouldRepaint(covariant StageRing o) =>
+      o.track != track ||
+      o.background != background ||
+      o.stroke != stroke ||
+      o.t != t ||
+      o.arcs.length != arcs.length ||
+      !_sameArcs(o.arcs);
+
+  bool _sameArcs(List<RingArc> other) {
+    for (var i = 0; i < arcs.length; i++) {
+      if (other[i] != arcs[i]) return false;
+    }
+    return true;
+  }
 }
 
 /// A ring made of discrete dashes rather than a continuous arc — for a value
