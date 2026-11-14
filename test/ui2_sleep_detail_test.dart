@@ -482,6 +482,19 @@ void main() {
     });
   });
 
+  group('sleepScrubTempText', () {
+    test('a gen5 curve is centi-degrees: shown in °C', () {
+      expect(sleepScrubTempText(61.2, 'centi_c'), '+0.6 °C');
+      expect(sleepScrubTempText(-8.1, 'centi_c'), '−0.1 °C');
+      expect(sleepScrubTempText(2, 'centi_c'), '±0.0 °C');
+    });
+
+    test('a curve in sensor counts has no number to show', () {
+      expect(sleepScrubTempText(61.2, null), isNull);
+      expect(sleepScrubTempText(61.2, 'raw'), isNull);
+    });
+  });
+
   group('sleepStepperDay', () {
     test('stepping onto the newest night follows it rather than pinning it',
         () {

@@ -1970,6 +1970,11 @@ class LocalRepositoryImpl extends LocalRepository {
       'hrv': hrvLine,
       'resp': respLine,
       'skin_temp': tempLine,
+      // What one unit of [tempLine] is. The curve is the day's skin-temperature
+      // array minus its median, in whatever unit the strap stored: centi-°C on
+      // gen5, a raw ADC count on gen4. Only the first can be read in degrees;
+      // anything else stays a shape with no number (null).
+      'skin_temp_unit': b['device_family'] == 'gen5' ? 'centi_c' : null,
       'activity': b['activity_curve'] ?? const [],
       // Who owned each stretch of the merged HR curve (only on a day more
       // than one device measured) — the zoomed chart's per-second read keeps
